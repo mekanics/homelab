@@ -1,7 +1,7 @@
-apiVersion: "vault.banzaicloud.com/v1alpha1"
-kind: "Vault"
+apiVersion: 'vault.banzaicloud.com/v1alpha1'
+kind: 'Vault'
 metadata:
-  name: "vault"
+  name: 'vault'
 spec:
   size: 1
   image: vault:1.6.2
@@ -10,23 +10,23 @@ spec:
 
   # Common annotations for all created resources
   annotations:
-    common/annotation: "true"
+    common/annotation: 'true'
 
   # Vault Pods , Services and TLS Secret annotations
   vaultAnnotations:
-    type/instance: "vault"
+    type/instance: 'vault'
 
   # Vault Configurer Pods and Services annotations
   vaultConfigurerAnnotations:
-    type/instance: "vaultconfigurer"
+    type/instance: 'vaultconfigurer'
 
   # Vault Pods , Services and TLS Secret labels
   vaultLabels:
-    example.com/log-format: "json"
+    example.com/log-format: 'json'
 
   # Vault Configurer Pods and Services labels
   vaultConfigurerLabels:
-    example.com/log-format: "string"
+    example.com/log-format: 'string'
 
   # Support for affinity Rules, same as in PodSpec
   # affinity:
@@ -72,7 +72,7 @@ spec:
       hajimari.io/appName: Vault
       hajimari.io/icon: database-lock
     spec:
-      ingressClassName: nginx
+      # ingressClassName: nginx
       rules:
         - host: &host vault.127-0-0-1.nip.io
           http:
@@ -102,7 +102,7 @@ spec:
   # Support for distributing the generated CA certificate Secret to other namespaces.
   # Define a list of namespaces or use ["*"] for all namespaces.
   caNamespaces:
-    - "vswh"
+    - 'vswh'
 
   # Describe where you would like to store the Vault unseal keys and root token.
   unsealConfig:
@@ -114,17 +114,17 @@ spec:
       # This is true by default
       storeRootToken: true
     kubernetes:
-      secretNamespace: {{ .Release.Namespace }}
+      secretNamespace: { { .Release.Namespace } }
 
   # A YAML representation of a final vault config file.
   # See https://www.vaultproject.io/docs/configuration/ for more information.
   config:
     storage:
       file:
-        path: "${ .Env.VAULT_STORAGE_FILE }" # An example how Vault config environment interpolation can be used
+        path: '${ .Env.VAULT_STORAGE_FILE }' # An example how Vault config environment interpolation can be used
     listener:
       tcp:
-        address: "0.0.0.0:8200"
+        address: '0.0.0.0:8200'
         # TODO enable TLS?
         tls_disable: true
         # tls_cert_file: /vault/tls/server.crt
@@ -165,15 +165,15 @@ spec:
         mountpath: token
         group: admin1
 
-
     auth:
       - type: kubernetes
         roles:
           # Allow every pod in the default namespace to use the secret kv store
           - name: default
-            bound_service_account_names: ["default", "vault-secrets-webhook", "vault"]
-            bound_service_account_namespaces: ["default", "vswh"]
-            policies: ["allow_secrets", "allow_pki"]
+            bound_service_account_names:
+              ['default', 'vault-secrets-webhook', 'vault']
+            bound_service_account_namespaces: ['default', 'vswh']
+            policies: ['allow_secrets', 'allow_pki']
             ttl: 1h
 
     secrets:
@@ -190,18 +190,18 @@ spec:
           max_lease_ttl: 720h
         configuration:
           config:
-          - name: urls
-            issuing_certificates: https://vault.default:8200/v1/pki/ca
-            crl_distribution_points: https://vault.default:8200/v1/pki/crl
+            - name: urls
+              issuing_certificates: https://vault.default:8200/v1/pki/ca
+              crl_distribution_points: https://vault.default:8200/v1/pki/crl
           root/generate:
-          - name: internal
-            common_name: vault.default
+            - name: internal
+              common_name: vault.default
           roles:
-          - name: default
-            allowed_domains: localhost,pod,svc,default
-            allow_subdomains: true
-            generate_lease: true
-            ttl: 1m
+            - name: default
+              allowed_domains: localhost,pod,svc,default
+              allow_subdomains: true
+              generate_lease: true
+              ttl: 1m
 
     # Allows writing some secrets to Vault (useful for development purposes).
     # See https://www.vaultproject.io/docs/secrets/kv/index.html for more information.
@@ -229,7 +229,7 @@ spec:
     - name: VAULT_LOG_LEVEL
       value: debug
     - name: VAULT_STORAGE_FILE
-      value: "/vault/file"
+      value: '/vault/file'
 
   # If you are using a custom certificate and are setting the hostname in a custom way
   # sidecarEnvsConfig:
