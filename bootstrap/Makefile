@@ -1,6 +1,6 @@
 .POSIX:
 
-default: namespace argocd root
+default: namespace argocd 
 
 argocd/charts: argocd/Chart.yaml
 	cd argocd \
@@ -11,9 +11,14 @@ namespace:
 		| kubectl apply -f -
 
 .PHONY: argocd
-argocd: argocd/charts
-	cd argocd && \
-		./apply.sh
+# argocd: argocd/charts
+# 	cd argocd && \
+# 		./apply.sh
+
+argocd: 
+	kubectl apply -n argocd \ 
+		-f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
 
 .PHONY: root
 root:
