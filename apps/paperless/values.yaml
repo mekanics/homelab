@@ -1,4 +1,6 @@
 paperless:
+  env:
+    PAPERLESS_OCR_LANGUAGE: 'deu+eng'
   ingress:
     main:
       enabled: true
