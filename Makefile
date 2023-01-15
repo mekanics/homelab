@@ -17,7 +17,7 @@ wait:
 	./scripts/wait-main-apps
 
 smoke-test:
- 	make -C test filter=Smoke
+	make -C test filter=Smoke
 
 tools:
 	@docker run \
@@ -34,6 +34,9 @@ tools:
 		--volume homelab-tools-nix:/nix \
 		--workdir $(shell pwd) \
 		nixos/nix nix-shell
+
+test:
+	make -C test
 
 clean: 
 	make clean -C metal
