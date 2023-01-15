@@ -2,7 +2,7 @@
 
 VALUES="values.yaml"
 
-curl -fks --connect-timeout 5 https://git.127-0-0-1.nip.io ||
+kubectl get ingress gitea --namespace gitea ||
     VALUES="values-seed.yaml"
 
 helm template \

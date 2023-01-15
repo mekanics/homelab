@@ -1,0 +1,18 @@
+external-dns:
+  provider: pihole
+  txtOwnerId: homelab
+  env:
+    - name: EXTERNAL_DNS_PIHOLE_SERVER
+      value: http://192.168.1.5
+    - name: EXTERNAL_DNS_PIHOLE_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: pihole-api-token
+          key: value
+  extraArgs:
+    - --annotation-filter=external-dns.alpha.kubernetes.io/exclude notin (true)
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
