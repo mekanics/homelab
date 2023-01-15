@@ -21,6 +21,7 @@ pkgs.mkShell {
     go
     grc
     iproute2
+    jq
     k9s
     kube3d
     kubectl
