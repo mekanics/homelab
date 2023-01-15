@@ -5,7 +5,7 @@
 KUBECONFIG = $(shell pwd)/metal/kubeconfig.yaml
 KUBE_CONFIG_PATH = $(KUBECONFIG)
 
-default: metal bootstrap wait
+default: metal bootstrap smoke-test
 
 metal:
 	make -C metal
@@ -16,6 +16,8 @@ bootstrap:
 wait: 
 	./scripts/wait-main-apps
 
+smoke-test:
+ 	make -C test filter=Smoke
 
 tools:
 	@docker run \
