@@ -5,7 +5,7 @@
 default: k3d
 
 # ~/.ssh/id_ed25519_homelab:
-# 	ssh-keygen -t ed25519 -f "$@"
+# 	ssh-keygen -t ed25519 -P '' -f "$@"
 
 # boot: ~/.ssh/id_ed25519_homelab
 # 	ansible-playbook \
