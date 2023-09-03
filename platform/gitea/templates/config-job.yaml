@@ -16,7 +16,7 @@ spec:
           restartPolicy: Never
           containers:
             - name: apply
-              image: golang:1.17-alpine
+              image: golang:1.19-alpine
               env:
                 - name: GITEA_HOST
                   value: http://gitea-http:3000
@@ -30,6 +30,11 @@ spec:
                     secretKeyRef:
                       name: gitea-admin-secret
                       key: password
+                - name: WEBHOOK_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: gitea-webhook-secret
+                      key: token
               workingDir: /go/src/gitea-config
               command:
                 - sh
