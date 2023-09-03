@@ -5,7 +5,7 @@
 KUBECONFIG = $(shell pwd)/metal/kubeconfig.yaml
 KUBE_CONFIG_PATH = $(KUBECONFIG)
 
-default: metal bootstrap wait post-install
+default: metal bootstrap wait smoke-test post-install
 
 metal:
 	make -C metal

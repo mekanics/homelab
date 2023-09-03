@@ -7,11 +7,9 @@ namespace:
 		| kubectl apply -f -
 
 .PHONY: argocd
-argocd: 
-	cd argocd && \
-		./apply.sh
+argocd:
+	cd argocd && ./apply.sh
 
 .PHONY: root
 root:
-	cd root && \
-		./apply.sh
+	cd root && ./apply.sh
