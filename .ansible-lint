@@ -27,6 +27,5 @@ skip_list:
 # kinds:
 #   - vars: 'ansible/playbooks/adoptopenjdk_variables.yml'
 
-exclude_paths:
-  - src/kubeconfig.yaml
+# exclude_paths:
 #   - ansible/playbooks/adoptopenjdk_variables.yml # See: https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1926
