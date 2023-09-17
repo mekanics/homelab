@@ -1,3 +1,4 @@
 {
-	"C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools"
+	"C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
+	"ansible.python.interpreterPath": "/Users/ajoly/.pyenv/versions/3.9.12/envs/reproad/bin/python"
 }
