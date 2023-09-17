@@ -7,5 +7,5 @@
   become: false
   roles:
     - local_helm
-    - sealed_secrets
-    # - argo
+    - service_sealed_secrets
+    # - service_argo
