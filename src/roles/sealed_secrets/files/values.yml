@@ -1,0 +1,6 @@
+# https://github.com/bitnami-labs/sealed-secrets/blob/main/helm/sealed-secrets/values.yaml
+
+serviceMonitor:
+  # Enables ServiceMonitor creation for the Prometheus Operator
+  create: true
+  namespace: monitoring

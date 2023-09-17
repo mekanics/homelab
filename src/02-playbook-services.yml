@@ -7,5 +7,5 @@
   become: false
   roles:
     - local_helm
-    - bitnami
-    - argo
+    - sealed_secrets
+    # - argo

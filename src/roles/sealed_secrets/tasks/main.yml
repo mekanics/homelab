@@ -1,0 +1,20 @@
+- name: Add Bitnami Sealed Secrets repo
+  kubernetes.core.helm_repository:
+    state: present
+    name: sealed-secrets
+    repo_url: https://bitnami-labs.github.io/sealed-secrets
+  tags:
+    - secrets
+
+- name: Deploy Sealed Secrets Controller to cluster
+  kubernetes.core.helm:
+    update_repo_cache: true
+    state: present
+    name: sealed-secrets-controller
+    chart_ref: sealed-secrets/sealed-secrets
+    release_namespace: kube-system
+    create_namespace: true
+    release_values: "{{ lookup('file', '{{ role_path }}/files/values.yml') | from_yaml }}"
+    wait: true
+  tags:
+    - secrets

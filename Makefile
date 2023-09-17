@@ -14,14 +14,14 @@ endif
 PLAY_CMD=ansible-playbook
 
 # Load the env settings so they can be read into the Ansible config
--include ../.env
+-include ./.env
 .EXPORT_ALL_VARIABLES: ;
 
 
 ############################
 
-default: host-bootstrap cluster-install
-dev: cluster-install-dev 
+default: host-bootstrap cluster-install cluster-bootstrap
+dev: cluster-install-dev cluster-bootstrap
 
 k3s: cluster-install
 
@@ -55,14 +55,14 @@ cluster-install: about lint
 
 cluster-bootstrap: about lint
 > @echo "Configuring Kubernetes cluster-wide services"
-> $(PLAY_CMD) src/02b-playbook-k3s-services.yml $(params)
+> $(PLAY_CMD) src/02-playbook-services.yml
 
 ############################
 
 cluster-install-dev: about
 > @echo "Start k3d Dev Cluster"
 > k3d cluster start homelab-dev || k3d cluster create --config src/k3d-dev.yaml
-> k3d kubeconfig get homelab-dev > kubeconfig.yaml
+> k3d kubeconfig get homelab-dev > src/kubeconfig.yaml
 
 ############################
 

@@ -1,0 +1,8 @@
+---
+- name: Install Helm plugins
+  kubernetes.core.helm_plugin:
+    plugin_path: "{{ item }}"
+    state: present
+  loop: "{{ helm_common_plugins }}"
+  tags:
+    - helm
