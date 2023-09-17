@@ -1,0 +1,7 @@
+---
+- name: Install k3s
+  include_tasks: k3s.yml
+  when: ansible_facts['os_family'] != "Darwin"
+  tags:
+    - install
+    - k3s

@@ -1,0 +1,11 @@
+---
+# Remaining services are installed by Argo from their git repos.
+- name: KUBERNETES CLUSTER SERVICES
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: false
+  roles:
+    - local_helm
+    - bitnami
+    - argo

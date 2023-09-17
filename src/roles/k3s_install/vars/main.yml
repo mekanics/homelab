@@ -10,7 +10,3 @@ k3s_server_config:
     - traefik
   disable-cloud-controller: true
   secrets-encryption: true
-
-k3d_install_url: 'https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh'
-k3d_path_bin: '/usr/local/bin/k3d'
-k3d_path_tmp: '/tmp/k3d_install.sh'
