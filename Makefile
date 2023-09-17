@@ -1,45 +1,37 @@
-.POSIX:
-.PHONY: *
-.EXPORT_ALL_VARIABLES:
+.PHONY: about
 
-KUBECONFIG = $(shell pwd)/metal/kubeconfig.yaml
-KUBE_CONFIG_PATH = $(KUBECONFIG)
+# Tips: https://tech.davis-hansson.com/p/make
+SHELL := bash
+.ONESHELL:
+.SHELLFLAGS := -eu -o pipefail -c
+MAKEFLAGS += --warn-undefined-variables
+MAKEFLAGS += --no-builtin-rules
+ifeq ($(origin .RECIPEPREFIX), undefined)
+  $(error This Make does not support .RECIPEPREFIX. Please use GNU Make 4.0 or later)
+endif
+.RECIPEPREFIX = >
 
-default: metal bootstrap wait smoke-test post-install
+# Load the env settings so they can be read into the Ansible config
+-include ./.env
+.EXPORT_ALL_VARIABLES: ;
 
-metal:
-	make -C metal
 
-bootstrap:
-	make -C bootstrap
+############################
 
-wait: 
-	./scripts/wait-main-apps
+default: metal
 
-post-install:
-	@./scripts/hacks
+metal: about
+> make -C metal
 
-smoke-test:
-	make -C test filter=Smoke
+############################
 
-tools:
-	@docker run \
-		--rm \
-		--interactive \
-		--tty \
-		--network host \
-		--env "KUBECONFIG=${KUBECONFIG}" \
-		--volume "/var/run/docker.sock:/var/run/docker.sock" \
-		--volume $(shell pwd):$(shell pwd) \
-		--volume ${HOME}/.ssh:/root/.ssh \
-		--volume ${HOME}/.terraform.d:/root/.terraform.d \
-		--volume homelab-tools-cache:/root/.cache \
-		--volume homelab-tools-nix:/nix \
-		--workdir $(shell pwd) \
-		nixos/nix nix-shell
+about:
+> @echo "Kubernetes Homelab Cluster"
 
-test:
-	make -C test
+############################
 
-clean: 
-	make clean -C metal
+dev:
+>	@$(MAKE) -C 00_metal -f Makefile dev
+
+clean:
+> @$(MAKE) -C 00_metal -f Makefile clean

@@ -8,4 +8,8 @@ book/
 *kubeconfig.yaml
 Chart.lock
 
+.env
+.env.*
+!.env.example
+
 OLD_*

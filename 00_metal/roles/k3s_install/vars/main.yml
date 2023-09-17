@@ -1,0 +1,16 @@
+---
+k3s_version: v1.27.1+k3s1
+k3s_config_file: /etc/rancher/k3s/config.yaml
+k3s_token_file: /etc/rancher/node/password
+k3s_service_file: /etc/systemd/system/k3s.service
+k3s_server_config:
+  disable:
+    - local-storage
+    - servicelb
+    - traefik
+  disable-cloud-controller: true
+  secrets-encryption: true
+
+k3d_install_url: 'https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh'
+k3d_path_bin: '/usr/local/bin/k3d'
+k3d_path_tmp: '/tmp/k3d_install.sh'

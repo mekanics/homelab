@@ -1,0 +1,14 @@
+---
+# Initializes the hosts that comprise the network for subsequent playbooks
+# 1. Creates ansible user and group
+# 2. Adds ansible ssh key to authorized keys list
+# The ansible user is then used for all subsequent ssh connections
+
+- name: Bootrapping all hosts
+  hosts: all
+  gather_facts: true
+  remote_user: '{{ bootstrap_account.user }}'
+  become: true
+  become_method: ansible.builtin.sudo
+  roles:
+    - host_bootstrap

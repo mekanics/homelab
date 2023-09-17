@@ -1,0 +1,56 @@
+---
+all:
+  hosts:
+    # Mac Mini
+    # mars.local:
+    #   ansible_host: 192.168.10.11
+    #   mac: 'c8:2a:14:55:97:24'
+    #   ansible_connection: ssh
+    #   performance: high
+    #   disktype: mmc
+
+    # Raspbery Pi
+    homelab-1.local:
+      ansible_host: 192.168.10.21
+      mac: 'tbd'
+      ansible_connection: ssh
+      performance: mid
+      disctype: 'ssd'
+
+    homelab-2.local:
+      ansible_host: 192.168.10.22
+      mac: 'tbd'
+      ansible_connection: ssh
+      performance: mid
+      disctype: 'mmc'
+
+    # Synology NAS
+    # mercury.local:
+    #   ansible_host: 192.168.10.193
+    #   ansible_connection: ssh
+    #   ansible_python_interpreter: /usr/local/bin/python3
+
+  children:
+    servers:
+      hosts:
+        homelab-1.local:
+
+    workers:
+      hosts:
+        homelab-2.local:
+
+    cluster:
+      children:
+        servers:
+        workers:
+
+    # NAS storage and media
+    nas:
+      hosts:
+        # mercury.local:
+
+    # These hosts have attached Flash/NVME storage devices for use by the cluster storage.
+    # Devices are defined in host_vars files
+    storage_nodes:
+      hosts:
+        homelab-1.local:

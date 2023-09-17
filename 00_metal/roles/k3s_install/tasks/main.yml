@@ -1,0 +1,14 @@
+---
+- name: Install k3s on Linux
+  include_tasks: k3s.yml
+  when: ansible_facts['os_family'] != "Darwin"
+  tags:
+    - install
+    - k3s
+
+- name: Install k3d on macOS
+  include_tasks: k3d.yml
+  when: ansible_facts['os_family'] == "Darwin"
+  tags:
+    - install
+    - k3d
