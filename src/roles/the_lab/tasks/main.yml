@@ -1,0 +1,22 @@
+---
+- name: Render the ApplicationSet template
+  kubernetes.core.helm_template:
+    chart_ref: '{{ role_path }}/files'
+    output_dir: '{{ role_path }}/files'
+    include_crds: true
+    release_name: 'argocd'
+    release_namespace: 'argocd'
+    values_files: '{{ role_path }}/files/values.yml'
+  tags:
+    - argo
+    - gitops
+
+- name: Deploy the ApplicationSet to the cluster
+  k8s:
+    state: present
+    definition: "{{ lookup('file', '{{ role_path }}/files/root/templates/stack.yml') | from_yaml }}"
+    # src: '{{ role_path }}/files/root/templates/stack.yml'
+    wait: true
+  tags:
+    - argo
+    - gitops

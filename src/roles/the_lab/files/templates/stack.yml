@@ -1,0 +1,48 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: "the-lab"
+  namespace: {{ $.Release.Namespace }}
+spec:
+  generators:
+    - list:
+      elements:
+        {{- range $index, $stack := .Values.stacks }}
+        - name: '{{ $stack.name }}'
+          namespace: '{{ default $stack.name $stack.namespace }}'
+        {{- end }}
+  
+  template:
+    metadata:
+      name: '{{ `{{ name }}` }}'
+      namespace: argocd
+    
+    spec:
+      project: default # TODO
+      
+      source:
+        repoURL: {{ $.Values.gitops.repo }}
+        targetRevision: {{ $.Values.gitops.revision }}
+        path: 'the-lab/{{ `{{ name }}` }}'
+
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{ `{{ namespace }}` }}'
+
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        
+        retry:
+          limit: 10
+          backoff:
+            duration: 1m
+            factor: 2
+            maxDuration: 16m
+        
+        syncOptions:
+          - CreateNamespace=true
+          - ApplyOutOfSyncOnly=true
+          - ServerSideApply=true

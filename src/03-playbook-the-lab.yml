@@ -1,0 +1,9 @@
+---
+# Add the ApplicationSet to Argo
+- name: Starting the actuall lab application
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: false
+  roles:
+    - the_lab

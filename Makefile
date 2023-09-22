@@ -20,8 +20,8 @@ PLAY_CMD=ansible-playbook
 
 ############################
 
-default: host-bootstrap cluster-install cluster-bootstrap
-dev: cluster-install-dev cluster-bootstrap
+default: host-bootstrap cluster-install cluster-bootstrap lab-bootstrap
+dev: cluster-install-dev cluster-bootstrap lab-bootstrap
 
 k3s: cluster-install
 
@@ -51,11 +51,15 @@ host-bootstrap: about lint
 
 cluster-install: about lint
 > @echo "Install Kubernetes"
-> $(PLAY_CMD) src/01-playbook-k3s-install.yml 
+> $(PLAY_CMD) src/01-playbook-k3s-install.yml $(params)
 
 cluster-bootstrap: about lint
 > @echo "Configuring Kubernetes cluster-wide services"
-> $(PLAY_CMD) src/02-playbook-services.yml
+> $(PLAY_CMD) src/02-playbook-services.yml $(params)
+
+lab-bootstrap: about lint
+> @echo "Start the lab Kubernetes cluster-wide services"
+> $(PLAY_CMD) src/03-playbook-the-lab.yml $(params)
 
 ############################
 
