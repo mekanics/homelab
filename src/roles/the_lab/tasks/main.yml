@@ -14,8 +14,7 @@
 - name: Deploy the ApplicationSet to the cluster
   k8s:
     state: present
-    definition: "{{ lookup('file', '{{ role_path }}/files/root/templates/stack.yml') | from_yaml }}"
-    # src: '{{ role_path }}/files/root/templates/stack.yml'
+    definition: "{{ lookup('file', '{{ role_path }}/files/root/templates/stack.yml') | from_yaml_all }}"
     wait: true
   tags:
     - argo

@@ -1,34 +1,34 @@
+{{- range $index, $stack := .Values.stacks }}
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: "the-lab"
+  name: {{ $stack.name }}
   namespace: {{ $.Release.Namespace }}
 spec:
   generators:
-    - list:
-        elements:
-          {{- range $index, $stack := .Values.stacks }}
-          - name: '{{ $stack.name }}'
-            namespace: '{{ default $stack.name $stack.namespace }}'
-          {{- end }}
+    - git:
+        repoURL: {{ $.Values.gitops.repo }}
+        revision: {{ $.Values.gitops.revision }}
+        directories:
+          - path: the-lab/{{ $stack.name }}/*
   
   template:
     metadata:
-      name: '{{ `{{ name }}` }}'
-      namespace: argocd
+      name: '{{ `{{path.basename}}` }}'
+      # namespace: argocd
     
     spec:
-      project: default # TODO
+      project: default
       
       source:
         repoURL: {{ $.Values.gitops.repo }}
         targetRevision: {{ $.Values.gitops.revision }}
-        path: 'the-lab/{{ `{{ name }}` }}/'
+        path: '{{ `{{path}}` }}'
 
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{ `{{ namespace }}` }}'
+        namespace: '{{ default $stack.name $stack.namespace }}'
 
       syncPolicy:
         automated:
@@ -46,3 +46,5 @@ spec:
           - CreateNamespace=true
           - ApplyOutOfSyncOnly=true
           - ServerSideApply=true
+
+{{- end }}
