@@ -59,7 +59,7 @@ cluster-bootstrap: about lint
 
 lab-bootstrap: about lint
 > @echo "Start the lab Kubernetes cluster-wide services"
-> $(PLAY_CMD) src/03-playbook-the-lab.yml -vvv
+> $(PLAY_CMD) src/03-playbook-the-lab.yml
 
 ############################
 
