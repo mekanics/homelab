@@ -7,11 +7,11 @@ metadata:
 spec:
   generators:
     - list:
-      elements:
-        {{- range $index, $stack := .Values.stacks }}
-        - name: '{{ $stack.name }}'
-          namespace: '{{ default $stack.name $stack.namespace }}'
-        {{- end }}
+        elements:
+          {{- range $index, $stack := .Values.stacks }}
+          - name: '{{ $stack.name }}'
+            namespace: '{{ default $stack.name $stack.namespace }}'
+          {{- end }}
   
   template:
     metadata:
@@ -24,7 +24,7 @@ spec:
       source:
         repoURL: {{ $.Values.gitops.repo }}
         targetRevision: {{ $.Values.gitops.revision }}
-        path: 'the-lab/{{ `{{ name }}` }}'
+        path: 'the-lab/{{ `{{ name }}` }}/'
 
       destination:
         server: https://kubernetes.default.svc

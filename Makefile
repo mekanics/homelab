@@ -51,15 +51,15 @@ host-bootstrap: about lint
 
 cluster-install: about lint
 > @echo "Install Kubernetes"
-> $(PLAY_CMD) src/01-playbook-k3s-install.yml $(params)
+> $(PLAY_CMD) src/01-playbook-k3s-install.yml
 
 cluster-bootstrap: about lint
 > @echo "Configuring Kubernetes cluster-wide services"
-> $(PLAY_CMD) src/02-playbook-services.yml $(params)
+> $(PLAY_CMD) src/02-playbook-services.yml
 
 lab-bootstrap: about lint
 > @echo "Start the lab Kubernetes cluster-wide services"
-> $(PLAY_CMD) src/03-playbook-the-lab.yml $(params)
+> $(PLAY_CMD) src/03-playbook-the-lab.yml -vvv
 
 ############################
 
@@ -71,4 +71,4 @@ cluster-install-dev: about
 ############################
 
 clean:
-# > k3d cluster delete homelab-dev
+> k3d cluster delete homelab-dev
