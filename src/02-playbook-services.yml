@@ -8,4 +8,4 @@
   roles:
     - local_helm
     - service_sealed_secrets
-    # - service_argo
+    - service_argocd

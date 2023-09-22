@@ -1,0 +1,41 @@
+- name: Deploy namespace
+  import_tasks: namespace.yml
+
+- name: Add Argo repo
+  kubernetes.core.helm_repository:
+    state: present
+    name: argocd
+    repo_url: https://argoproj.github.io/argo-helm
+  tags:
+    - argo
+
+- name: Deploy ArgoCD to cluster
+  kubernetes.core.helm:
+    update_repo_cache: true
+    state: present
+    name: argo-cd
+    chart_ref: argocd/argo-cd
+    release_namespace: '{{ argocd_k8s_namespace }}'
+    create_namespace: true
+    release_values: "{{ lookup('file', '{{ role_path }}/files/values.yml') | from_yaml }}"
+    wait: true
+  tags:
+    - argo
+    - gitops
+# - name: Patch WebUI service
+#   shell: 'kubectl patch svc argocd-server -n {{ argocd_k8s_namespace }} -p ''{"spec": {"type": "{{ argocd_k8s_service_type }}"}}'''
+#   run_once: yes
+
+# - name: Download command line tool
+#   get_url:
+#     url: '{{ argocd_cli_url }}'
+#     dest: '{{ argocd_cli_path }}'
+#     owner: root
+#     group: root
+#     mode: 0755
+
+# # - name: Manage admin user
+# #   import_tasks: users.yml
+
+# - name: Manage registries
+#   import_tasks: registries.yml

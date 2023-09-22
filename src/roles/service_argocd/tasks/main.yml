@@ -1,0 +1,10 @@
+---
+- name: Ensure ArgoCD is installed
+  shell: kubectl get po -n {{ argocd_k8s_namespace }} | wc -l
+  changed_when: false
+  register: argocd_status
+  run_once: true
+
+- name: Install ArgoCD
+  import_tasks: install.yml
+  when: argocd_action == "present"

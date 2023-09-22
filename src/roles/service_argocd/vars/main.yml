@@ -1,0 +1,9 @@
+argo_repo: https://argoproj.github.io/argo-helm
+argo_repo_name: argo
+argo_chart_name: argo-cd
+
+# Action
+argocd_action: present # Value : present / absent
+
+# Namespace
+argocd_k8s_namespace: argocd
