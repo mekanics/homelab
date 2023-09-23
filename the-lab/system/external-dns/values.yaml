@@ -3,6 +3,7 @@
 external-dns:
   provider: pihole
   txtOwnerId: homelab
+  policy: []
   env:
     - name: EXTERNAL_DNS_PIHOLE_SERVER
       value: http://192.168.10.5
