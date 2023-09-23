@@ -23,7 +23,7 @@ kube-prometheus-stack:
       server:
         root_url: https://grafana.127-0-0-1.nip.io
       auth.generic_oauth:
-        enabled: true
+        enabled: false
         allow_sign_up: true
         name: Dex
         client_id: grafana-sso
