@@ -9,7 +9,7 @@ hajimari:
         cert-manager.io/cluster-issuer: letsencrypt-prod
         hajimari.io/enable: 'false'
       hosts:
-        - host: &host home.127-0-0-1.nip.io
+        - host: &host home.waid.lan
           paths:
             - path: /
               pathType: Prefix
