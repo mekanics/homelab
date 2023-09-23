@@ -21,6 +21,10 @@ hajimari:
     defaultEnable: true
     namespaceSelector:
       any: true
+    name: 'Alex'
+    lightTheme: cloud
+    darkTheme: espresso
+    defaultSearchProvider: DuckDuckGo
     globalBookmarks:
       - group: Homelab
         bookmarks:
