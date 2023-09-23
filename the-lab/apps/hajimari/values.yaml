@@ -9,7 +9,7 @@ hajimari:
         cert-manager.io/cluster-issuer: letsencrypt-prod
         hajimari.io/enable: 'false'
       hosts:
-        - host: &host home.waid.lan
+        - host: &host home.mekanics.ch
           paths:
             - path: /
               pathType: Prefix
