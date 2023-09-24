@@ -3,5 +3,5 @@ name: finance
 version: 0.0.0
 dependencies:
   - name: fava
-    version: 0.1.0
+    version: 0.1.2
     repository: https://mekanics.github.io/docker-fava/
