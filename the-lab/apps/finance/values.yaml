@@ -7,12 +7,10 @@ fava:
       ingressClassName: nginx
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-prod
-        hajimari.io/enable: 'true'
+        hajimari.io/appName: Finances
+        hajimari.io/icon: finance
       hosts:
         - host: &host finance.mekanics.ch
-          paths:
-            - path: /
-              pathType: Prefix
       tls:
         - secretName: finance-tls-certificate
           hosts:
