@@ -1,0 +1,25 @@
+# https://raw.githubusercontent.com/longhorn/longhorn/master/chart/values.yaml
+
+longhorn:
+  defaultSettings:
+    nodeDownPodDeletionPolicy: delete-both-statefulset-and-deployment-pod
+  persistence:
+    # If you have three or more nodes for storage, use 3; otherwise use 2
+    defaultClassReplicaCount: 2
+
+  ingress:
+    main:
+      enabled: true
+      ingressClassName: nginx
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        # hajimari.io/enable: 'false'
+      hosts:
+        - host: &host longhorn.system.mekanics.ch
+          paths:
+            - path: /
+              pathType: Prefix
+      tls:
+        - secretName: longhorn-tls-certificate
+          hosts:
+            - *host
