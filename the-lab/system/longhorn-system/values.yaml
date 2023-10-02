@@ -14,12 +14,5 @@ longhorn:
       cert-manager.io/cluster-issuer: letsencrypt-prod
       hajimari.io/appName: Longhorn
       hajimari.io/icon: cow
-    hosts:
-      - host: &host longhorn.system.mekanics.ch
-        paths:
-          - path: /
-            pathType: Prefix
-    tls:
-      - secretName: longhorn-tls-certificate
-        hosts:
-          - *host
+    host: &host longhorn.system.mekanics.ch
+    tlsSecret: longhorn-tls-certificate
