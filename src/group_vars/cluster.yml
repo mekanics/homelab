@@ -1,0 +1,7 @@
+pi:
+  cgroups:
+    - 'cgroup_enable=cpuset'
+    - 'cgroup_enable=memory'
+    - 'cgroup_memory=1'
+  boot:
+    cmdLine: '/boot/firmware/cmdline.txt'

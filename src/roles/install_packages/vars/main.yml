@@ -1,0 +1,9 @@
+common_apt_dependencies:
+  unzip: present
+  curl: present
+  open-iscsi: present
+  apt-transport-https: present
+  ca-certificates: present
+  gnupg: present
+  # python3: present
+  # python3-pip: present
