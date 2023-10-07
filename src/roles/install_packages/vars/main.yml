@@ -2,6 +2,7 @@ common_apt_dependencies:
   unzip: present
   curl: present
   open-iscsi: present
+  nfs-common: present
   apt-transport-https: present
   ca-certificates: present
   gnupg: present
