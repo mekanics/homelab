@@ -15,7 +15,7 @@ spec:
   
   template:
     metadata:
-      name: '{{ `{{path.basename}}` }}'
+      name: '{{ index (split "/" `{{path}}`) (sub (length (split "/" `{{path}}`)) 1) }}'
       # namespace: argocd
     
     spec:
