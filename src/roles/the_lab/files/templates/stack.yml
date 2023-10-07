@@ -15,8 +15,7 @@ spec:
   
   template:
     metadata:
-      name: '{{ $splitPath := split "/" `{{path}}` }}{{ index $splitPath (sub (len $splitPath) 1) }}'
-      # namespace: argocd
+      name: '{{ `{{path.basename}}` }}'
     
     spec:
       project: default
