@@ -15,7 +15,7 @@ spec:
   
   template:
     metadata:
-      name: '{{ index (split "/" `{{path}}`) (sub (length (split "/" `{{path}}`)) 1) }}'
+      name: '{{ $splitPath := split "/" `{{path}}` }}{{ index $splitPath (sub (len $splitPath) 1) }}'
       # namespace: argocd
     
     spec:
