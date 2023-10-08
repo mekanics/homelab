@@ -3,6 +3,8 @@ argo_repo_name: argo
 argo_chart_name: argo-cd
 argo_chart_version: 5.46.7
 
+argo_chart_ref: https://raw.githubusercontent.com/mekanics/homelab/remake/the-lab/bootstrap/argocd/Chart.yaml
+
 # Action
 argocd_action: present # Value : present / absent
 
