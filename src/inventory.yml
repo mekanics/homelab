@@ -11,7 +11,7 @@ all:
 
     # Raspbery Pi
     pi-homelab.local:
-      ansible_host: 192.168.10.245
+      ansible_host: 192.168.10.246
       mac: 'dc:a6:32:c0:f3:ab'
       ansible_connection: ssh
       performance: mid
