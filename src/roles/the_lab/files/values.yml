@@ -4,8 +4,8 @@ gitops:
   repo: https://github.com/mekanics/homelab
   revision: remake ## HEAD, branch, tag, ...
 stacks:
-  - name: argocd
-    # namespace: argocd # Override default value
+  - name: bootstrap
+    namespace: argocd # Override default value
   - name: system
   # - name: platform
   - name: apps
