@@ -22,7 +22,7 @@ hajimari:
     namespaceSelector:
       any: true
     name: 'Alex'
-    lightTheme: cloud
+    lightTheme: gazette
     darkTheme: espresso
     defaultSearchProvider: DuckDuckGo
     globalBookmarks:
