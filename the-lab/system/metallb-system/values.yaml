@@ -1,4 +1,0 @@
-# https://raw.githubusercontent.com/metallb/metallb/main/charts/metallb/values.yaml
-
-metallb:
-  existingConfigMap: metallb-config
