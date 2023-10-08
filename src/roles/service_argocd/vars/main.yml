@@ -1,6 +1,8 @@
 argo_repo: https://argoproj.github.io/argo-helm
 argo_repo_name: argo
-argo_chart_name: argo-cd
+argo_chart_name: argocd
+
+argo_chart_ref: https://raw.githubusercontent.com/mekanics/homelab/remake/the-lab/argocd/Chart.yaml
 
 # Action
 argocd_action: present # Value : present / absent

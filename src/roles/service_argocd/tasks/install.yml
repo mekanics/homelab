@@ -13,8 +13,8 @@
   kubernetes.core.helm:
     update_repo_cache: true
     state: present
-    name: argo-cd
-    chart_ref: argocd/argo-cd
+    chart_ref: '{{ argo_chart_ref }}' # argocd/argo-cd
+    name: '{{ argo_chart_name }}'
     release_namespace: '{{ argocd_k8s_namespace }}'
     create_namespace: true
     release_values: "{{ lookup('file', '{{ role_path }}/files/values.yml') | from_yaml }}"

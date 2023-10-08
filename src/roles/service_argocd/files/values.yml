@@ -4,22 +4,17 @@ argo-cd:
   server:
     extraArgs:
       - --insecure
-    config:
-      statusbadge.enabled: 'true'
 
     metrics: &metrics
       enabled: true
       serviceMonitor:
         enabled: true
 
+  dex:
+    enabled: false
   controller:
     metrics: *metrics
-
-  dex:
-    metrics: *metrics
-
   repoServer:
     metrics: *metrics
-
   redis:
     metrics: *metrics
