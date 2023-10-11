@@ -1,6 +1,8 @@
 # https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/charts/ingress-nginx/values.yaml
 
 ingress-nginx:
+  service:
+    externalTrafficPolicy: Local
   controller:
     admissionWebhooks:
       timeoutSeconds: 30
