@@ -1,4 +1,8 @@
 # https://raw.githubusercontent.com/metallb/metallb/main/charts/metallb/values.yaml
 
 metallb:
-  existingConfigMap: metallb-config
+  # existingConfigMap: metallb-config
+
+  controller:
+    # -- Controller log level. Must be one of: `all`, `debug`, `info`, `warn`, `error` or `none`
+    logLevel: debug
