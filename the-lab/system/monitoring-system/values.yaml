@@ -1,6 +1,6 @@
 kube-prometheus-stack:
   grafana:
-    enabled: false
+    enabled: true
     forceDeployDatasources: true
     forceDeployDashboards: true
     additionalDataSources:
