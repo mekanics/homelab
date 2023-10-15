@@ -1,0 +1,22 @@
+fava:
+  env:
+    TZ: Europe/Zurich
+
+  ingress:
+    main:
+      enabled: true
+      ingressClassName: nginx
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        hajimari.io/appName: Finances
+        hajimari.io/icon: finance
+      hosts:
+        - host: &host finance.mekanics.ch
+      tls:
+        - secretName: finance-tls-certificate
+          hosts:
+            - *host
+
+  volume:
+    persistentVolumeClaim:
+      claimName: nfs-fava-ajo
