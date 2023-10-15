@@ -5,7 +5,7 @@ metadata:
 spec:
     accessModes:
         - ReadWriteMany
-    storageClassName: nfs-fava-ajo
+    storageClassName: nfs
     resources:
         requests:
             storage: 500Mi
