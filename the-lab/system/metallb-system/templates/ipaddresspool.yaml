@@ -5,6 +5,6 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   addresses:
-    - 192.168.10.230-192.168.10.240
+    - 192.168.10.90-192.168.10.99
   autoAssign: true
   avoidBuggyIPs: true
