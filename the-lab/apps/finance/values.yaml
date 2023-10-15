@@ -11,6 +11,9 @@ fava:
       hajimari.io/icon: finance
     hosts:
       - host: &host finance.mekanics.ch
+        paths:
+          - path: /
+            pathType: Prefix
     tls:
       - secretName: finance-tls-certificate
         hosts:
