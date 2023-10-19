@@ -1,23 +1,32 @@
 - name: Deploy namespace
   import_tasks: namespace.yml
 
-- name: Add Argo repo
-  kubernetes.core.helm_repository:
-    state: present
-    name: argocd
-    repo_url: https://argoproj.github.io/argo-helm
+# - name: Add Argo repo
+#   kubernetes.core.helm_repository:
+#     state: present
+#     name: argocd
+#     repo_url: https://argoproj.github.io/argo-helm
+#   tags:
+#     - argo
+
+- name: Render the Argo Helm Umbrella
+  kubernetes.core.helm_template:
+    chart_ref: '{{ role_path }}/files'
+    # output_dir: '{{ role_path }}/files/output'
+    dependency_update: true
+    include_crds: true
+    release_namespace: 'argocd'
+    release_name: 'argocd'
+    release_values: "{{ lookup('file', '{{ role_path }}/files/values-seed.yml') | from_yaml }}"
+  register: argo_template_result
   tags:
     - argo
+    - gitops
 
 - name: Deploy ArgoCD to cluster
-  kubernetes.core.helm:
-    update_repo_cache: true
+  k8s:
     state: present
-    name: argo-cd
-    chart_ref: argocd/argo-cd
-    release_namespace: '{{ argocd_k8s_namespace }}'
-    create_namespace: true
-    release_values: "{{ lookup('file', '{{ role_path }}/files/values.yml') | from_yaml }}"
+    definition: '{{ argo_template_result.stdout }}'
     wait: true
   tags:
     - argo
