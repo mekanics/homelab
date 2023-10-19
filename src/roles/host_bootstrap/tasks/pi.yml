@@ -23,3 +23,7 @@
     path: /usr/sbin/ip6tables-legacy
     name: ip6tables
   register: ip6_legacy
+
+- name: Activate prosmic on wlan0
+  shell:
+    cmd: ifconfig wlan0 promisc
