@@ -1,0 +1,24 @@
+fava:
+  env:
+    TZ: Europe/Zurich
+
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      hajimari.io/appName: Finances
+      hajimari.io/icon: finance
+    hosts:
+      - host: &host finance.bbi.mekanics.ch
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: finance-tls-certificate
+        hosts:
+          - *host
+
+  volume:
+    persistentVolumeClaim:
+      claimName: nfs-fava-bbi
