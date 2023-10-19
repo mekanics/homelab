@@ -1,13 +1,9 @@
 - name: Deploy namespace
   import_tasks: namespace.yml
 
-# - name: Add Argo repo
-#   kubernetes.core.helm_repository:
-#     state: present
-#     name: argocd
-#     repo_url: https://argoproj.github.io/argo-helm
-#   tags:
-#     - argo
+- name: Wait for all k8s nodes to be ready
+  shell: kubectl wait --for=condition=Ready nodes --all --timeout=600s
+  register: nodes_ready
 
 - name: Render the Argo Helm Umbrella
   kubernetes.core.helm_template:
@@ -26,7 +22,7 @@
 - name: Deploy ArgoCD to cluster
   k8s:
     state: present
-    definition: '{{ argo_template_result.stdout }}'
+    definition: '{{ argo_template_result.stdout | from_yaml_all }}'
     wait: true
   tags:
     - argo
