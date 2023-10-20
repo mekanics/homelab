@@ -25,7 +25,7 @@ fava:
 
   resources:
     limits:
-      cpu: 200m
+      cpu: 500m
       memory: 500Mi
     requests:
       cpu: 100m
