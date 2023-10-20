@@ -6,7 +6,7 @@ hajimari:
       enabled: true
       ingressClassName: nginx
       annotations:
-        cert-manager.io/cluster-issuer: selfsigned-issuer
+        cert-manager.io/cluster-issuer: letsencrypt-prod
         hajimari.io/enable: 'false'
       hosts:
         - host: &host home.mekanics.ch
