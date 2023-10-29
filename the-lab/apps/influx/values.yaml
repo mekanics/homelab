@@ -1,7 +1,7 @@
 # https://github.com/influxdata/helm-charts/blob/master/charts/influxdb2/values.yaml
 influxdb2:
   adminUser:
-    existingSecret: true
+    existingSecret: influxdb-auth
 
   ingress:
     enabled: true
