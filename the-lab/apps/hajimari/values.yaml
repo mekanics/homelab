@@ -18,12 +18,13 @@ hajimari:
           hosts:
             - *host
   hajimari:
-    defaultEnable: true
+    defaultEnable: 'true'
     namespaceSelector:
-      any: true
+      any: 'true'
     name: 'Alex'
     lightTheme: gazette
     darkTheme: espresso
+    showAppGroups: 'true'
     defaultSearchProvider: DuckDuckGo
     globalBookmarks:
       - group: Homelab
