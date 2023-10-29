@@ -2,16 +2,14 @@
 influxdb2:
   ingress:
     enabled: true
-    ingressClassName: nginx
+    className: nginx
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt-prod
       hajimari.io/appName: Influx
       hajimari.io/icon: database
     hostname: &host influxdb.mekanics.ch
-    tls:
-      - hosts:
-          - *host
-        secretName: influxdb-tls-certificate
+    tls: true
+    secretName: influxdb-tls-certificate
 
   persistence:
     enabled: true
