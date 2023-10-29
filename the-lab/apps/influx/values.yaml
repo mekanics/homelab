@@ -29,6 +29,9 @@ influxdb2:
 
 # https://github.com/influxdata/helm-charts/blob/master/charts/telegraf/values.yaml
 telegraf:
+  service:
+    enabled: false
+
   env:
     - name: HOSTNAME
       value: 'telegraf-polling-service'
