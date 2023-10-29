@@ -17,8 +17,14 @@ mosquitto:
       #   - secretName: mosquitto-tls-certificate
       #     hosts:
       #       - *host
+
   persistence:
+    config:
+      storageClass: longhorn
+      retain: true
+
     data:
       enabled: true
+
     configinc:
       enabled: true
