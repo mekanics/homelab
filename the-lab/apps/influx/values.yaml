@@ -26,6 +26,13 @@ influxdb2:
 
 # https://github.com/influxdata/helm-charts/blob/master/charts/telegraf/values.yaml
 telegraf:
+  config:
+    outputs:
+      - influxdb:
+          urls:
+            - 'http://influx-influxdb2.influxdb.svc:8086'
+          database: 'telegraf'
+
   resources:
     requests:
       memory: 128Mi
