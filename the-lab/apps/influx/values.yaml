@@ -35,6 +35,16 @@ telegraf:
           urls:
             - 'http://influx-influxdb2.influx.svc'
           database: 'telegraf'
+          ## Token for authentication.
+          token:
+            valueFrom:
+              secretKeyRef:
+                name: influxdb-auth
+                key: admin-token
+          ## Organization is the name of the organization you wish to write to.
+          organization: 'waid'
+          ## Destination bucket to write into.
+          bucket: 'waid-bucket'
 
   resources:
     requests:
