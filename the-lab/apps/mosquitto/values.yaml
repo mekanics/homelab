@@ -22,7 +22,3 @@ mosquitto:
     data:
       enabled: true
       storageClass: longhorn
-
-    configinc:
-      enabled: true
-      storageClass: longhorn
