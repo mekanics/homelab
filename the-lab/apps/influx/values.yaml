@@ -29,17 +29,23 @@ influxdb2:
 
 # https://github.com/influxdata/helm-charts/blob/master/charts/telegraf/values.yaml
 telegraf:
+  env:
+    - name: HOSTNAME
+      value: 'telegraf-polling-service'
+    - name: INFLUX_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: influxdb-auth
+          key: admin-token
+
+  # https://docs.influxdata.com/telegraf/v1.1/administration/configuration/
   config:
     outputs:
       - influxdb_v2:
           urls:
             - 'http://influx-influxdb2.influx.svc'
           ## Token for authentication.
-          token:
-            valueFrom:
-              secretKeyRef:
-                name: influxdb-auth
-                key: admin-token
+          token: '$INFLUX_TOKEN'
           ## Organization is the name of the organization you wish to write to.
           organization: 'waid'
           ## Destination bucket to write into.
