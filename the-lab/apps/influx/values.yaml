@@ -61,156 +61,77 @@ telegraf:
             - 'main-power/status/#'
           data_format: 'json'
 
-    #   - mqtt_consumer:
-    #       servers:
-    #         - 'tcp://mosquitto.mekanics.ch:1883'
-    #       topics:
-    #         - 'solar/dtu/+'
-    #         - 'solar/+/device/+'
-    #         - 'solar/+/status/+'
-    #         - 'solar/+/0/+'
-    #         - 'solar/+/1/+'
-    #         - 'solar/+/2/+'
-    #         - 'solar/+/3/+'
-    #         - 'solar/+/4/+'
-    #       data_format: 'value'
-    #       data_type: 'string'
-    #       topic_parsing:
-    #         - topic: 'solar/dtu/+'
-    #           measurement: '_/measurement/_'
-    #           tags: '_/_/field'
-    #         - topic: 'solar/+/device/+'
-    #           measurement: '_/_/measurement/_'
-    #           tags: '_/serial/_/field'
-    #         - topic: 'solar/+/status/+'
-    #           measurement: '_/_/measurement/_'
-    #           tags: '_/serial/_/field'
-    #         - topic: 'solar/+/0/+'
-    #           measurement: 'measurement/_/_/_'
-    #           tags: '_/serial/channel/field'
-    #         - topic: 'solar/+/1/+'
-    #           measurement: 'measurement/_/_/_'
-    #           tags: '_/serial/channel/field'
-    #         - topic: 'solar/+/2/+'
-    #           measurement: 'measurement/_/_/_'
-    #           tags: '_/serial/channel/field'
-    #         - topic: 'solar/+/3/+'
-    #           measurement: 'measurement/_/_/_'
-    #           tags: '_/serial/channel/field'
-    #         - topic: 'solar/+/4/+'
-    #           measurement: 'measurement/_/_/_'
-    #           tags: '_/serial/channel/field'
+      - mqtt_consumer:
+          servers:
+            - 'tcp://mosquitto.mekanics.ch:1883'
+          topics:
+            - 'solar/dtu/+'
+            - 'solar/+/device/+'
+            - 'solar/+/status/+'
+            - 'solar/+/0/+'
+            - 'solar/+/1/+'
+            - 'solar/+/2/+'
+            - 'solar/+/3/+'
+            - 'solar/+/4/+'
+          data_format: 'value'
+          data_type: 'string'
+          topic_parsing:
+            - topic: 'solar/dtu/+'
+              measurement: '_/measurement/_'
+              tags: '_/_/field'
+            - topic: 'solar/+/device/+'
+              measurement: '_/_/measurement/_'
+              tags: '_/serial/_/field'
+            - topic: 'solar/+/status/+'
+              measurement: '_/_/measurement/_'
+              tags: '_/serial/_/field'
+            - topic: 'solar/+/0/+'
+              measurement: 'measurement/_/_/_'
+              tags: '_/serial/channel/field'
+            - topic: 'solar/+/1/+'
+              measurement: 'measurement/_/_/_'
+              tags: '_/serial/channel/field'
+            - topic: 'solar/+/2/+'
+              measurement: 'measurement/_/_/_'
+              tags: '_/serial/channel/field'
+            - topic: 'solar/+/3/+'
+              measurement: 'measurement/_/_/_'
+              tags: '_/serial/channel/field'
+            - topic: 'solar/+/4/+'
+              measurement: 'measurement/_/_/_'
+              tags: '_/serial/channel/field'
 
-    # processors:
-    #   - converter:
-    #       fields:
-    #         string:
-    #           - 'ip'
-    #           - 'hostname'
-    #           - 'status'
-    #         integer:
-    #           - 'uptime'
-    #         float:
-    #           - 'rssi'
-    #   - pivot:
-    #       tag_key: 'field'
-    #       value_key: 'value'
-    #   - converter:
-    #       fields:
-    #         string:
-    #           - 'hostname'
-    #         integer:
-    #           - 'producing'
-    #           - 'reachable'
-    #         float:
-    #           - 'limit_absolute'
-    #           - 'limit_relative'
-    #   - converter:
-    #       fields:
-    #         string:
-    #           - 'name'
-    #         float:
-    #           - 'current'
-    #           - 'efficiency'
-    #           - 'frequency'
-    #           - 'power'
-    #           - 'powerdc'
-    #           - 'powerfactor'
-    #           - 'reactivepower'
-    #           - 'temperature'
-    #           - 'voltage'
-    #           - 'yieldday'
-    #           - 'yieldtotal'
-    #   - converter:
-    #       fields:
-    #         string:
-    #           - 'name'
-    #         float:
-    #           - 'current'
-    #           - 'irradiation'
-    #           - 'power'
-    #           - 'voltage'
-    #           - 'yieldday'
-    #           - 'yieldtotal'
-    #   - converter:
-    #       fields:
-    #         string:
-    #           - 'name'
-    #         float:
-    #           - 'current'
-    #           - 'irradiation'
-    #           - 'power'
-    #           - 'voltage'
-    #           - 'yieldday'
-    #           - 'yieldtotal'
-    #   - converter:
-    #       fields:
-    #         string:
-    #           - 'name'
-    #         float:
-    #           - 'current'
-    #           - 'irradiation'
-    #           - 'power'
-    #           - 'voltage'
-    #           - 'yieldday'
-    #           - 'yieldtotal'
-    #   - converter:
-    #       fields:
-    #         string:
-    #           - 'name'
-    #         float:
-    #           - 'current'
-    #           - 'irradiation'
-    #           - 'power'
-    #           - 'voltage'
-    #           - 'yieldday'
-    #           - 'yieldtotal'
-    #   - converter:
-    #       fields:
-    #         string:
-    #           - 'name'
-    #         float:
-    #           - 'current'
-    #           - 'irradiation'
-    #           - 'power'
-    #           - 'voltage'
-    #           - 'yieldday'
-    #           - 'yieldtotal'
-    #   - pivot:
-    #       tag_key: 'field'
-    #       value_key: 'value'
-    #   - pivot:
-    #       tag_key: 'field'
-    #       value_key: 'value'
-    #   - pivot:
-    #       tag_key: 'field'
-    #       value_key: 'value'
-    #   - pivot:
-    #       tag_key: 'field'
-    #       value_key: 'value'
-    #   - pivot:
-    #       tag_key: 'field'
-    #       value_key: 'value'
+    processors:
+      - converter:
+          fields:
+            string:
+              - 'ip'
+              - 'hostname'
+              - 'status'
+              - 'name'
+            integer:
+              - 'uptime'
+              - 'producing'
+              - 'reachable'
+            float:
+              - 'rssi'
+              - 'current'
+              - 'efficiency'
+              - 'frequency'
+              - 'power'
+              - 'powerdc'
+              - 'powerfactor'
+              - 'reactivepower'
+              - 'temperature'
+              - 'irradiation'
+              - 'voltage'
+              - 'yieldday'
+              - 'yieldtotal'
+              - 'limit_absolute'
+              - 'limit_relative'
+      - pivot:
+          tag_key: 'field'
+          value_key: 'value'
 
   resources:
     requests:
