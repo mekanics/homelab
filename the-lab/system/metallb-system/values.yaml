@@ -5,7 +5,7 @@ metallb:
 
   controller:
     # -- Controller log level. Must be one of: `all`, `debug`, `info`, `warn`, `error` or `none`
-    logLevel: &loglevel debug
+    logLevel: &loglevel info
   speaker:
     # -- Speaker log level. Must be one of: `all`, `debug`, `info`, `warn`, `error` or `none`
     logLevel: *loglevel
