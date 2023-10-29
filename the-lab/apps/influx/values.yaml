@@ -30,7 +30,7 @@ telegraf:
     outputs:
       - influxdb:
           urls:
-            - 'http://influx-influxdb2.influx.svc:8086'
+            - 'http://influx-influxdb2.influx.svc'
           database: 'telegraf'
 
   resources:
