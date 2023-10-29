@@ -7,11 +7,7 @@ influxdb2:
       cert-manager.io/cluster-issuer: letsencrypt-prod
       hajimari.io/appName: Influx
       hajimari.io/icon: database
-    hosts:
-      - host: &host influxdb.mekanics.ch
-        paths:
-          - path: /
-            pathType: Prefix
+    hostname: &host influxdb.mekanics.ch
     tls:
       - hosts:
           - *host
@@ -21,3 +17,21 @@ influxdb2:
     enabled: true
     storageClass: 'longhorn'
     size: 10Gi
+
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 100m
+    limits:
+      memory: 128Mi
+      cpu: 100m
+
+# https://github.com/influxdata/helm-charts/blob/master/charts/telegraf/values.yaml
+telegraf:
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 100m
+    limits:
+      memory: 128Mi
+      cpu: 100m
