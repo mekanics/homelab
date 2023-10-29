@@ -1,16 +1,24 @@
 # https://github.com/k8s-at-home/charts/blob/master/charts/stable/mosquitto/values.yaml
 
 mosquitto:
+  ingress:
+    main:
+      enabled: true
+      ingressClassName: nginx
+      annotations:
+        # cert-manager.io/cluster-issuer: letsencrypt-prod
+        hajimari.io/enable: 'false'
+      hosts:
+        - host: &host mosquitto.mekanics.ch
+          paths:
+            - path: /
+              pathType: Prefix
+      # tls:
+      #   - secretName: mosquitto-tls-certificate
+      #     hosts:
+      #       - *host
   persistence:
-  # -- Configure a persistent volume to place mosquitto data in.
-  # When enabled, this enables `persistence` and `persistence_location` in the mosquitto config.
-  # @default -- See values.yaml
-  data:
-    enabled: true
-    mountPath: /mosquitto/data
-  # -- Configure a persistent volume to place *.conf mosquitto-config-files in.
-  # When enabled, this gets set as `include_dir` in the mosquitto config.
-  # @default -- See values.yaml
-  configinc:
-    enabled: true
-    mountPath: /mosquitto/configinc
+    data:
+      enabled: true
+    configinc:
+      enabled: true
