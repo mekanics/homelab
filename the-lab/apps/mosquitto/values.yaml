@@ -19,12 +19,10 @@ mosquitto:
       #       - *host
 
   persistence:
-    config:
-      storageClass: longhorn
-      retain: true
-
     data:
       enabled: true
+      storageClass: longhorn
 
     configinc:
       enabled: true
+      storageClass: longhorn
