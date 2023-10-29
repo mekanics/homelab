@@ -31,10 +31,9 @@ influxdb2:
 telegraf:
   config:
     outputs:
-      - influxdb:
+      - influxdb_v2:
           urls:
             - 'http://influx-influxdb2.influx.svc'
-          database: 'telegraf'
           ## Token for authentication.
           token:
             valueFrom:
