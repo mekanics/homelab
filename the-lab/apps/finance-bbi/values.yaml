@@ -7,7 +7,7 @@ fava:
     className: nginx
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt-prod
-      hajimari.io/appName: Finances
+      hajimari.io/appName: Finances BBI
       hajimari.io/icon: finance
     hosts:
       - host: &host finance.bbi.mekanics.ch
