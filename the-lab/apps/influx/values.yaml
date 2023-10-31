@@ -57,15 +57,17 @@ telegraf:
       - mqtt_consumer:
           servers:
             - 'tcp://mosquitto.mekanics.ch:1883'
-          topics:
-            - 'solar/dtu/#'
-            - 'solar/+/device/#'
-            - 'solar/+/status/#'
-            - 'solar/+/0/#'
-            - 'solar/+/1/#'
-            - 'solar/+/2/#'
-            - 'solar/+/3/#'
-            - 'solar/+/4/#'
+          topics: |
+            [
+              "solar/dtu/+",
+              "solar/+/device/+",
+              "solar/+/status/+",
+              "solar/+/0/+", 
+              "solar/+/1/+",
+              "solar/+/2/+",
+              "solar/+/3/+",
+              "solar/+/4/+",
+            ]
           data_format: 'value'
           data_type: 'string'
           topic_parsing:
