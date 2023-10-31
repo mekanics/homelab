@@ -68,10 +68,10 @@ telegraf:
             - 'solar/+/4/+'
           data_format: 'value'
           data_type: 'string'
-          # topic_parsing:
-          #   - topic: 'solar/dtu/+'
-          #     measurement: '_/measurement/_'
-          #     tags: '_/_/field'
+          topic_parsing:
+            - topic: 'solar/dtu/+'
+              measurement: '_/measurement/_'
+              tags: '_/_/field'
 
           #   - topic: 'solar/+/device/+'
           #     measurement: '_/_/measurement/_'
