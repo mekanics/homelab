@@ -58,13 +58,6 @@ telegraf:
           servers:
             - 'tcp://mosquitto.mekanics.ch:1883'
           topics:
-            - 'main-power/status/#'
-          data_format: 'json'
-
-      - mqtt_consumer:
-          servers:
-            - 'tcp://mosquitto.mekanics.ch:1883'
-          topics:
             - 'solar/dtu/+'
             - 'solar/+/device/+'
             - 'solar/+/status/+'
@@ -79,27 +72,41 @@ telegraf:
             - topic: 'solar/dtu/+'
               measurement: '_/measurement/_'
               tags: '_/_/field'
+
             - topic: 'solar/+/device/+'
               measurement: '_/_/measurement/_'
               tags: '_/serial/_/field'
+
             - topic: 'solar/+/status/+'
               measurement: '_/_/measurement/_'
               tags: '_/serial/_/field'
+
             - topic: 'solar/+/0/+'
               measurement: 'measurement/_/_/_'
               tags: '_/serial/channel/field'
+
             - topic: 'solar/+/1/+'
               measurement: 'measurement/_/_/_'
               tags: '_/serial/channel/field'
+
             - topic: 'solar/+/2/+'
               measurement: 'measurement/_/_/_'
               tags: '_/serial/channel/field'
+
             - topic: 'solar/+/3/+'
               measurement: 'measurement/_/_/_'
               tags: '_/serial/channel/field'
+
             - topic: 'solar/+/4/+'
               measurement: 'measurement/_/_/_'
               tags: '_/serial/channel/field'
+
+      - mqtt_consumer:
+          servers:
+            - 'tcp://mosquitto.mekanics.ch:1883'
+          topics:
+            - 'main-power/status/#'
+          data_format: 'json'
 
     processors:
       - converter:
