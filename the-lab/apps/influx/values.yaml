@@ -29,6 +29,7 @@ influxdb2:
 
 # https://github.com/influxdata/helm-charts/blob/master/charts/telegraf/values.yaml
 telegraf:
+  tplVersion: 2
   service:
     enabled: false
 
