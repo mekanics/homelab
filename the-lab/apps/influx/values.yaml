@@ -102,12 +102,12 @@ telegraf:
               measurement: 'measurement/_/_/_'
               tags: '_/serial/channel/field'
 
-      # - mqtt_consumer:
-      #     servers:
-      #       - 'tcp://mosquitto.mekanics.ch:1883'
-      #     topics:
-      #       - 'main-power/status/#'
-      #     data_format: 'json'
+      - mqtt_consumer:
+          servers:
+            - 'tcp://mosquitto.mekanics.ch:1883'
+          topics:
+            - 'main-power/status/#'
+          data_format: 'json'
 
     processors:
       - converter:
