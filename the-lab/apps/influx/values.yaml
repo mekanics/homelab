@@ -102,44 +102,44 @@ telegraf:
               measurement: 'measurement/_/_/_'
               tags: '_/serial/channel/field'
 
+          processors:
+            - converter:
+                fields:
+                  string:
+                    - 'ip'
+                    - 'hostname'
+                    - 'status'
+                    - 'name'
+                  integer:
+                    - 'uptime'
+                    - 'producing'
+                    - 'reachable'
+                  float:
+                    - 'rssi'
+                    - 'current'
+                    - 'efficiency'
+                    - 'frequency'
+                    - 'power'
+                    - 'powerdc'
+                    - 'powerfactor'
+                    - 'reactivepower'
+                    - 'temperature'
+                    - 'irradiation'
+                    - 'voltage'
+                    - 'yieldday'
+                    - 'yieldtotal'
+                    - 'limit_absolute'
+                    - 'limit_relative'
+            - pivot:
+                tag_key: 'field'
+                value_key: 'value'
+
       - mqtt_consumer:
           servers:
             - 'tcp://mosquitto.mekanics.ch:1883'
           topics:
             - 'main-power/status/#'
           data_format: 'json'
-
-    processors:
-      - converter:
-          fields:
-            string:
-              - 'ip'
-              - 'hostname'
-              - 'status'
-              - 'name'
-            integer:
-              - 'uptime'
-              - 'producing'
-              - 'reachable'
-            float:
-              - 'rssi'
-              - 'current'
-              - 'efficiency'
-              - 'frequency'
-              - 'power'
-              - 'powerdc'
-              - 'powerfactor'
-              - 'reactivepower'
-              - 'temperature'
-              - 'irradiation'
-              - 'voltage'
-              - 'yieldday'
-              - 'yieldtotal'
-              - 'limit_absolute'
-              - 'limit_relative'
-      - pivot:
-          tag_key: 'field'
-          value_key: 'value'
 
   resources:
     requests:
