@@ -111,6 +111,10 @@ telegraf:
 
     processors:
       - converter:
+          tags:
+            integer:
+              - 'uptime'
+      - converter:
           fields:
             # string:
             #   - 'ip'
