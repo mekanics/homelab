@@ -68,18 +68,8 @@ telegraf:
             - 'solar/+/3/+'
             - 'solar/+/4/+'
           data_format: 'value'
-          # data_type: 'string'
+          data_type: 'string'
           topic_parsing:
-            - topic: 'solar/dtu/uptime'
-              measurement: '_/measurement/_'
-              tags: '_/_/field'
-              data_type: 'float'
-
-            - topic: 'solar/dtu/rssi'
-              measurement: '_/measurement/_'
-              tags: '_/_/field'
-              data_type: 'integer'
-
             - topic: 'solar/dtu/+'
               measurement: '_/measurement/_'
               tags: '_/_/field'
