@@ -111,6 +111,7 @@ telegraf:
 
     processors:
       - converter:
+          order: 2
           fields:
             string:
               - 'ip'
@@ -138,6 +139,7 @@ telegraf:
               - 'limit_absolute'
               - 'limit_relative'
       - pivot:
+          order: 1
           tag_key: 'field'
           value_key: 'value'
 
