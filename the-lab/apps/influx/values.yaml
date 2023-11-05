@@ -68,7 +68,7 @@ telegraf:
             - 'solar/+/3/+'
             - 'solar/+/4/+'
           data_format: 'value'
-          data_type: 'string'
+          # data_type: 'string'
           topic_parsing:
             - topic: 'solar/dtu/uptime'
               measurement: '_/measurement/_'
@@ -122,31 +122,31 @@ telegraf:
     processors:
       - converter:
           fields:
-            # string:
-            #   - 'ip'
-            #   - 'hostname'
-            #   - 'status'
-            #   - 'name'
-            boolean:
+            string:
+              - 'ip'
+              - 'hostname'
+              - 'status'
+              - 'name'
+            integer:
               - 'uptime'
-            #   - 'producing'
-            #   - 'reachable'
-            # float:
-            #   - 'rssi'
-            #   - 'current'
-            #   - 'efficiency'
-            #   - 'frequency'
-            #   - 'power'
-            #   - 'powerdc'
-            #   - 'powerfactor'
-            #   - 'reactivepower'
-            #   - 'temperature'
-            #   - 'irradiation'
-            #   - 'voltage'
-            #   - 'yieldday'
-            #   - 'yieldtotal'
-            #   - 'limit_absolute'
-            #   - 'limit_relative'
+              - 'producing'
+              - 'reachable'
+            float:
+              - 'rssi'
+              - 'current'
+              - 'efficiency'
+              - 'frequency'
+              - 'power'
+              - 'powerdc'
+              - 'powerfactor'
+              - 'reactivepower'
+              - 'temperature'
+              - 'irradiation'
+              - 'voltage'
+              - 'yieldday'
+              - 'yieldtotal'
+              - 'limit_absolute'
+              - 'limit_relative'
       - pivot:
           tag_key: 'field'
           value_key: 'value'
