@@ -11,7 +11,8 @@ longhorn:
     enabled: true
     ingressClassName: nginx
     annotations:
-      cert-manager.io/cluster-issuer: letsencrypt-prod
+      cert-manager.io/cluster-issuer: mekanics-ca-issuer
+      hajimari.io/group: System
       hajimari.io/appName: Longhorn
       hajimari.io/icon: cow
     host: &host longhorn.system.mekanics.ch

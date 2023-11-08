@@ -6,7 +6,7 @@ fava:
     enabled: true
     className: nginx
     annotations:
-      cert-manager.io/cluster-issuer: letsencrypt-prod
+      cert-manager.io/cluster-issuer: mekanics-ca-issuer
       hajimari.io/appName: Finances
       hajimari.io/icon: finance
       hajimari.io/group: Babsi
