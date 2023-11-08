@@ -4,4 +4,4 @@ metadata:
     name: mekanics-ca-issuer
 spec:
     ca:
-	    secretName: ca-key-pair
+        secretName: ca-key-pair
