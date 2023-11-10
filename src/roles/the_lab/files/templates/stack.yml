@@ -16,7 +16,6 @@ spec:
   template:
     metadata:
       name: '{{ `{{path.basename}}` }}'
-      # namespace: argocd
     
     spec:
       project: default
@@ -28,19 +27,19 @@ spec:
 
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{ default $stack.name $stack.namespace }}'
+        namespace: '{{ default `{{path.basename}}` $stack.namespace }}'
 
       syncPolicy:
         automated:
           prune: true
           selfHeal: true
-        
-        # retry:
-        #   limit: 10
-        #   backoff:
-        #     duration: 1m
-        #     factor: 2
-        #     maxDuration: 16m
+          
+          retry:
+            limit: 10
+            backoff:
+              duration: 1m
+              factor: 2
+              maxDuration: 16m
         
         syncOptions:
           - CreateNamespace=true

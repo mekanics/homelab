@@ -1,3 +1,5 @@
+# https://github.com/argoproj/argo-helm/blob/main/charts/argo-cd/values.yaml
+
 gitops:
   repo: https://github.com/mekanics/homelab
   revision: remake ## HEAD, branch, tag, ...

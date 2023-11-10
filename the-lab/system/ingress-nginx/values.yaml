@@ -1,8 +1,12 @@
+# https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/charts/ingress-nginx/values.yaml
+
 ingress-nginx:
   controller:
     admissionWebhooks:
       timeoutSeconds: 30
     metrics:
-      enabled: false
+      enabled: true
       serviceMonitor:
-        enabled: false
+        enabled: true
+  tcp:
+    1883: mosquitto/mosquitto:1883

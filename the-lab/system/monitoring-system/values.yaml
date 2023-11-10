@@ -1,0 +1,33 @@
+kube-prometheus-stack:
+  grafana:
+    enabled: false
+    forceDeployDatasources: true
+    forceDeployDashboards: true
+    additionalDataSources:
+      - name: Loki
+        type: loki
+        url: http://loki.loki:3100
+    grafana.ini:
+      server:
+        root_url: https://grafana.mekanics.ch
+    adminPassword: null
+    ingress:
+      enabled: true
+      ingressClassName: nginx
+      annotations:
+        cert-manager.io/cluster-issuer: mekanics-ca-issuer
+        hajimari.io/group: Monitoring
+        hajimari.io/appName: Grafana
+        hajimari.io/icon: chart-bar
+      hosts:
+        - &host grafana.mekanics.ch
+      tls:
+        - secretName: grafana-general-tls
+          hosts:
+            - *host
+  prometheus:
+    prometheusSpec:
+      ruleSelectorNilUsesHelmValues: false
+      serviceMonitorSelectorNilUsesHelmValues: false
+      podMonitorSelectorNilUsesHelmValues: false
+      probeSelectorNilUsesHelmValues: false

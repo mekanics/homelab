@@ -1,0 +1,12 @@
+- name: Upgrade existing APT packages
+  apt:
+    upgrade: safe
+    update_cache: true
+    cache_valid_time: 3600
+    autoclean: true
+
+- name: Common APT dependencies
+  apt:
+    name: '{{ item.key }}'
+    state: '{{ item.value }}'
+  with_dict: '{{ common_apt_dependencies }}'

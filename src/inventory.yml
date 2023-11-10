@@ -10,19 +10,19 @@ all:
     #   disktype: mmc
 
     # Raspbery Pi
-    homelab-1.local:
-      ansible_host: 192.168.10.21
-      mac: 'tbd'
+    pi-homelab.local:
+      ansible_host: 192.168.10.246
+      mac: 'dc:a6:32:c0:f3:ab'
       ansible_connection: ssh
       performance: mid
       disctype: 'ssd'
 
-    homelab-2.local:
-      ansible_host: 192.168.10.22
-      mac: 'tbd'
-      ansible_connection: ssh
-      performance: mid
-      disctype: 'mmc'
+    # homelab-2.local:
+    #   ansible_host: 192.168.10.22
+    #   mac: 'tbd'
+    #   ansible_connection: ssh
+    #   performance: mid
+    #   disctype: 'mmc'
 
     # Synology NAS
     # mercury.local:
@@ -33,11 +33,11 @@ all:
   children:
     servers:
       hosts:
-        homelab-1.local:
+        pi-homelab.local:
 
     workers:
       hosts:
-        homelab-2.local:
+        # homelab-2.local:
 
     cluster:
       children:
@@ -53,4 +53,4 @@ all:
     # Devices are defined in host_vars files
     storage_nodes:
       hosts:
-        homelab-1.local:
+        pi-homelab.local:

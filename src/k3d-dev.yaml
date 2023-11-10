@@ -1,8 +1,9 @@
-apiVersion: k3d.io/v1alpha4
+apiVersion: k3d.io/v1alpha5
 kind: Simple
 metadata:
   name: homelab-dev
-image: docker.io/rancher/k3s:v1.26.4-k3s1
+# image: docker.io/rancher/k3s:v1.26.4-k3s1
+image: docker.io/rancher/k3s:v1.23.4-k3s1
 servers: 1
 agents: 0
 options:
