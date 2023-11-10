@@ -25,8 +25,8 @@ influxdb2:
       memory: 128Mi
       cpu: 100m
     limits:
-      memory: 256Mi
-      cpu: 100m
+      memory: 2048Mi
+      cpu: 1000m
 
 # https://github.com/influxdata/helm-charts/blob/master/charts/telegraf/values.yaml
 telegraf:
