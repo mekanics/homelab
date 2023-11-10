@@ -24,6 +24,9 @@ fava:
     persistentVolumeClaim:
       claimName: nfs-fava-ajo
 
+  weeklyPriceUpdate:
+    enabled: true
+
   resources:
     limits:
       cpu: 500m
