@@ -15,8 +15,8 @@ spec:
                 spec:
                     containers:
                         - name: weekly-price-update
-                          image: '{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}'
-                          imagePullPolicy: {{ .Values.image.pullPolicy }}
+                          image: 'ghcr.io/mekanics/fava:0.0.4'
+                          imagePullPolicy: IfNotPresent
                           command:
                               - /bin/sh
                               - -c
@@ -27,5 +27,6 @@ spec:
                                 mountPath: /bean
                     volumes:
                         - name: bean-volume
-                          {{- toYaml .Values.volume | nindent 26 }}
+                          persistentVolumeClaim:
+                              claimName: nfs-fava-ajo
                     restartPolicy: OnFailure
