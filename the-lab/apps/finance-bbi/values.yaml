@@ -24,6 +24,10 @@ fava:
     persistentVolumeClaim:
       claimName: nfs-fava-bbi
 
+  weeklyPriceUpdate:
+    enabled: true
+    schedule: '45 23 * * FRI'
+
   resources:
     limits:
       cpu: 500m
