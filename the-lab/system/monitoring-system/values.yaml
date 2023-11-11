@@ -13,17 +13,31 @@ kube-prometheus-stack:
       - name: InfluxDB
         type: influxdb
         url: http://influx-influxdb2.influx.svc:8086
+        access: proxy
         jsonData:
           organization: waid
           defaultBucket: waid-bucket
           httpMode: POST
           version: Flux
+          tlsSkipVerify: true
+        secureJsonData:
+          token:
+            valueFrom:
+              secretKeyRef:
+                name: influxdb-auth
+                key: admin-token
 
       - name: Sun and Moon
         type: fetzerch-sunandmoon-datasource
+        access: proxy
+        basicAuth: false
         jsonData:
           latitude: 47.3990478335303
           longitude: 8.511763550691876
+
+    plugins:
+      - grafana-clock-panel
+      - fetzerch-sunandmoon-datasource
 
     grafana.ini:
       server:
