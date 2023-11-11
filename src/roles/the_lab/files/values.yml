@@ -2,7 +2,7 @@
 
 gitops:
   repo: https://github.com/mekanics/homelab
-  revision: remake ## HEAD, branch, tag, ...
+  revision: main ## HEAD, branch, tag, ...
 stacks:
   - name: bootstrap
     namespace: argocd # Override default value
