@@ -1,0 +1,17 @@
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  creationTimestamp: null
+  name: grafana-datasources
+  namespace: influx
+spec:
+  encryptedData:
+    influxdb.yaml: AgAT1qBPq1iEBBbE3c5gKn+ej6YBCH1ENesVvYq3rgG+LA8efNZP2dawmknoPtDwOowl/BkpcuigTdmw9YifKJbQY7OgPhG+nDDoAv7gqSIOb8tyFt1eb22anR9boO09XKuFzDdMhS/6ftBXOp/5/N7Fdg+Vzoq9q2NRzrtpTT07SsL63Z+94Ja6I/EKSuV3AOUfMRqG9/VWGiXZoWCRDc8Uy9G51E+dmTX89LKckHyYjfa+ZX0VXD02kf+LYXjqNuSQ9UIEO/J7sbHqOHDj7+EVFOXUhmoNpJOkYPRazfGYkqVmP7aHzEZqr9tFksNzUMv0eFkFECSP+iWnlO/lkpiEesizZIBvIhmjw6cfHrhiXyjBvn0+FAx9y4DA5MIR0bIU1eHZVdt97iqmUx3w6ZAAP+A1ixhSVeDMmab3nTy9mLTNHcalt2EqL4enAQnenLEWf0+qgoVblUEvzxY1m5X/HOJifW5EFUfxudmE1NzTEQBl7vjfw5ALBG4eKlg/ar7HwfPTk3uPKJ6t7teTTrPdTXUFQgDyZWCTIrofCP4JSEvKA+lVBdjZGcALDEEBI8tjnAdgpqFCoebtH/YQWLwuA9iKxB5PdoaZo2jIOaBYBf9zNw+Wa+pZ18ljwRjodFRXZXQpB/EILMKBq451VtTiZOi9tGgElG9uyH4qWTNIwLiR7EQzPZYVysR5E3XGEvyAxHZgpU96YybdOkbi9Erz4NJfiKxCvAmyDTv5js4beltECXPywcklQvmLGqN1VYp3jO3OvIqQv7RQQjxZ21wznyrSOD4KsUOh2pMOGBl9+lgUhS4ha/ygPo60Efnhr55MvXhDO5CZ05EzHMZrNtK/l5JgdPvoepvZf6XKm6clnMaep9w2C+ETbQ+hlWmnoOBxR1ZCUII1xnrD7W2YLD7HVyGRUE1iIvX1Q/gLZ57TJtQAb2QyjGMMsezKJeld6l11ch29ssaA2cGd+UbWvJaGt2YxRv5Bl7tqdsKkM3hoek3/pDhixqS+hsorD2Vl/bJ2dNh35n8ZaSaI/gy5fbHwrAxadcyI0V6ubf7gOrFEjvjLuXtgv1+9SVAa/er67XQB7Nw299RDJaiHyTUDv4uaq9qR
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        grafana_datasource: "true"
+      name: grafana-datasources
+      namespace: influx
+---
