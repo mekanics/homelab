@@ -7,6 +7,17 @@ kube-prometheus-stack:
     forceDeployDashboards: true
     # http://docs.grafana.org/administration/provisioning/#datasources
 
+    sidecar:
+      datasources:
+        enabled: true
+        searchNamespace: ALL
+      dashboards:
+        enabled: true
+        searchNamespace: ALL
+      alerts:
+        enabled: true
+        searchNamespace: ALL
+
     additionalDataSources:
       - name: Loki
         type: loki
