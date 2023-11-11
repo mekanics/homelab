@@ -21,11 +21,7 @@ kube-prometheus-stack:
           version: Flux
           tlsSkipVerify: true
         secureJsonData:
-          token:
-            valueFrom:
-              secretKeyRef:
-                name: influxdb-auth
-                key: admin-token
+          token: token
 
       - name: Sun and Moon
         type: fetzerch-sunandmoon-datasource
