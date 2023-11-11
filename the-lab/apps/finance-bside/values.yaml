@@ -1,0 +1,37 @@
+fava:
+  env:
+    TZ: Europe/Zurich
+
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: mekanics-ca-issuer
+      hajimari.io/appName: Finances b.side
+      hajimari.io/icon: finance
+      hajimari.io/group: Babsi
+    hosts:
+      - host: &host finance.bside.mekanics.ch
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: finance-tls-certificate
+        hosts:
+          - *host
+
+  volume:
+    persistentVolumeClaim:
+      claimName: nfs-fava-bside
+
+  weeklyPriceUpdate:
+    enabled: false
+    schedule: '48 23 * * FRI'
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 500Mi
+    requests:
+      cpu: 250m
+      memory: 250Mi
