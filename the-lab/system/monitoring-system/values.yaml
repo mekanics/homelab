@@ -19,17 +19,6 @@ kube-prometheus-stack:
       - name: Loki
         type: loki
         url: http://loki.loki:3100
-      - name: InfluxDB
-        type: influxdb
-        url: http://influx-influxdb2.influx.svc
-        access: proxy
-        jsonData:
-          organization: waid
-          defaultBucket: waid-bucket
-          httpMode: POST
-          version: Flux
-        secureJsonData:
-          token: $INFLUX_TOKEN
 
       - name: Sun and Moon
         type: fetzerch-sunandmoon-datasource
@@ -38,6 +27,10 @@ kube-prometheus-stack:
         jsonData:
           latitude: 47.3990478335303
           longitude: 8.511763550691876
+
+    sidecar:
+      datasources:
+        enabled: true
 
     plugins:
       - grafana-clock-panel
