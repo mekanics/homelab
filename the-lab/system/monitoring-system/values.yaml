@@ -7,14 +7,6 @@ kube-prometheus-stack:
     forceDeployDashboards: true
     # http://docs.grafana.org/administration/provisioning/#datasources
 
-    datasources:
-      env:
-        - name: INFLUX_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: influxdb-auth
-              key: admin-token
-
     additionalDataSources:
       - name: Loki
         type: loki
@@ -24,13 +16,7 @@ kube-prometheus-stack:
         type: fetzerch-sunandmoon-datasource
         access: proxy
         basicAuth: false
-        jsonData:
-          latitude: 47.3990478335303
-          longitude: 8.511763550691876
-
-    sidecar:
-      datasources:
-        enabled: true
+        editable: true
 
     plugins:
       - grafana-clock-panel
