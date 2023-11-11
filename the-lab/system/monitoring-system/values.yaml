@@ -1,12 +1,15 @@
 kube-prometheus-stack:
   grafana:
-    enabled: false
+    enabled: true
     forceDeployDatasources: true
     forceDeployDashboards: true
     additionalDataSources:
       - name: Loki
         type: loki
         url: http://loki.loki:3100
+      - name: InfluxDB
+        type: InfluxDB
+        url: http://influx-influxdb2.influx.svc
     grafana.ini:
       server:
         root_url: https://grafana.mekanics.ch
