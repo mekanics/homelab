@@ -28,7 +28,6 @@ kube-prometheus-stack:
           defaultBucket: waid-bucket
           httpMode: POST
           version: Flux
-          tlsSkipVerify: true
         secureJsonData:
           token: $INFLUX_TOKEN
 
