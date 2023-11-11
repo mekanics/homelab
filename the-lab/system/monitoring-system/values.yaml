@@ -12,7 +12,7 @@ kube-prometheus-stack:
         url: http://loki.loki:3100
       - name: InfluxDB
         type: influxdb
-        url: http://influx-influxdb2.influx.svc:8086
+        url: http://influx-influxdb2.influx.svc
         access: proxy
         jsonData:
           organization: waid
