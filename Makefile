@@ -45,7 +45,7 @@ lint:
 
 host-bootstrap: about lint
 > @echo "Bootstrapping inventory hosts as $${BOOTSTRAP_USER}"
-> $(PLAY_CMD) src/00-playbook-bootstrap.yml -u $${BOOTSTRAP_USER} --private-key=$${BOOTSTRAP_SSH_KEY_FILE} #-K --check
+> $(PLAY_CMD) src/00-playbook-bootstrap.yml -u $${BOOTSTRAP_USER} --private-key=$${BOOTSTRAP_SSH_KEY_FILE} --ask-pass #-K --check
 
 ############################
 

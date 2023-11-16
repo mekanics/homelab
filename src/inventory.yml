@@ -17,6 +17,13 @@ all:
       performance: mid
       disctype: 'ssd'
 
+    pi-homelab-woker-1.local:
+      ansible_host: 192.168.10.120
+      mac: 'b8:27:eb:4e:4f:96'
+      ansible_connection: ssh
+      performance: mid
+      disctype: 'sd'
+
     # homelab-2.local:
     #   ansible_host: 192.168.10.22
     #   mac: 'tbd'
@@ -37,7 +44,7 @@ all:
 
     workers:
       hosts:
-        # homelab-2.local:
+        pi-homelab-woker-1.local:
 
     cluster:
       children:

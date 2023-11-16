@@ -26,6 +26,7 @@
 #     name: ip6tables
 #   register: ip6_legacy
 
-- name: Activate prosmic on wlan0
+- name: Activate the promiscuous mode on wlan0
   shell:
     cmd: ifconfig wlan0 promisc
+  notify: Reboot
