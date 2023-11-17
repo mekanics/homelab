@@ -10,7 +10,10 @@ spec:
     storageClassName: nfs
     mountOptions:
         - hard
-        - nfsvers=4
+        - intr
+        - async
+        - noatime
+        - nfsvers=3
     nfs:
         server: mercury.local
         path: '/volume1/homelab/finance.ajo'
