@@ -1,24 +1,23 @@
 # https://github.com/mekanics/charts/blob/main/charts/paperless/values.yaml
 paperless:
   ingress:
-    main:
-      enabled: true
-      className: nginx
-      annotations:
-        nginx.ingress.kubernetes.io/proxy-body-size: 64m
-        cert-manager.io/cluster-issuer: mekanics-ca-issuer
-        hajimari.io/appName: Paperless
-        hajimari.io/icon: file-document
-      hosts:
-        - host: &host paperless.mekanics.ch
-          paths:
-            - path: /
-              pathType: Prefix
-              service: main
-      tls:
-        - secretName: paperless-tls-certificate
-          hosts:
-            - *host
+    enabled: true
+    className: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-body-size: 64m
+      cert-manager.io/cluster-issuer: mekanics-ca-issuer
+      hajimari.io/appName: Paperless
+      hajimari.io/icon: file-document
+    hosts:
+      - host: &host paperless.mekanics.ch
+        paths:
+          - path: /
+            pathType: Prefix
+            service: main
+    tls:
+      - secretName: paperless-tls-certificate
+        hosts:
+          - *host
 
   # https://docs.paperless-ngx.com/configuration/
   env:
