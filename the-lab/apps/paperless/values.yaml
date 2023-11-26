@@ -31,37 +31,37 @@ paperless:
   postgresql:
     enabled: false
 
-resources:
-  limits:
-    cpu: 1000m
-    memory: 1024Mi
-  requests:
-    cpu: 100m
-    memory: 256Mi
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1024Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
 
-persistence:
-  # -- Configure storage volume settings for the chart under this key.
-  storage:
-    enabled: true
-    existingClaim: 'nfs-paperless-storage'
+  persistence:
+    # -- Configure storage volume settings for the chart under this key.
+    storage:
+      enabled: true
+      existingClaim: 'nfs-paperless-storage'
 
-  # -- Configure export volume settings for the chart under this key.
-  export:
-    enabled: false
-    # existingClaim: ""
+    # -- Configure export volume settings for the chart under this key.
+    export:
+      enabled: false
+      # existingClaim: ""
 
-  # -- Configure consume volume settings for the chart under this key.
-  consume:
-    enabled: true
-    existingClaim: 'nfs-paperless-consume'
-#
-# postgresql:
-#   enabled: false
-#   auth:
-#     database: paperless
-#     postgresPassword: paperless
-#   primary:
-#     persistence:
-#       enabled: false
-#       # storageClass: ""
-#       # size: 8Gi
+    # -- Configure consume volume settings for the chart under this key.
+    consume:
+      enabled: true
+      existingClaim: 'nfs-paperless-consume'
+  #
+  # postgresql:
+  #   enabled: false
+  #   auth:
+  #     database: paperless
+  #     postgresPassword: paperless
+  #   primary:
+  #     persistence:
+  #       enabled: false
+  #       # storageClass: ""
+  #       # size: 8Gi
