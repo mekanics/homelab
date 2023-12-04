@@ -9,10 +9,12 @@ spec:
     - ReadWriteMany
   storageClassName: nfs
   mountOptions:
-    - hard
-    - intr
+    - rw
+    - nolock
+    - tcp
     - async
     - noatime
+    - intr
   nfs:
     server: mercury.local
     path: '/volume1/homelab/finance.bside'

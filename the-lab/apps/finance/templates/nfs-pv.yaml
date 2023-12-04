@@ -11,11 +11,10 @@ spec:
   mountOptions:
     - rw
     - nolock
-    - rsize=8192
-    - wsize=8192
     - tcp
     - async
     - noatime
+    - intr
   nfs:
     server: mercury.local
     path: '/volume1/homelab/finance.ajo'
