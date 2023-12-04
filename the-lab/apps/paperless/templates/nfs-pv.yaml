@@ -28,7 +28,7 @@ spec:
   capacity:
     storage: 1Gi
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   storageClassName: nfs
   mountOptions:
     - async

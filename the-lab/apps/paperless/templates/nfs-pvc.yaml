@@ -16,7 +16,7 @@ metadata:
   name: nfs-paperless-consume
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   storageClassName: nfs
   resources:
     requests:
