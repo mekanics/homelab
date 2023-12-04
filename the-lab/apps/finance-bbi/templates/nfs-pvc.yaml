@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-    name: nfs-fava-bbi
+  name: nfs-fava-bbi
 spec:
-    accessModes:
-        - ReadWriteMany
-    storageClassName: nfs
-    resources:
-        requests:
-            storage: 500Mi
+  accessModes:
+    - ReadWriteMany
+  storageClassName: nfs
+  resources:
+    requests:
+      storage: 500Mi
