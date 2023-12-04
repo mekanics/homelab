@@ -1,38 +1,42 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-    name: nfs-paperless-storage
+  name: nfs-paperless-storage
 spec:
-    capacity:
-        storage: 15Gi
-    accessModes:
-        - ReadWriteOnce
-    storageClassName: nfs
-    mountOptions:
-        - async
-        - hard
-        - intr
-        - noatime
-    nfs:
-        server: mercury.local
-        path: '/volume1/documents'
+  capacity:
+    storage: 15Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: nfs
+  mountOptions:
+    - async
+    - hard
+    - intr
+    - noatime
+    - tcp
+    - rw
+  nfs:
+    server: mercury.local
+    path: '/volume1/documents'
 
 ---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-    name: nfs-paperless-consume
+  name: nfs-paperless-consume
 spec:
-    capacity:
-        storage: 1Gi
-    accessModes:
-        - ReadWriteOnce
-    storageClassName: nfs
-    mountOptions:
-        - async
-        - hard
-        - intr
-        - noatime
-    nfs:
-        server: mercury.local
-        path: '/volume1/documents/_inbox'
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: nfs
+  mountOptions:
+    - async
+    - hard
+    - intr
+    - noatime
+    - tcp
+    - rw
+  nfs:
+    server: mercury.local
+    path: '/volume1/documents/_inbox'
