@@ -39,4 +39,4 @@ spec:
     - rw
   nfs:
     server: mercury.local
-    path: '/volume1/documents/_inbox'
+    path: '/volume1/_inbox'
