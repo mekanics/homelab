@@ -19,10 +19,10 @@ all:
 
     pi-homelab-woker-1.local:
       ansible_host: 192.168.10.120
-      mac: 'b8:27:eb:4e:4f:96'
+      mac: '1a:3e:66:48:81:31'
       ansible_connection: ssh
-      performance: mid
-      disctype: 'sd'
+      performance: high
+      disctype: 'ssd'
 
     # homelab-2.local:
     #   ansible_host: 192.168.10.22
