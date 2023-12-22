@@ -80,3 +80,7 @@
     key: "{{ lookup('file', item) }}"
   with_fileglob:
     - '{{ deploy_account.sshKey }}.pub'
+
+- name: Set hostname
+  hostname:
+    name: '{{ inventory_hostname }}'
