@@ -56,6 +56,12 @@ paperless:
     consume:
       enabled: true
       existingClaim: 'nfs-paperless-consume'
+
+  podSecurityContext:
+    fsGroup: 1000
+    runAsNonRoot: true
+    runAsGroup: 1000
+    runAsUser: 1000
   #
   # postgresql:
   #   enabled: false
