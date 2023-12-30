@@ -18,3 +18,38 @@
     wait: true
   tags:
     - secrets
+
+- name: Check for the master key
+  stat:
+    path: '{{ role_path }}/files/master.key'
+  register: masterkey
+
+- name: Restore Master key
+  k8s:
+    api_version: v1
+    definition: "{{ lookup('file', '{{ role_path }}/files/master.key') | from_yaml }}"
+    state: present
+    wait: true
+  when: masterkey.stat.exists
+  tags:
+    - secrets
+
+- name: Restart Sealed Secret
+  k8s:
+    api_version: v1
+    kind: Pod
+    namespace: kube-system
+    name: sealed-secrets-controller
+    state: absent
+  when: masterkey.stat.exists
+  tags:
+    - secrets
+
+- name: Backup Master key to master.key | You should save it somewhere safe
+  shell: kubectl get secret -n kube-system -l sealedsecrets.bitnami.com/sealed-secrets-key -o yaml >{{ role_path }}/files/master.key
+  changed_when: false
+  register: argocd_status
+  run_once: true
+  when: not masterkey.stat.exists
+  tags:
+    - secrets
