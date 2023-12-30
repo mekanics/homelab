@@ -9,24 +9,38 @@
   register: cgroup_flags
   notify: Reboot
 
-# - name: Flush iptables before changing to iptables-legacy
-#   iptables:
-#     flush: true
-#   changed_when: false # iptables flush always returns changed
-
-# - name: Changing to iptables-legacy
-#   alternatives:
-#     path: /usr/sbin/iptables-legacy
-#     name: iptables
-#   register: ip4_legacy
-
-# - name: Changing to ip6tables-legacy
-#   alternatives:
-#     path: /usr/sbin/ip6tables-legacy
-#     name: ip6tables
-#   register: ip6_legacy
+- name: Check if wlan0 is active
+  command: 'ip link show wlan0'
+  register: wlan_status
+  ignore_errors: true
 
 - name: Activate the promiscuous mode on wlan0
   shell:
-    cmd: ifconfig wlan0 promisc
+    cmd: 'ifconfig wlan0 promisc'
   notify: Reboot
+  when: wlan_status.rc == 0
+
+- name: Turn off swap
+  command: 'dphys-swapfile swapoff'
+  register: swapfile_status
+  ignore_errors: true
+
+- name: Uninstall dphys-swapfile
+  command: 'dphys-swapfile uninstall'
+  register: swapfile_status
+  ignore_errors: true
+
+- name: Remove dphys-swapfile from startup
+  command: 'update-rc.d dphys-swapfile remove'
+
+- name: Purge dphys-swapfile
+  apt:
+    name: dphys-swapfile
+    state: absent
+    purge: true
+
+- name: Set vm.swappiness to 0
+  sysctl:
+    name: vm.swappiness
+    value: 0
+    state: present
