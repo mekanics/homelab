@@ -58,7 +58,7 @@ telegraf:
     inputs:
       - mqtt_consumer:
           servers:
-            - 'tcp://mosquitto.mekanics.ch:1883'
+            - 'tcp://mosquitto.mosquitto.svc.cluster.local:1883'
           topics:
             - 'solar/dtu/+'
             - 'solar/+/device/+'
@@ -105,7 +105,7 @@ telegraf:
 
       - mqtt_consumer:
           servers:
-            - 'tcp://mosquitto.mekanics.ch:1883'
+            - 'tcp://mosquitto.mosquitto.svc.cluster.local:1883'
           topics:
             - 'main-power/status/#'
           data_format: 'json'
