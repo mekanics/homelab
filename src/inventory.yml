@@ -11,18 +11,18 @@ all:
 
     # Raspbery Pi
     pi-homelab.local:
-      ansible_host: 192.168.10.246
+      ansible_host: 192.168.10.50
       mac: 'dc:a6:32:c0:f3:ab'
       ansible_connection: ssh
       performance: mid
       disctype: 'ssd'
 
-    pi-homelab-woker-1.local:
-      ansible_host: 192.168.10.225
-      mac: '1a:3e:66:48:81:31'
-      ansible_connection: ssh
-      performance: high
-      disctype: 'ssd'
+    # pi-homelab-woker-1.local:
+    #   ansible_host: 192.168.10.51
+    #   mac: '1a:3e:66:48:81:31'
+    #   ansible_connection: ssh
+    #   performance: high
+    #   disctype: 'ssd'
 
     # homelab-2.local:
     #   ansible_host: 192.168.10.22
@@ -44,7 +44,7 @@ all:
 
     workers:
       hosts:
-        pi-homelab-woker-1.local:
+        # pi-homelab-woker-1.local:
 
     cluster:
       children:
