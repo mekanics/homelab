@@ -17,12 +17,12 @@ spec:
     - timeo=600
     - retrans=2
     - _netdev
-    # - rw
-    # - nolock
-    # - tcp
-    # - async
-    # - noatime
-    # - intr
+    - rw
+    - nolock
+    - tcp
+    - async
+    - noatime
+    - intr
   nfs:
     server: mercury.local
     path: '/volume1/homelab/finance.ajo'
