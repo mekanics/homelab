@@ -6,6 +6,7 @@ paperless:
     annotations:
       nginx.ingress.kubernetes.io/proxy-body-size: 64m
       cert-manager.io/cluster-issuer: mekanics-ca-issuer
+      hajimari.io/group: Apps
       hajimari.io/appName: Paperless
       hajimari.io/icon: file-document
     hosts:
