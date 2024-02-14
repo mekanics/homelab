@@ -48,7 +48,7 @@ kube-prometheus-stack:
       storageClassName: longhorn
       accessModes:
         - ReadWriteOnce
-      size: 10Gi
+      size: 1Gi
       # annotations: {}
       finalizers:
         - kubernetes.io/pvc-protection
