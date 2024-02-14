@@ -26,6 +26,7 @@ kube-prometheus-stack:
       server:
         root_url: https://grafana.mekanics.ch
     adminPassword: null
+
     ingress:
       enabled: true
       ingressClassName: nginx
@@ -40,6 +41,25 @@ kube-prometheus-stack:
         - secretName: grafana-general-tls
           hosts:
             - *host
+
+    persistence:
+      enabled: true
+      type: pvc
+      storageClassName: longhorn
+      accessModes:
+        - ReadWriteOnce
+      size: 10Gi
+      # annotations: {}
+      finalizers:
+        - kubernetes.io/pvc-protection
+      # selectorLabels: {}
+      ## Sub-directory of the PV to mount. Can be templated.
+      # subPath: ""
+      ## Name of an existing PVC. Can be templated.
+      # existingClaim:
+      ## Extra labels to apply to a PVC.
+      extraPvcLabels: {}
+
   prometheus:
     prometheusSpec:
       ruleSelectorNilUsesHelmValues: false
