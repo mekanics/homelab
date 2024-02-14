@@ -42,23 +42,23 @@ kube-prometheus-stack:
           hosts:
             - *host
 
-    persistence:
-      enabled: true
-      type: pvc
-      storageClassName: longhorn
-      accessModes:
-        - ReadWriteOnce
-      size: 1Gi
-      # annotations: {}
-      finalizers:
-        - kubernetes.io/pvc-protection
-      # selectorLabels: {}
-      ## Sub-directory of the PV to mount. Can be templated.
-      # subPath: ""
-      ## Name of an existing PVC. Can be templated.
-      # existingClaim:
-      ## Extra labels to apply to a PVC.
-      extraPvcLabels: {}
+    # persistence:
+    #   enabled: true
+    #   type: pvc
+    #   storageClassName: longhorn
+    #   accessModes:
+    #     - ReadWriteOnce
+    #   size: 1Gi
+    #   # annotations: {}
+    #   finalizers:
+    #     - kubernetes.io/pvc-protection
+    #   # selectorLabels: {}
+    #   ## Sub-directory of the PV to mount. Can be templated.
+    #   # subPath: ""
+    #   ## Name of an existing PVC. Can be templated.
+    #   # existingClaim:
+    #   ## Extra labels to apply to a PVC.
+    #   extraPvcLabels: {}
 
   prometheus:
     prometheusSpec:
