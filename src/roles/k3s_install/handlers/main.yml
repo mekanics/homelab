@@ -1,15 +1,16 @@
 ---
 - name: K3S server service started
   service:
-    name: "k3s"
+    name: 'k3s'
     state: started
 
 - name: K3S worker service started
   service:
-    name: "k3s-agent"
+    name: 'k3s-agent'
     state: started
 
 - name: Reboot
   reboot:
-    reboot_timeout: 3600
+    post_reboot_delay: 10
+    reboot_timeout: 300
   register: reboot_status

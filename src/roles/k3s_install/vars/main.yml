@@ -11,3 +11,5 @@ k3s_server_config:
     - traefik
   disable-cloud-controller: true
   secrets-encryption: true
+
+k3s_server_location: '/var/lib/rancher/k3s'

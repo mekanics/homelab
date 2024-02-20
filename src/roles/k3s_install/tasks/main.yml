@@ -5,3 +5,19 @@
   tags:
     - install
     - k3s
+# - name: Install k3s
+#   tags:
+#     - install
+#     - k3s
+#   block:
+#     - name: Setup K3S servers
+#       include_tasks: k3s.yml
+#       hosts: servers
+#       become: true
+# # - name: Setup K3S workers
+# #   hosts: workers
+# #   include_tasks: k3s_worker.yml
+# #   become: true
+# #   tags:
+# #     - install
+# #     - k3s
