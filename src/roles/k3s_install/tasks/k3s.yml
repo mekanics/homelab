@@ -1,41 +1,21 @@
 ---
-- name: Download k3s binary x64
+- name: Download K3s install script
   become: true
-  get_url:
-    url: https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s
-    checksum: sha256:https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/sha256sum-amd64.txt
-    dest: /usr/local/bin/k3s
+  ansible.builtin.get_url:
+    url: https://get.k3s.io/
+    timeout: 120
+    dest: /usr/local/bin/k3s-install.sh
     owner: '{{ deploy_account.user }}'
     group: '{{ deploy_account.group }}'
     mode: '0755'
-  when: ansible_facts.architecture == "x86_64"
 
-- name: Download k3s binary arm64
-  become: true
-  get_url:
-    url: https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s-arm64
-    checksum: sha256:https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/sha256sum-arm64.txt
-    dest: /usr/local/bin/k3s
-    owner: '{{ deploy_account.user }}'
-    group: '{{ deploy_account.group }}'
-    mode: '0755'
-  when:
-    - ( ansible_facts.architecture is search("arm") and
-      ansible_facts.userspace_bits == "64" ) or
-      ansible_facts.architecture is search("aarch64")
-
-- name: Download k3s binary armhf
-  become: true
-  get_url:
-    url: https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s-armhf
-    checksum: sha256:https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/sha256sum-arm.txt
-    dest: /usr/local/bin/k3s
-    owner: '{{ deploy_account.user }}'
-    group: '{{ deploy_account.group }}'
-    mode: '0755'
-  when:
-    - ansible_facts.architecture is search("arm")
-    - ansible_facts.userspace_bits == "32"
+- name: Download K3s binary
+  ansible.builtin.command:
+    cmd: /usr/local/bin/k3s-install.sh
+  environment:
+    INSTALL_K3S_SKIP_START: 'true'
+    INSTALL_K3S_VERSION: '{{ k3s_version }}'
+  changed_when: true
 
 - name: Ensure config directories exist
   become: true
@@ -47,36 +27,7 @@
     - /etc/rancher/k3s
     - /etc/rancher/node
 
-- name: Check if k3s token file exists on the first node
-  run_once: true
-  ansible.builtin.stat:
-    path: '{{ k3s_token_file }}'
-  register: k3s_token_file_stat
-
-- name: Generate k3s token file on the first node if not exist yet
-  run_once: true
-  become: true
-  when: not k3s_token_file_stat.stat.exists
-  ansible.builtin.copy:
-    content: "{{ lookup('community.general.random_string', length=32) }}"
-    dest: '{{ k3s_token_file }}'
-    mode: '0600'
-
-- name: Get k3s token from the first node
-  become: true
-  run_once: true
-  ansible.builtin.slurp:
-    src: '{{ k3s_token_file }}'
-  register: k3s_token_base64
-
-- name: Ensure all nodes has the same token
-  become: true
-  ansible.builtin.copy:
-    content: '{{ k3s_token_base64.content | b64decode }}'
-    dest: '{{ k3s_token_file }}'
-    mode: '0600'
-
-- name: Copy k3s config files
+- name: Copy k3s config and service files
   become: true
   ansible.builtin.template:
     src: '{{ item.src }}'
@@ -88,27 +39,85 @@
     - src: k3s.service.j2
       dest: '{{ k3s_service_file }}'
 
-- name: Enable k3s service
-  become: true
-  ansible.builtin.systemd:
-    name: k3s
-    enabled: true
-    state: started
-  register: k3s_service
-  until: k3s_service is succeeded
-  retries: 5
+- name: Init first server node
+  when: inventory_hostname == groups['servers'][0]
+  block:
+    - name: Enable and check K3s service
+      become: true
+      ansible.builtin.systemd:
+        name: k3s
+        daemon_reload: true
+        state: started
+        enabled: true
 
-- name: Get Kubernetes config file
+    - name: Pause to allow first server startup
+      when: (groups['servers'] | length) > 1
+      ansible.builtin.pause:
+        seconds: 10
+
+    - name: Get Kubernetes config file
+      become: true
+      ansible.builtin.slurp:
+        src: /etc/rancher/k3s/k3s.yaml
+      register: kubeconfig_base64
+
+    - name: Write Kubernetes config file with the correct cluster address
+      ansible.builtin.copy:
+        content: "{{ kubeconfig_base64.content | b64decode | replace('127.0.0.1', hostvars[groups['servers'][0]].ansible_host) }}"
+        dest: '{{ playbook_dir }}/kubeconfig.yaml'
+        mode: '0600'
+      delegate_to: localhost
+
+- name: Get k3s token
   become: true
   run_once: true
+  when: inventory_hostname == groups['servers'][0]
   ansible.builtin.slurp:
-    src: /etc/rancher/k3s/k3s.yaml
-  register: kubeconfig_base64
+    src: '/var/lib/rancher/k3s/server/node-token'
+  register: k3s_token_base64
 
-- name: Write Kubernetes config file with the correct cluster address
+- name: Ensure all nodes have the same token
+  become: true
+  when: inventory_hostname != groups['servers'][0]
   ansible.builtin.copy:
-    content: "{{ kubeconfig_base64.content | b64decode | replace('127.0.0.1', hostvars[groups['servers'][0]].ansible_host) }}"
-    dest: '{{ playbook_dir }}/kubeconfig.yaml'
+    content: '{{ k3s_token_base64.content | b64decode | trim }}'
+    dest: '{{ k3s_token_file }}'
     mode: '0600'
-  delegate_to: localhost
-  run_once: true
+
+- name: Start other server if any and verify status
+  when:
+    - (groups['servers'] | length) > 1
+    - inventory_hostname != groups['servers'][0]
+    - '"servers" in group_names'
+  block:
+    - name: Enable and check K3s service
+      become: true
+      ansible.builtin.systemd:
+        name: k3s
+        daemon_reload: true
+        state: started
+        enabled: true
+
+    - name: Verify that all server nodes joined
+      become: true
+      when: (groups['servers'] | length) > 1
+      ansible.builtin.command:
+        cmd: >
+          k3s kubectl get nodes -l "node-role.kubernetes.io/control-plane=true" -o=jsonpath="{.items[*].metadata.name}"
+      register: nodes
+      until: nodes.rc == 0 and (nodes.stdout.split() | length) == (groups['servers'] | length)
+      retries: 20
+      delay: 10
+      changed_when: false
+
+- name: Start workers if any and verify status
+  when:
+    - '"workers" in group_names'
+  block:
+    - name: Enable and check K3s service
+      become: true
+      ansible.builtin.systemd:
+        name: k3s
+        daemon_reload: true
+        state: started
+        enabled: true
