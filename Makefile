@@ -70,5 +70,10 @@ cluster-install-dev: about
 
 ############################
 
+reboot:
+> $(PLAY_CMD) src/50-playbook-reboot.yml
+
+############################
+
 clean:
 > k3d cluster delete homelab-dev
