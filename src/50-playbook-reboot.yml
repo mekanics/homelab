@@ -1,6 +1,6 @@
 ---
 - name: Reboot cluster servers staggered
-  hosts: server
+  hosts: servers
   become: true
   gather_facts: true
   serial: 1
@@ -9,7 +9,7 @@
       ansible.builtin.reboot:
         test_command: kubectl get nodes
 
-- name: Reboot cluster workerss staggered
+- name: Reboot cluster workers staggered
   hosts: workers
   become: true
   gather_facts: true
