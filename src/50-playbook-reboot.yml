@@ -7,6 +7,7 @@
   tasks:
     - name: Reboot
       ansible.builtin.reboot:
+        reboot_timeout: 300
         test_command: kubectl get nodes
 
 - name: Reboot cluster workers staggered
@@ -17,3 +18,4 @@
   tasks:
     - name: Reboot
       ansible.builtin.reboot:
+        reboot_timeout: 300
