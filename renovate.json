@@ -1,6 +1,12 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended"
-  ]
+	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
+	"extends": ["config:recommended"],
+	"regexManagers": [
+		{
+			"fileMatch": ["\\.(ya?ml)$"],
+			"matchStrings": [
+				"# ?renovate datasource=(?<datasource>.+?) depName=(?<depName>.+)\\n.+: [\"']?(?<currentValue>.+?)[\"']?\\n"
+			]
+		}
+	]
 }
