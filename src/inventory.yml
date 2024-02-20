@@ -17,7 +17,8 @@ all:
       performance: mid
       disctype: 'ssd'
 
-    pi-homelab-worker-1.local:
+    # Raspbery Pi 5
+    pi-homelab-master-1.local:
       ansible_host: 192.168.10.51
       mac: '1a:3e:66:48:81:31'
       ansible_connection: ssh
@@ -41,10 +42,11 @@ all:
     servers:
       hosts:
         pi-homelab.local:
+        pi-homelab-master-1.local:
 
     workers:
       hosts:
-        pi-homelab-worker-1.local:
+        # pi-homelab-worker-1.local:
 
     cluster:
       children:
@@ -61,3 +63,4 @@ all:
     storage_nodes:
       hosts:
         pi-homelab.local:
+        pi-homelab-master-1.local:
