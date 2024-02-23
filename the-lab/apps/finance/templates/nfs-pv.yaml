@@ -9,18 +9,18 @@ spec:
     - ReadWriteMany
   storageClassName: nfs
   mountOptions:
-    # https://docs.aws.amazon.com/efs/latest/ug/mounting-fs-nfs-mount-settings.html
-    - noresvport
-    - timeo=600
-    - retrans=2
-    - _netdev
-    - rw
-    - nolock
-    - tcp
-    - async
-    - noatime
-    - hard
-    - intr
+    # # https://docs.aws.amazon.com/efs/latest/ug/mounting-fs-nfs-mount-settings.html
+    # - noresvport
+    # - timeo=600
+    # - retrans=2
+    # - _netdev
+    # - rw
+    # - nolock
+    # - tcp
+    # - async
+    # - noatime
+    # - hard
+    # - intr
   nfs:
     server: mercury.local
     path: '/volume1/homelab/finance.ajo'
