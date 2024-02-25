@@ -26,6 +26,7 @@
   loop:
     - /etc/rancher/k3s
     - /etc/rancher/node
+    - /var/lib/rancher/k3s/server/manifests
 
 - name: Copy k3s config and service files
   become: true
@@ -42,6 +43,16 @@
 - name: Init first server node
   when: inventory_hostname == groups['servers'][0]
   block:
+    - name: Copy kube-vip config
+      become: true
+      ansible.builtin.template:
+        src: '{{ item.src }}'
+        dest: '{{ item.dest }}'
+        mode: '0644'
+      loop:
+        - src: kube-vip.yaml.j2
+          dest: '{{ k3s_kubevip_manifest_file }}'
+
     - name: Enable and check K3s service
       become: true
       ansible.builtin.systemd:
@@ -63,7 +74,7 @@
 
     - name: Write Kubernetes config file with the correct cluster address
       ansible.builtin.copy:
-        content: "{{ kubeconfig_base64.content | b64decode | replace('127.0.0.1', hostvars[groups['servers'][0]].ansible_host) }}"
+        content: "{{ kubeconfig_base64.content | b64decode | replace('127.0.0.1', apiserver_endpoint) }}"
         dest: '{{ playbook_dir }}/kubeconfig.yaml'
         mode: '0600'
       delegate_to: localhost

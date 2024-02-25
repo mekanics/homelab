@@ -1,7 +1,7 @@
 {% if inventory_hostname == groups['servers'][0] %}
 cluster-init: true
 {% else %}
-server: https://{{ hostvars[groups['servers'][0]].ansible_host }}:6443
+server: https://{{ apiserver_endpoint }}:6443
 token-file: {{ k3s_token_file }}
 {% endif %}
 {% if 'servers' in group_names %}
