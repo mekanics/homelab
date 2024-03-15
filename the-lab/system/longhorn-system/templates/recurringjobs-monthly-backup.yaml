@@ -1,0 +1,12 @@
+apiVersion: longhorn.io/v1beta1
+kind: RecurringJob
+metadata:
+  name: backup-every-8h
+  namespace: longhorn-system
+spec:
+  cron: '30 23 1 * *'
+  task: 'backup'
+  groups:
+    - default-backup
+  retain: 1
+  concurrency: 2
