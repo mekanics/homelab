@@ -8,5 +8,5 @@ spec:
   task: 'backup'
   groups:
     - default-backup
-  retain: 1
+  retain: 3
   concurrency: 2
