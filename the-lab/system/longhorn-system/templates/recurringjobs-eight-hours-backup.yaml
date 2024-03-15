@@ -9,4 +9,4 @@ spec:
   groups:
     - default-backup
   retain: 3
-  concurrency: 2
+  concurrency: 1
