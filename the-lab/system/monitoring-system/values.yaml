@@ -45,7 +45,7 @@ kube-prometheus-stack:
     persistence:
       enabled: true
       type: pvc
-      existinClaim: nfs-monitoring-grafana
+      existingClaim: nfs-monitoring-grafana
 
   prometheus:
     prometheusSpec:
