@@ -42,12 +42,13 @@ kube-prometheus-stack:
           hosts:
             - *host
 
-    persistence:
-      enabled: true
-      type: nfs
-      size: 10Gi
-      server: mercury.local
-      path: '/volume1/homelab/grafana'
+    # persistence:
+    #   enabled: true
+    #   type: nfs
+    #   size: 10Gi
+    #   server: mercury.local
+    #   path: '/volume1/homelab/grafana'
+    
     #   storageClassName: longhorn
     #   accessModes:
     #     - ReadWriteOnce
