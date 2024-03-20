@@ -42,6 +42,9 @@ kube-prometheus-stack:
           hosts:
             - *host
 
+    initChownData:
+      enabled: false
+
     persistence:
       enabled: true
       type: pvc
