@@ -29,9 +29,9 @@ fava:
     schedule: '45 23 * * FRI'
 
   resources:
-    limits:
-      cpu: 500m
-      memory: 500Mi
+    # limits:
+    #   cpu: 500m
+    #   memory: 500Mi
     requests:
       cpu: 250m
       memory: 250Mi
