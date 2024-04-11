@@ -53,6 +53,10 @@ cluster-install: about lint
 > @echo "Install Kubernetes"
 > $(PLAY_CMD) src/01-playbook-k3s-install.yml
 
+cluster-upgrade: about lint
+> @echo "Upgrade Kubernetes"
+> $(PLAY_CMD) src/01a-playbook-k3s-upgrade.yml
+
 cluster-bootstrap: about lint
 > @echo "Configuring Kubernetes cluster-wide services"
 > $(PLAY_CMD) src/02-playbook-services.yml
