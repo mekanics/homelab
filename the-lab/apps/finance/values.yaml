@@ -1,7 +1,9 @@
 fava:
   env:
-    TZ: Europe/Zurich
-    WATCHFILES_FORCE_POLLING: 'true'
+    - name: TZ
+      value: Europe/Zurich
+    - name: WATCHFILES_FORCE_POLLING
+      value: true
 
   ingress:
     enabled: true
