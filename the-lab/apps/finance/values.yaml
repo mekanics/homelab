@@ -1,6 +1,6 @@
 fava:
   env:
-    - name: beancountFile
+    - name: BEANCOUNT_FILE
       value: '/bean/main.bean'
     - name: TZ
       value: Europe/Zurich
