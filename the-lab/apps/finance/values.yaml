@@ -1,0 +1,41 @@
+fava:
+  env:
+    - name: BEANCOUNT_FILE
+      value: '/bean/main.bean'
+    - name: TZ
+      value: Europe/Zurich
+    - name: WATCHFILES_FORCE_POLLING
+      value: true
+
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: mekanics-ca-issuer
+      hajimari.io/group: Apps
+      hajimari.io/appName: Finances
+      hajimari.io/icon: finance
+    hosts:
+      - host: &host finance.mekanics.ch
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: finance-tls-certificate
+        hosts:
+          - *host
+
+  volume:
+    persistentVolumeClaim:
+      claimName: nfs-fava-ajo
+
+  weeklyPriceUpdate:
+    enabled: true
+
+  resources:
+    # limits:
+    #   cpu: 500m
+    #   memory: 500Mi
+    requests:
+      cpu: 250m
+      memory: 250Mi
