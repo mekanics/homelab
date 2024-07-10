@@ -4,6 +4,8 @@ fava:
       value: '/bean/main.bean'
     - name: TZ
       value: Europe/Zurich
+    - name: WATCHFILES_FORCE_POLLING
+      value: true
 
   ingress:
     enabled: true
