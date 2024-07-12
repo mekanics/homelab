@@ -68,4 +68,4 @@ all:
   # Required Vars
   vars:
     # renovate datasource=github-releases depName=k3s-io/k3s
-    k3s_version: v1.29.3+k3s1
+    k3s_version: v1.30.2+k3s2
