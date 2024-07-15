@@ -9,7 +9,7 @@
     - role: k3s_upgrade
 
 - name: Upgrade K3s Agents
-  hosts: workers
+  hosts: agents
   become: true
   roles:
     - role: k3s_upgrade

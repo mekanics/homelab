@@ -10,8 +10,8 @@
         reboot_timeout: 300
         test_command: kubectl get nodes
 
-- name: Reboot cluster workers staggered
-  hosts: workers
+- name: Reboot cluster agents staggered
+  hosts: agents
   become: true
   gather_facts: true
   serial: 1

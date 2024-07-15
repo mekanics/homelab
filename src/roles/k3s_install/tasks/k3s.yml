@@ -121,9 +121,9 @@
       delay: 10
       changed_when: false
 
-- name: Start workers if any and verify status
+- name: Start agents if any and verify status
   when:
-    - '"workers" in group_names'
+    - '"agents" in group_names'
   block:
     - name: Enable and check K3s service
       become: true

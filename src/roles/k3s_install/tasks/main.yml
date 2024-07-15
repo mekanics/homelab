@@ -14,8 +14,8 @@
 #       include_tasks: k3s.yml
 #       hosts: servers
 #       become: true
-# # - name: Setup K3S workers
-# #   hosts: workers
+# # - name: Setup K3S agents
+# #   hosts: agents
 # #   include_tasks: k3s_worker.yml
 # #   become: true
 # #   tags:

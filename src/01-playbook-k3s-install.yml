@@ -5,6 +5,6 @@
   vars:
     host_summary: 'OS: {{ ansible_facts.lsb.description }} {{ ansible_facts.architecture }} -
       vCORES: {{ ansible_facts.processor_vcpus }} - RAM: {{ ansible_facts.memtotal_mb }}Mb'
-    k3s_binary_name: "{{ 'k3s-agent' if inventory_hostname in groups.workers else 'k3s' }}"
+    k3s_binary_name: "{{ 'k3s-agent' if inventory_hostname in groups.agents else 'k3s' }}"
   roles:
     - k3s_install

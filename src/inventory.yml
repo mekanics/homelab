@@ -44,14 +44,14 @@ all:
         pi-homelab.local:
         pi-homelab-master-1.local:
 
-    workers:
+    agents:
       hosts:
         # pi-homelab-worker-1.local:
 
     cluster:
       children:
         servers:
-        workers:
+        agents:
 
     # NAS storage and media
     nas:

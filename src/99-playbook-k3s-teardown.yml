@@ -1,7 +1,7 @@
 # Tears down the k3s cluster. Don't do this except when destroying the cluster.
 ---
 - name: Teardown k3s cluster
-  hosts: workers
+  hosts: agents
   gather_facts: false
   tasks:
     - name: Run {{ k3s_agent_uninstall }}
