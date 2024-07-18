@@ -41,7 +41,7 @@ uptime-kuma:
   livenessProbe:
     exec:
       command:
-	- extra/healthcheck
+	  - extra/healthcheck
 
   readinessProbe:
     httpGet:
@@ -62,8 +62,6 @@ uptime-kuma:
 
 
   ingress:
-    className: ""
-    annotations: {}
     enabled: true
     className: nginx
     annotations:
