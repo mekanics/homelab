@@ -2,8 +2,8 @@ uptime-kuma:
   image:
     registry: "quay.io"
     repository: "k3rnel-pan1c/uptime-kuma"
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the Chart's appVersion.
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the Chart's appVersion.
     tag: ""
 
   imagePullSecrets: []
