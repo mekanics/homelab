@@ -41,7 +41,7 @@ uptime-kuma:
   livenessProbe:
     exec:
       command:
-	  - extra/healthcheck
+        - extra/healthcheck
 
   readinessProbe:
     httpGet:
@@ -75,7 +75,7 @@ uptime-kuma:
       - host: &host uptime.mekanics.ch
     paths:
       - path: /
-      pathType: Prefix
+        pathType: Prefix
     tls:
       - secretName: uptime-kuma-tls-certificate
         hosts:
