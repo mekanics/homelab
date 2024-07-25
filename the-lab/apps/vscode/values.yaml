@@ -49,7 +49,7 @@ code-server:
       cert-manager.io/cluster-issuer: mekanics-ca-issuer
       hajimari.io/group: Apps
       hajimari.io/appName: VSCode
-      hajimari.io/icon: DataObject
+      hajimari.io/icon: code-braces-box
     hosts:
       - host: &host vscode.mekanics.ch
         paths:
