@@ -44,6 +44,7 @@ code-server:
 
   ingress:
     enabled: true
+    className: 'nginx'
     annotations:
       cert-manager.io/cluster-issuer: mekanics-ca-issuer
       hajimari.io/group: Apps
@@ -54,7 +55,6 @@ code-server:
         paths:
           - path: /
             pathType: Prefix
-    ingressClassName: 'nginx'
     tls:
       - secretName: vscode-tls-certificate
         hosts:
