@@ -3,6 +3,6 @@ name: vscode
 version: 0.0.0
 dependencies:
   - name: code-server
-    version: 13.3.0
+    version: 4.0.40
     repository: oci://tccr.io/truecharts/code-server
     # repository: https://github.com/coder/code-server
