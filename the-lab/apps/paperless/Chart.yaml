@@ -3,5 +3,5 @@ name: paperless
 version: 0.0.0
 dependencies:
   - name: paperless
-    version: 0.4.4
+    version: 0.5.0
     repository: https://mekanics.github.io/charts/
