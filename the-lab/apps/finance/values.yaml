@@ -31,6 +31,7 @@ fava:
 
   weeklyPriceUpdate:
     enabled: true
+    commitToGit: true
 
   resources:
     # limits:
