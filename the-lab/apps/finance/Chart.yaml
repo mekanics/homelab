@@ -3,5 +3,5 @@ name: finance
 version: 0.0.0
 dependencies:
   - name: fava
-    version: 0.7.4
+    version: 0.7.5
     repository: https://mekanics.github.io/charts/
