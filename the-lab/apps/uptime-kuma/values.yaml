@@ -1,14 +1,14 @@
 uptime-kuma:
   image:
-    registry: "quay.io"
-    repository: "k3rnel-pan1c/uptime-kuma"
+    registry: 'quay.io'
+    repository: 'k3rnel-pan1c/uptime-kuma'
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the Chart's appVersion.
-    tag: ""
+    tag: ''
 
   imagePullSecrets: []
-  nameOverride: ""
-  fullnameOverride: ""
+  nameOverride: ''
+  fullnameOverride: ''
 
   commonLabels: {}
 
@@ -23,14 +23,16 @@ uptime-kuma:
     annotations: {}
     # The name of the service account to use.
     # If not set and create is true, a name is generated using the fullname template
-    name: ""
+    name: ''
 
   podAnnotations: {}
 
-  podSecurityContext: {}
+  podSecurityContext:
+    {}
     # fsGroup: 2000
 
-  securityContext: {}
+  securityContext:
+    {}
     # capabilities:
     #   drop:
     #   - ALL
@@ -56,10 +58,8 @@ uptime-kuma:
   route:
     enabled: false
     annotations: {}
-    host: ""
+    host: ''
     labels: {}
-
-
 
   ingress:
     enabled: true
@@ -81,7 +81,8 @@ uptime-kuma:
         hosts:
           - *host
 
-  resources: {}
+  resources:
+    {}
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -94,10 +95,10 @@ uptime-kuma:
     #   memory: 128Mi
 
   persistence:
-    enabled: false
-    claimNameOverwrite: ""
+    enabled: true
+    claimNameOverwrite: ~
     sizeLimit: 4Gi
-    storageClass: ""
+    storageClass: 'longhorn'
     annotations: {}
     labels: {}
 
@@ -116,4 +117,4 @@ uptime-kuma:
 
   extraCertificates:
     enabled: false
-    cacerts: ""
+    cacerts: ''
