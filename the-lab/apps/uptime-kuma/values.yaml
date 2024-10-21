@@ -1,20 +1,17 @@
 uptime-kuma:
+  replicaCount: 1
+
   image:
-    registry: 'quay.io'
-    repository: 'k3rnel-pan1c/uptime-kuma'
+    repository: louislam/uptime-kuma
     pullPolicy: IfNotPresent
-    # Overrides the image tag whose default is the Chart's appVersion.
-    tag: ''
+    # Overrides the image tag whose default is the chart appVersion.
+    tag:
 
   imagePullSecrets: []
   nameOverride: ''
   fullnameOverride: ''
 
-  commonLabels: {}
-
-  statefulSet:
-    labels: {}
-    annotations: {}
+  strategyType: RollingUpdate
 
   serviceAccount:
     # Specifies whether a service account should be created
@@ -40,26 +37,14 @@ uptime-kuma:
     # runAsNonRoot: true
     # runAsUser: 1000
 
-  livenessProbe:
-    exec:
-      command:
-        - extra/healthcheck
-
-  readinessProbe:
-    httpGet:
-      path: /
-      port: http
-      scheme: HTTP
-
   service:
     type: ClusterIP
-    port: 80
+    port: 3001
 
-  route:
-    enabled: false
-    annotations: {}
-    host: ''
-    labels: {}
+  dnsConfig:
+    options:
+      - name: ndots
+        value: '1'
 
   ingress:
     enabled: true
@@ -81,6 +66,52 @@ uptime-kuma:
         hosts:
           - *host
 
+  persistence:
+    config:
+      enabled: true
+      # -- Sets the persistence type
+      # Valid options are pvc, emptyDir, hostPath, secret, configMap or custom
+      type: pvc
+
+      # -- Where to mount the volume in the main container.
+      # Defaults to `/<name_of_the_volume>`,
+      # setting to '-' creates the volume but disables the volumeMount.
+      mountPath: /app/data
+      # -- Specify if the volume should be mounted read-only.
+      readOnly: false
+      # -- Override the name suffix that is used for this volume.
+      nameOverride:
+
+      # -- Storage Class for the config volume.
+      # If set to `-`, dynamic provisioning is disabled.
+      # If set to something else, the given storageClass is used.
+      # If undefined (the default) or set to null, no storageClassName spec is set, choosing the default provisioner.
+      storageClass: 'longhorn' # "-"
+
+      # -- If you want to reuse an existing claim, the name of the existing PVC can be passed here.
+      existingClaim: # your-claim
+
+      # -- Used in conjunction with `existingClaim`. Specifies a sub-path inside the referenced volume instead of its root
+      subPath: # some-subpath
+
+      # -- AccessMode for the persistent volume.
+      # Make sure to select an access mode that is supported by your storage provider!
+      # [[ref]](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes)
+      accessMode: ReadWriteOnce
+
+      # -- The amount of storage that is requested for the persistent volume.
+      size: 1Gi
+
+      # -- Set to true to retain the PVC upon `helm uninstall`
+      retain: true
+
+      # -- Additional labels for the PVC
+      extraLabels: {}
+
+  env:
+    - name: TZ
+      value: Europe/Zurich
+
   resources:
     {}
     # We usually recommend not to specify default resources and to leave this as a conscious
@@ -88,33 +119,21 @@ uptime-kuma:
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
     # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
     # limits:
-    #   cpu: 200m
-    #   memory: 256Mi
+    #   cpu: 100m
+    #   memory: 128Mi
     # requests:
     #   cpu: 100m
     #   memory: 128Mi
 
-  persistence:
-    enabled: true
-    claimNameOverwrite: ~
-    sizeLimit: 4Gi
-    storageClass: 'longhorn'
-    annotations: {}
-    labels: {}
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    # targetMemoryUtilizationPercentage: 80
 
   nodeSelector: {}
 
   tolerations: []
 
   affinity: {}
-
-  serviceMonitor:
-    enabled: false
-
-  testPod:
-    image: docker.io/busybox@sha256:768e5c6f5cb6db0794eec98dc7a967f40631746c32232b78a3105fb946f3ab83
-    annotations: {}
-
-  extraCertificates:
-    enabled: false
-    cacerts: ''
