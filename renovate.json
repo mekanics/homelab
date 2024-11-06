@@ -8,5 +8,7 @@
 				"# ?renovate datasource=(?<datasource>.+?) depName=(?<depName>.+)\\n.+: [\"']?(?<currentValue>.+?)[\"']?\\n"
 			]
 		}
-	]
+	],
+	"timezone": "Europe/Zurich",
+	"schedule": ["before 4am on Monday"]
 }
