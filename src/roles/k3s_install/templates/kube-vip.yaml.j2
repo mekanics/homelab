@@ -48,68 +48,61 @@ metadata:
 spec:
   selector:
     matchLabels:
-      name: kube-vip-ds
+      app: kube-vip-ds
   template:
     metadata:
       labels:
-        name: kube-vip-ds
+        app: kube-vip-ds
     spec:
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: node-role.kubernetes.io/master
-                operator: Exists
-            - matchExpressions:
-              - key: node-role.kubernetes.io/control-plane
-                operator: Exists
       containers:
-      - args:
-        - manager
-        env:
-        - name: vip_arp
-          value: "true"
-        - name: port
-          value: "6443"
-        - name: vip_cidr
-          value: "{{ apiserver_endpoint | ansible.utils.ipsubnet | ansible.utils.ipaddr('prefix') }}"
-        - name: cp_enable
-          value: "true"
-        - name: cp_namespace
-          value: kube-system
-        - name: vip_ddns
-          value: "false"
-        - name: svc_enable
-          value: "false"
-        - name: vip_leaderelection
-          value: "true"
-        - name: vip_leaseduration
-          value: "15"
-        - name: vip_renewdeadline
-          value: "10"
-        - name: vip_retryperiod
-          value: "2"
-        - name: address
-          value: {{ apiserver_endpoint }}
-        # renovate datasource=docker depName=kube-vip/kube-vip
-        image: ghcr.io/kube-vip/kube-vip:v0.7.0
-        imagePullPolicy: Always
-        name: kube-vip
-        resources: {}
-        securityContext:
-          capabilities:
-            add:
-            - NET_ADMIN
-            - NET_RAW
-            - SYS_TIME
+        - name: kube-vip
+          image: ghcr.io/kube-vip/kube-vip:v0.8.7
+          imagePullPolicy: IfNotPresent
+          args:
+            - manager
+          env:
+            - name: vip_arp
+              value: "true"
+            - name: port
+              value: "6443"
+            - name: vip_interface
+              value: "{{ ansible_default_ipv4.interface }}"
+            - name: vip_cidr
+              value: "32"
+            - name: cp_enable
+              value: "true"
+            - name: cp_namespace
+              value: kube-system
+            - name: vip_address
+              value: "{{ k3s_registration_address }}"
+            - name: lb_enable
+              value: "true"
+            - name: lb_port
+              value: "6443"
+            - name: prometheus_server
+              value: ":2112"
+            - name: leaderelection_leaseduration
+              value: "15"
+            - name: leaderelection_renewdeadline
+              value: "10"
+            - name: leaderelection_retryperiod
+              value: "2"
+            - name: vip_loglevel
+              value: "5"
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+                - NET_RAW
+                - SYS_TIME
+                - NET_BIND_SERVICE
       hostNetwork: true
-      serviceAccountName: kube-vip
+      nodeSelector:
+        node-role.kubernetes.io/master: "true"
       tolerations:
-      - effect: NoSchedule
-        operator: Exists
-      - effect: NoExecute
-        operator: Exists
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/master
+          operator: Exists
   updateStrategy: {}
 status:
   currentNumberScheduled: 0
