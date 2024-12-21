@@ -1,4 +1,8 @@
 ---
+- name: Include k3s_install vars
+  ansible.builtin.include_vars:
+    file: '{{ role_path }}/../k3s_install/vars/main.yml'
+
 # with_fileglob doesn't work with remote_src, it tries to find the file on the
 # local control-plane instead of the remote host. Shell supports wildcards.
 - name: Get k3s installed version
@@ -9,6 +13,27 @@
 - name: Set k3s installed version
   ansible.builtin.set_fact:
     installed_k3s_version: "{{ k3s_version_output.stdout_lines[0].split(' ')[2] }}"
+
+# Update kube-vip manifest on the first server node
+- name: Update kube-vip manifest
+  when: inventory_hostname == groups['servers'][0]
+  block:
+    - name: Copy updated kube-vip config
+      become: true
+      ansible.builtin.template:
+        src: '{{ role_path }}/../k3s_install/templates/kube-vip.yaml.j2'
+        dest: '{{ k3s_kubevip_manifest_file }}'
+        mode: '0644'
+
+    - name: Wait for kube-vip pods to be ready
+      become: true
+      ansible.builtin.command:
+        cmd: k3s kubectl -n kube-system wait --for=condition=Ready pods -l app=kube-vip-ds --timeout=300s
+      register: kubevip_ready
+      until: kubevip_ready.rc == 0
+      retries: 10
+      delay: 30
+      changed_when: false
 
 # We should be downloading and installing the newer version only if we are in the following case :
 #   - the installed version of K3s on the nodes is older than the requested version in ansible vars
