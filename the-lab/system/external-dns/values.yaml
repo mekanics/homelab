@@ -6,7 +6,7 @@ external-dns:
   policy: sync
   env:
     - name: EXTERNAL_DNS_PIHOLE_SERVER
-      value: http://192.168.10.5:8080/api
+      value: http://192.168.10.5/api
     - name: EXTERNAL_DNS_PIHOLE_PASSWORD
       valueFrom:
         secretKeyRef:
