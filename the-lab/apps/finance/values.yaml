@@ -1,4 +1,7 @@
 fava:
+  image:
+    tag: 0.6.0
+
   env:
     - name: BEANCOUNT_FILE
       value: '/bean/main.bean'
