@@ -3,5 +3,5 @@ name: uptime-kuma
 version: 0.0.0
 dependencies:
   - name: uptime-kuma
-    version: 0.1.16
+    version: 0.1.17
     repository: https://mekanics.github.io/charts/
