@@ -29,7 +29,7 @@ fava:
     persistentVolumeClaim:
       claimName: nfs-fava-ajo
 
-  weeklyPriceUpdate:
+  priceUpdateJobs:
     enabled: true
     commitToGit: true
     jobs:
