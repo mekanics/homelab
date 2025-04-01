@@ -32,6 +32,14 @@ fava:
   weeklyPriceUpdate:
     enabled: true
     commitToGit: true
+  jobs:
+    - name: weekly
+      schedule: '00 17 * * FRI' # 1h after the US market closes
+      timezone: 'America/New_York'
+
+    - name: last-day-of-month
+      schedule: '00 4 1 * *' # Equivalent to 10pm in New York
+      timezone: 'Europe/Zurich'
 
   resources:
     # limits:
