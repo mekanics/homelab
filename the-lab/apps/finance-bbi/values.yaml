@@ -29,9 +29,17 @@ fava:
     persistentVolumeClaim:
       claimName: nfs-fava-bbi
 
-  weeklyPriceUpdate:
+  priceUpdateJobs:
     enabled: true
-    schedule: '45 23 * * FRI'
+    commitToGit: true
+    jobs:
+      - name: weekly
+        schedule: '03 17 * * FRI' # 1h after the US market closes
+        timezone: 'America/New_York'
+
+      - name: last-day-of-month
+        schedule: '03 4 1 * *' # Equivalent to 10pm in New York
+        timezone: 'Europe/Zurich'
 
   resources:
     # limits:
