@@ -36,7 +36,11 @@ n8n:
   #
   ingress:
     enabled: true
-    annotations: {}
+    annotations:
+      cert-manager.io/cluster-issuer: mekanics-ca-issuer
+      hajimari.io/group: Apps
+      hajimari.io/appName: Workflow
+      hajimari.io/icon: auto-awesome
     # define a custom ingress class Name, like "traefik" or "nginx"
     className: 'nginx'
     hosts:
