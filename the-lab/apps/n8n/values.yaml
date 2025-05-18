@@ -46,8 +46,7 @@ n8n:
     hosts:
       - host: &host workflow.mekanics.ch
         paths:
-          paths:
-            - /
+          - /
     tls:
       - hosts:
           - *host
