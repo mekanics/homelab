@@ -59,6 +59,8 @@ n8n:
         editor_base_url: *host
         executions_mode: queue
         generic_timezone: Europe/Zurich
+        runners_enabled: true
+
     #    db:
     #      type: postgresdb
     #      postgresdb:
