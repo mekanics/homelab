@@ -54,8 +54,11 @@ n8n:
   # The config: {} dictionary is converted to environmental variables in the ConfigMap.
   main:
     # See https://docs.n8n.io/hosting/configuration/environment-variables/ for all values.
-    config: {}
-    #    n8n:
+    config:
+      n8n:
+        editor_base_url: *host
+        executions_mode: queue
+        generic_timezone: Europe/Zurich
     #    db:
     #      type: postgresdb
     #      postgresdb:
@@ -74,8 +77,6 @@ n8n:
     #        password: 'big secret'
 
     # Extra environmental variables, so you can reference other configmaps and secrets into n8n as env vars.
-    extraEnv:
-      TZ: Europe/Zurich
     #    N8N_DB_POSTGRESDB_NAME:
     #      valueFrom:
     #        secretKeyRef:
