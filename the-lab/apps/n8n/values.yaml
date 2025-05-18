@@ -46,9 +46,8 @@ n8n:
     hosts:
       - host: &host workflow.mekanics.ch
         paths:
-          - path: /
-            pathType: Prefix
-            service: main
+          paths:
+            - /
     tls:
       - hosts:
           - *host
@@ -248,17 +247,16 @@ n8n:
       # -- Service port
       port: 80
 
-    resources: {}
-    # We usually recommend not specifying default resources and to leave this as a conscious
-    # choice for the user. This also increases chances charts run on environments with little
-    # resources, such as Minikube. If you do want to specify resources, uncomment the following
-    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-    # limits:
-    #   cpu: 100m
-    #   memory: 128Mi
-    # requests:
-    #   cpu: 100m
-    #   memory: 128Mi
+    resources:
+      # We usually recommend not specifying default resources and to leave this as a conscious
+      # choice for the user. This also increases chances charts run on environments with little
+      # resources, such as Minikube. If you do want to specify resources, uncomment the following
+      # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+      # limits:
+      #   cpu: 100m
+      #   memory: 128Mi
+      requests:
+        memory: 256Mi
 
     autoscaling:
       enabled: false
