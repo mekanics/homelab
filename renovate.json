@@ -1,14 +1,21 @@
 {
 	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
-	"extends": ["config:recommended"],
-	"regexManagers": [
+	"extends": [
+		"config:recommended"
+	],
+	"customManagers": [
 		{
-			"fileMatch": ["\\.(ya?ml)$"],
+			"customType": "regex",
+			"managerFilePatterns": [
+				"/\\.(ya?ml)$/"
+			],
 			"matchStrings": [
 				"# ?renovate datasource=(?<datasource>.+?) depName=(?<depName>.+)\\n.+: [\"']?(?<currentValue>.+?)[\"']?\\n"
 			]
 		}
 	],
 	"timezone": "Europe/Zurich",
-	"schedule": ["before 4pm every weekday"]
+	"schedule": [
+		"before 4pm every weekday"
+	]
 }
