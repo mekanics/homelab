@@ -3,6 +3,8 @@
 ingress-nginx:
   controller:
     admissionWebhooks:
+      certManager:
+        enabled: true
       timeoutSeconds: 30
     metrics:
       enabled: true
