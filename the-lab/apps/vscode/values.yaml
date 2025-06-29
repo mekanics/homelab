@@ -1,7 +1,5 @@
 # https://github.com/coder/code-server/blob/main/ci/helm-chart/values.yaml
 code-server:
-  autoscaling:
-    enabled: false
   # Default values for code-server.
   # This is a YAML-formatted file.
   # Declare variables to be passed into your templates.
@@ -148,7 +146,7 @@ code-server:
     #      - curl -s -L SOME_SCRIPT | bash
 
   ## Enable an Specify container in extraContainers.
-  ## This is meant to allow adding code-server dependencies, like docker-dind.
+  ## This is meant to allow adding code-server dependencies, like docker-dind.
   extraContainers: |
     # If docker-dind is used, DOCKER_HOST env is mandatory to set in "extraVars"
     #- name: docker-dind
