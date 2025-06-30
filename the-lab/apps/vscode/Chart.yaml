@@ -3,5 +3,5 @@ name: vscode
 version: 0.0.0
 dependencies:
   - name: code-server
-    version: 3.28.0
+    version: 3.29.0
     repository: https://mekanics.github.io/charts/
