@@ -1,4 +1,10 @@
 fava:
+  image:
+    # repository: ghcr.io/mekanics/fava
+    # pullPolicy: IfNotPresent
+    # # Overrides the image tag whose default is the chart appVersion.
+    tag: 0.8.2
+
   env:
     - name: BEANCOUNT_FILE
       value: '/bean/main.bean'
