@@ -34,8 +34,8 @@ fava:
     commitToGit: true
     jobs:
       - name: weekly
-        schedule: '25 00 * * SAT'
-        # schedule: '06 17 * * FRI' # 1h after the US market closes
+        # schedule: '25 00 * * SAT'
+        schedule: '06 17 * * FRI' # 1h after the US market closes (16:00)
         timezone: 'America/New_York'
 
       - name: last-day-of-month
