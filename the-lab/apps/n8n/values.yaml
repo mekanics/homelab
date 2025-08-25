@@ -226,11 +226,11 @@ n8n:
       httpGet:
         path: /healthz
         port: http
-      # initialDelaySeconds: 30
-      # periodSeconds: 10
-      # timeoutSeconds: 5
-      # failureThreshold: 6
-      # successThreshold: 1
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 6
+      successThreshold: 1
 
     # List of initialization containers belonging to the pod. Init containers are executed in order prior to containers being started.
     # See https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
