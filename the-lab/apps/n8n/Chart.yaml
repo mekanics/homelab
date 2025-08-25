@@ -2,6 +2,7 @@ apiVersion: v2
 name: n8n
 version: 0.0.0
 dependencies:
+  # https://github.com/8gears/n8n-helm-chart
   - name: n8n
     version: 1.0.12
     repository: oci://8gears.container-registry.com/library
