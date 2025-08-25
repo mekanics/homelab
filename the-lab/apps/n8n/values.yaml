@@ -84,7 +84,7 @@ n8n:
     extraEnv:
       # https://github.com/8gears/n8n-helm-chart/issues/174
       N8N_PORT:
-        value: '80'
+        value: '5678'
     #    N8N_DB_POSTGRESDB_NAME:
     #      valueFrom:
     #        secretKeyRef:
