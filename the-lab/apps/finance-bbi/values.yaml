@@ -3,7 +3,7 @@ fava:
     # repository: ghcr.io/mekanics/fava
     # pullPolicy: IfNotPresent
     # # Overrides the image tag whose default is the chart appVersion.
-    tag: 0.8.3
+    # tag: 0.8.3
 
   env:
     - name: BEANCOUNT_FILE
