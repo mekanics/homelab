@@ -689,11 +689,11 @@ n8n:
   # Bitnami Valkey configuration
   # https://artifacthub.io/packages/helm/bitnami/valkey
   valkey:
-    enabled: false
-    # architecture: standalone
-    #
+    enabled: true
+    architecture: standalone
+
     # primary:
     #   persistence:
     #     enabled: false
-    #     existingClaim: ""
+    #     existingClaim: ''
     #     size: 2Gi
