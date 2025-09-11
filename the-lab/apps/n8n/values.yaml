@@ -701,6 +701,10 @@ n8n:
   valkey:
     enabled: true
     architecture: standalone
+    sentinel:
+      enabled: false
+    auth:
+      enabled: false
 
     # primary:
     #   persistence:
