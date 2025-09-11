@@ -142,7 +142,10 @@ n8n:
       # Use an existing PVC
       # existingClaim:
 
-    extraVolumes: []
+    extraVolumes:
+      - name: nfs-storage
+        persistentVolumeClaim:
+          claimName: nfs-n8n
     #    - name: db-ca-cert
     #      secret:
     #        secretName: db-ca
@@ -150,7 +153,10 @@ n8n:
     #          - key: ca.crt
     #            path: ca.crt
 
-    extraVolumeMounts: []
+    extraVolumeMounts:
+      - name: nfs-storage
+        mountPath: /home/node/nfs-data
+        readOnly: false
     #    - name: db-ca-cert
     #      mountPath: /etc/ssl/certs/postgresql
     #      readOnly: true
