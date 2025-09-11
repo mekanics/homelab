@@ -13,14 +13,14 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: nfs
   mountOptions:
-    - nfsvers=4.1
+    - nfsvers=4
     - proto=tcp
     - hard
     - intr
-    - rsize=1048576
-    - wsize=1048576
+    - rsize=65536
+    - wsize=65536
     - timeo=600
     - retrans=2
   nfs:
     server: mercury.local
-    path: /volume1/homelab/n8n
+    path: '/volume1/homelab/n8n'
