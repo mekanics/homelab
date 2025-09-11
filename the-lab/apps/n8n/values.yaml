@@ -65,6 +65,16 @@ n8n:
         editor_base_url: *host
         runners_enabled: true
 
+      # webhook_url: *host
+      queue:
+        health:
+          check:
+            active: true
+        bull:
+          redis:
+            host: n8n-valkey-primary
+            port: 6379
+
     #    db:
     #      type: postgresdb
     #      postgresdb:
