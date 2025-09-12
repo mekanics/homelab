@@ -138,7 +138,7 @@ n8n:
       accessModes:
         - ReadWriteOnce
       # Persistent Volume size
-      size: 1Gi
+      size: 4Gi
       # Use an existing PVC
       # existingClaim:
 
