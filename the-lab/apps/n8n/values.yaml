@@ -103,6 +103,8 @@ n8n:
         value: ''
       N8N_DIAGNOSTICS_CONFIG_BACKEND:
         value: ''
+      NODE_FUNCTION_ALLOW_BUILTIN:
+        value: '*'
 
     #    N8N_DB_POSTGRESDB_NAME:
     #      valueFrom:
