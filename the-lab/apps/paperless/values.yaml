@@ -77,6 +77,8 @@ paperless:
 
   redis:
     enabled: true
+    image:
+      repository: bitnamilegacy/redis
     auth:
       enabled: false
     master:
