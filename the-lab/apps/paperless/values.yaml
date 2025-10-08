@@ -77,4 +77,4 @@ paperless:
 
   redis:
     image:
-      repository: bitnami/redis
+      repository: bitnamilegacy/redis
