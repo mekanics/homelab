@@ -74,3 +74,7 @@ paperless:
   #       enabled: false
   #       # storageClass: ""
   #       # size: 8Gi
+
+  redis:
+    image:
+      repository: bitnami/redis
