@@ -1,5 +1,3 @@
-host: &host workflow.mekanics.ch
-
 n8n:
   # README
   # High level values structure, overview and explanation of the values.yaml file.
@@ -46,7 +44,7 @@ n8n:
     # define a custom ingress class Name, like "traefik" or "nginx"
     className: 'nginx'
     hosts:
-      - host: *host
+      - host: &host workflow.mekanics.ch
         paths:
           - /
     tls:
@@ -64,10 +62,10 @@ n8n:
       executions_mode: queue
 
       n8n:
-        editor_base_url: 'https://{{ .Values.host }}'
+        editor_base_url: 'https://workflow.mekanics.ch'
         runners_enabled: true
 
-      webhook_url: 'https://{{ .Values.host }}'
+      webhook_url: 'https://workflow.mekanics.ch'
       queue:
         health:
           check:
