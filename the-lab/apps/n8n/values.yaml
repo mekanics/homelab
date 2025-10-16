@@ -62,10 +62,10 @@ n8n:
       executions_mode: queue
 
       n8n:
-        editor_base_url: *host
+        editor_base_url: 'https://{{ .Values.host }}'
         runners_enabled: true
 
-      # webhook_url: *host
+      webhook_url: 'https://{{ .Values.host }}'
       queue:
         health:
           check:
