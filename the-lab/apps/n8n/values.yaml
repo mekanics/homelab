@@ -1,3 +1,5 @@
+host: &host workflow.mekanics.ch
+
 n8n:
   # README
   # High level values structure, overview and explanation of the values.yaml file.
@@ -44,7 +46,7 @@ n8n:
     # define a custom ingress class Name, like "traefik" or "nginx"
     className: 'nginx'
     hosts:
-      - host: &host workflow.mekanics.ch
+      - host: *host
         paths:
           - /
     tls:
