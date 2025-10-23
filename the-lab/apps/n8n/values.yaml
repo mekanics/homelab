@@ -93,8 +93,7 @@ n8n:
     #        password: 'big secret'
 
     # Extra environmental variables, so you can reference other configmaps and secrets into n8n as env vars.
-    extraEnv:
-      # https://github.com/8gears/n8n-helm-chart/issues/174
+    extraEnv: &extraEnv # https://github.com/8gears/n8n-helm-chart/issues/174
       N8N_PORT:
         value: '5678'
       N8N_DIAGNOSTICS_ENABLED:
@@ -313,7 +312,7 @@ n8n:
     secret: {}
 
     # Extra environmental variables, so you can reference other configmaps and secrets into n8n as env vars.
-    extraEnv: {}
+    extraEnv: *extraEnv
 
     # Define the number of jobs a worker can run in parallel by using the concurrency flag. Default is 10
     concurrency: 10
