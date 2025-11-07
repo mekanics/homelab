@@ -4,6 +4,18 @@ argo-cd:
   global:
     domain: argocd.mekanics.ch
 
+  # Performance tuning and timeout configuration for Raspberry Pi cluster
+  configs:
+    params:
+      # Reduce concurrent operations to lower load on etcd/API server
+      controller.operation.processors: '5'
+      controller.status.processors: '10'
+      # Increase timeouts to handle slower hardware
+      controller.repo.server.timeout.seconds: '120'
+    cm:
+      # Use annotation-based resource tracking (more reliable)
+      application.resourceTrackingMethod: annotation
+
   server:
     extraArgs:
       - --insecure
