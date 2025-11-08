@@ -1,3 +1,4 @@
+# https://github.com/8gears/n8n-helm-chart/blob/main/charts/n8n/values.yaml
 n8n:
   # README
   # High level values structure, overview and explanation of the values.yaml file.
@@ -297,6 +298,9 @@ n8n:
     nodeSelector: {}
     tolerations: []
     affinity: {}
+
+    # Pod termination grace period in seconds
+    terminationGracePeriodSeconds: 30
 
   # # # # # # # # # # # # # # # #
   #
@@ -667,6 +671,9 @@ n8n:
     tolerations: []
     affinity: {}
 
+    # Pod termination grace period in seconds
+    terminationGracePeriodSeconds: 30
+
   #
   # User defined supplementary K8s manifests
   #
@@ -713,8 +720,13 @@ n8n:
     auth:
       enabled: false
 
-    # primary:
-    #   persistence:
-    #     enabled: false
-    #     existingClaim: ''
-    #     size: 2Gi
+    primary:
+      persistence:
+        enabled: true
+        storageClass: 'longhorn'
+        accessModes:
+          - ReadWriteOnce
+        size: 2Gi
+      resources:
+        requests:
+          memory: 256Mi
