@@ -46,4 +46,11 @@ spec:
           - ApplyOutOfSyncOnly=true
           - ServerSideApply=true
 
+      # Ignore differences in the creation timestamp of the volume claim template
+      ignoreDifferences:
+        - group: apps
+          kind: StatefulSet
+          jqPathExpressions:
+            - '.spec.volumeClaimTemplates[]?.metadata.creationTimestamp'
+
 {{- end }}
