@@ -57,7 +57,7 @@ spec:
       containers:
         - name: kube-vip
           # renovate: datasource=github-releases depName=kube-vip/kube-vip
-          image: ghcr.io/kube-vip/kube-vip:v0.8.9
+          image: ghcr.io/kube-vip/kube-vip:v1.0.0
           imagePullPolicy: IfNotPresent
           args:
             - manager
@@ -67,9 +67,9 @@ spec:
             - name: port
               value: "6443"
             - name: vip_interface
-              value: "{{ ansible_default_ipv4.interface }}"
-            - name: vip_cidr
-              value: "{{ apiserver_endpoint | ansible.utils.ipsubnet | ansible.utils.ipaddr('prefix') }}"
+              value: "eth0"
+            - name: vip_subnet
+              value: "32"
             - name: cp_enable
               value: "true"
             - name: cp_namespace
@@ -83,12 +83,16 @@ spec:
             - name: prometheus_server
               value: ":2112"
             - name: leaderelection_leaseduration
-              value: "15"
+              value: "30"
             - name: leaderelection_renewdeadline
-              value: "10"
+              value: "20"
             - name: leaderelection_retryperiod
-              value: "2"
+              value: "5"
             - name: vip_loglevel
+              value: "5"
+            - name: vip_arp_gratuitous
+              value: "true"
+            - name: vip_arp_refresh
               value: "5"
           securityContext:
             capabilities:
@@ -97,6 +101,29 @@ spec:
                 - NET_RAW
                 - SYS_TIME
                 - NET_BIND_SERVICE
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 2112
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 2112
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
       hostNetwork: true
       serviceAccountName: kube-vip
       nodeSelector:

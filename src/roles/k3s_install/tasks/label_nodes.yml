@@ -1,8 +1,6 @@
 ---
 - name: Label nodes with custom labels
-  when:
-    - inventory_hostname == groups['servers'][0]
-    - k8s_node_labels is defined
+  when: inventory_hostname == groups['servers'][0]
   block:
     - name: Wait for node to be ready
       become: true
@@ -22,7 +20,7 @@
       ansible.builtin.command:
         cmd: >
           k3s kubectl label node {{ item }}
-          {{ hostvars[item].k8s_node_labels | dict2items | map('join', '=') | join(' ') }}
+          {{ hostvars[item].k8s_node_labels.items() | map('join', '=') | join(' ') }}
           --overwrite
       when: hostvars[item].k8s_node_labels is defined
       loop: "{{ groups['cluster'] }}"

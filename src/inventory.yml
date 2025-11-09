@@ -22,6 +22,7 @@ all:
         node.homelab.io/storage-type: ssd
         node.homelab.io/storage-tier: fast
         node.homelab.io/arch: arm64
+        node.homelab.io/location: office
         node.longhorn.io/create-default-disk: 'true'
 
     # Raspbery Pi 5
@@ -37,6 +38,7 @@ all:
         node.homelab.io/storage-type: ssd
         node.homelab.io/storage-tier: fast
         node.homelab.io/arch: arm64
+        node.homelab.io/location: office
         node.longhorn.io/create-default-disk: 'true'
 
     # homelab-2.local:
