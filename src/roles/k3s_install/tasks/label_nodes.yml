@@ -1,0 +1,40 @@
+---
+- name: Label nodes with custom labels
+  when:
+    - inventory_hostname == groups['servers'][0]
+    - k8s_node_labels is defined
+  block:
+    - name: Wait for node to be ready
+      become: true
+      ansible.builtin.command:
+        cmd: k3s kubectl get nodes {{ hostvars[item].inventory_hostname_short }} -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+      register: node_ready
+      until: node_ready.stdout == "True"
+      retries: 30
+      delay: 10
+      changed_when: false
+      loop: "{{ groups['cluster'] }}"
+      loop_control:
+        label: '{{ hostvars[item].inventory_hostname_short }}'
+
+    - name: Apply custom labels to nodes
+      become: true
+      ansible.builtin.command:
+        cmd: >
+          k3s kubectl label node {{ hostvars[item].inventory_hostname_short }}
+          {{ hostvars[item].k8s_node_labels | dict2items | map('join', '=') | join(' ') }}
+          --overwrite
+      when: hostvars[item].k8s_node_labels is defined
+      loop: "{{ groups['cluster'] }}"
+      loop_control:
+        label: '{{ hostvars[item].inventory_hostname_short }}'
+      changed_when: true
+      register: label_result
+
+    - name: Display labeling results
+      ansible.builtin.debug:
+        msg: 'Node {{ item.item }} labeled successfully'
+      loop: '{{ label_result.results }}'
+      loop_control:
+        label: '{{ item.item }}'
+      when: label_result.results is defined

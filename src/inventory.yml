@@ -16,6 +16,13 @@ all:
       ansible_connection: ssh
       performance: mid
       disctype: 'ssd'
+      # Kubernetes node labels
+      k8s_node_labels:
+        node.homelab.io/performance: mid
+        node.homelab.io/storage-type: ssd
+        node.homelab.io/storage-tier: fast
+        node.homelab.io/arch: arm64
+        node.longhorn.io/create-default-disk: 'true'
 
     # Raspbery Pi 5
     pi-homelab-master-1.local:
@@ -24,6 +31,13 @@ all:
       ansible_connection: ssh
       performance: high
       disctype: 'ssd'
+      # Kubernetes node labels
+      k8s_node_labels:
+        node.homelab.io/performance: high
+        node.homelab.io/storage-type: ssd
+        node.homelab.io/storage-tier: fast
+        node.homelab.io/arch: arm64
+        node.longhorn.io/create-default-disk: 'true'
 
     # homelab-2.local:
     #   ansible_host: 192.168.10.22

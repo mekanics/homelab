@@ -50,9 +50,34 @@ kube-prometheus-stack:
       type: pvc
       existingClaim: nfs-monitoring-grafana
 
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 80
+            preference:
+              matchExpressions:
+                - key: node.homelab.io/storage-type
+                  operator: In
+                  values: ['ssd']
+
   prometheus:
     prometheusSpec:
       ruleSelectorNilUsesHelmValues: false
       serviceMonitorSelectorNilUsesHelmValues: false
       podMonitorSelectorNilUsesHelmValues: false
       probeSelectorNilUsesHelmValues: false
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: node.homelab.io/performance
+                    operator: In
+                    values: ['high']
+            - weight: 80
+              preference:
+                matchExpressions:
+                  - key: node.homelab.io/storage-type
+                    operator: In
+                    values: ['ssd']

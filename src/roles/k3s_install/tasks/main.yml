@@ -5,6 +5,14 @@
   tags:
     - install
     - k3s
+
+- name: Label k3s nodes
+  include_tasks: label_nodes.yml
+  when: ansible_facts['os_family'] != "Darwin"
+  tags:
+    - install
+    - k3s
+    - labels
 # - name: Install k3s
 #   tags:
 #     - install

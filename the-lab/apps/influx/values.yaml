@@ -28,6 +28,22 @@ influxdb2:
     #   memory: 2048Mi
     #   cpu: 1000m
 
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: node.homelab.io/performance
+                operator: In
+                values: ['high']
+        - weight: 80
+          preference:
+            matchExpressions:
+              - key: node.homelab.io/storage-type
+                operator: In
+                values: ['ssd']
+
 # https://github.com/influxdata/helm-charts/blob/master/charts/telegraf/values.yaml
 telegraf:
   tplVersion: 2
@@ -151,3 +167,13 @@ telegraf:
     # limits:
     #   memory: 128Mi
     #   cpu: 100m
+
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: node.homelab.io/performance
+                operator: In
+                values: ['high']

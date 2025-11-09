@@ -297,7 +297,21 @@ n8n:
 
     nodeSelector: {}
     tolerations: []
-    affinity: {}
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+                - key: node.homelab.io/performance
+                  operator: In
+                  values: ['high']
+          - weight: 80
+            preference:
+              matchExpressions:
+                - key: node.homelab.io/storage-type
+                  operator: In
+                  values: ['ssd']
 
     # Pod termination grace period in seconds
     terminationGracePeriodSeconds: 30
@@ -469,7 +483,15 @@ n8n:
 
     nodeSelector: {}
     tolerations: []
-    affinity: {}
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 80
+            preference:
+              matchExpressions:
+                - key: node.homelab.io/storage-type
+                  operator: In
+                  values: ['ssd']
 
   # Webhook related settings
   # With .Values.scaling.webhook.enabled=true you disable Webhooks from the main process, but you enable the processing on a different Webhook instance.
@@ -698,3 +720,18 @@ n8n:
       resources:
         requests:
           memory: 256Mi
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: node.homelab.io/performance
+                    operator: In
+                    values: ['high']
+            - weight: 80
+              preference:
+                matchExpressions:
+                  - key: node.homelab.io/storage-type
+                    operator: In
+                    values: ['ssd']
