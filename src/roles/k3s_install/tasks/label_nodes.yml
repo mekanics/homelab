@@ -7,7 +7,7 @@
     - name: Wait for node to be ready
       become: true
       ansible.builtin.command:
-        cmd: k3s kubectl get nodes {{ hostvars[item].inventory_hostname_short }} -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+        cmd: k3s kubectl get nodes {{ item }} -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
       register: node_ready
       until: node_ready.stdout == "True"
       retries: 30
@@ -15,19 +15,19 @@
       changed_when: false
       loop: "{{ groups['cluster'] }}"
       loop_control:
-        label: '{{ hostvars[item].inventory_hostname_short }}'
+        label: '{{ item }}'
 
     - name: Apply custom labels to nodes
       become: true
       ansible.builtin.command:
         cmd: >
-          k3s kubectl label node {{ hostvars[item].inventory_hostname_short }}
+          k3s kubectl label node {{ item }}
           {{ hostvars[item].k8s_node_labels | dict2items | map('join', '=') | join(' ') }}
           --overwrite
       when: hostvars[item].k8s_node_labels is defined
       loop: "{{ groups['cluster'] }}"
       loop_control:
-        label: '{{ hostvars[item].inventory_hostname_short }}'
+        label: '{{ item }}'
       changed_when: true
       register: label_result
 
