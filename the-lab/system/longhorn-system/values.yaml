@@ -11,7 +11,7 @@ longhorn:
     allowRecurringJobWhileVolumeDetached: ~
     # -- Create default Disk automatically only on Nodes with the label "node.longhorn.io/create-default-disk=true" if no other disks exist.
     # If disabled, the default disk will be created on all new nodes when each node is first added.
-    createDefaultDiskLabeledNodes: true
+    createDefaultDiskLabeledNodes: ~
     # -- Default path to use for storing data on a host. By default, "/var/lib/longhorn/"
     defaultDataPath: ~
     # -- Longhorn volume has data locality if there is a local replica of the volume on the same node as the pod which is using the volume.
@@ -56,7 +56,7 @@ longhorn:
     # -- taintToleration for Longhorn system-managed components
     taintToleration: ~
     # -- nodeSelector for Longhorn system-managed components
-    systemManagedComponentsNodeSelector: 'node.homelab.io/storage-type:ssd'
+    systemManagedComponentsNodeSelector: ~
     # -- priorityClass for Longhorn system-managed components
     # This setting can help prevent Longhorn components from being evicted under Node Pressure.
     # Notice that this will be applied to Longhorn user-deployed components by default if there are no priority class values set yet, such as `longhornManager.priorityClass`.
