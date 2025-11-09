@@ -64,7 +64,7 @@
     - name: Pause to allow first server startup
       when: (groups['servers'] | length) > 1
       ansible.builtin.pause:
-        seconds: 10
+        seconds: 30
 
     - name: Get Kubernetes config file
       become: true
