@@ -8,44 +8,6 @@ metadata:
     app: kube-prometheus-stack
 spec:
   groups:
-  - name: rpi
-    rules:
-    - alert: RaspberryPiHighTemperature
-      expr: rpi_temperature_celsius > 75
-      for: 5m
-      labels:
-        severity: warning
-      annotations:
-        summary: {{ "Raspberry Pi high temperature ({{$value}}°C)" | quote }}
-        description: {{ "Raspberry Pi {{$labels.instance}} has been running at {{$value}}°C for more than 5 minutes." | quote }}
-
-    - alert: RaspberryPiUnderVoltage
-      expr: rpi_voltage_under_voltage_total - rpi_voltage_under_voltage_total offset 10m > 0
-      for: 1m
-      labels:
-        severity: critical
-      annotations:
-        summary: {{ "Raspberry Pi under-voltage detected" | quote }}
-        description: {{ "Raspberry Pi {{$labels.instance}} is experiencing under-voltage conditions." | quote }}
-
-    - alert: RaspberryPiThrottling
-      expr: rpi_throttled > 0
-      for: 1m
-      labels:
-        severity: critical
-      annotations:
-        summary: {{ "Raspberry Pi throttling active" | quote }}
-        description: {{ "Raspberry Pi {{$labels.instance}} is currently being throttled due to power/thermal issues." | quote }}
-
-    - alert: RaspberryPiFrequencyCapped
-      expr: rpi_frequency_limit > 0
-      for: 2m
-      labels:
-        severity: warning
-      annotations:
-        summary: {{ "Raspberry Pi frequency capped" | quote }}
-        description: {{ "Raspberry Pi {{$labels.instance}} CPU frequency is being limited." | quote }}
-
   - name: apiserver
     rules:
     - alert: KubernetesAPIServerDown
