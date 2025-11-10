@@ -16,8 +16,7 @@ spec:
     spec:
       containers:
         - name: rpi-exporter
-          # renovate: datasource=github-releases depName=prometheus-community/rpi_exporter
-          image: quay.io/prometheuscommunity/rpi-exporter:v0.3.0
+          image: edgd1er/rpi_exporter:latest
           ports:
             - containerPort: 9211
               name: metrics

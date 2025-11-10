@@ -11,7 +11,7 @@ spec:
   - name: rpi
     rules:
     - alert: RaspberryPiHighTemperature
-      expr: rpi_core_temp_celsius > 75
+      expr: rpi_temperature_celsius > 75
       for: 5m
       labels:
         severity: warning
@@ -29,7 +29,7 @@ spec:
         description: {{ "Raspberry Pi {{$labels.instance}} is experiencing under-voltage conditions." | quote }}
 
     - alert: RaspberryPiThrottling
-      expr: rpi_throttling_state > 0
+      expr: rpi_throttled > 0
       for: 1m
       labels:
         severity: critical
