@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: apiserver-vip
+  namespace: monitoring-system
+  labels:
+    release: kube-prometheus-stack
+spec:
+  jobName: apiserver-vip
+  prober:
+    url: prometheus-blackbox-exporter.monitoring-system:9115
+  targets:
+    staticConfig:
+      static:
+        - https://192.168.10.100:6443/readyz
+  module: https_2xx
+  interval: 30s
+  scrapeTimeout: 10s

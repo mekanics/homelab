@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: prometheus-rpi-exporter
+  namespace: monitoring-system
+  labels:
+    app: prometheus-rpi-exporter
+spec:
+  selector:
+    matchLabels:
+      app: prometheus-rpi-exporter
+  template:
+    metadata:
+      labels:
+        app: prometheus-rpi-exporter
+    spec:
+      containers:
+        - name: rpi-exporter
+          # renovate: datasource=github-releases depName=prometheus-community/rpi_exporter
+          image: quay.io/prometheuscommunity/rpi-exporter:v0.3.0
+          ports:
+            - containerPort: 9211
+              name: metrics
+          securityContext:
+            privileged: true
+          resources:
+            limits:
+              memory: 64Mi
+              cpu: 50m
+            requests:
+              memory: 32Mi
+              cpu: 10m
+      nodeSelector:
+        kubernetes.io/arch: arm64
+      tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-rpi-exporter
+  namespace: monitoring-system
+  labels:
+    app: prometheus-rpi-exporter
+spec:
+  selector:
+    app: prometheus-rpi-exporter
+  ports:
+    - name: metrics
+      port: 9211
+      targetPort: 9211
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: prometheus-rpi-exporter
+  namespace: monitoring-system
+  labels:
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: prometheus-rpi-exporter
+  endpoints:
+    - port: metrics
+      interval: 30s

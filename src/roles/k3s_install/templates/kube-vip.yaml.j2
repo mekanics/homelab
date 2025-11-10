@@ -91,9 +91,9 @@ spec:
             - name: vip_loglevel
               value: "5"
             - name: vip_arp_gratuitous
-              value: "false"
+              value: "true"
             - name: vip_arp_refresh
-              value: "10"
+              value: "3"
           securityContext:
             capabilities:
               add:
@@ -132,6 +132,16 @@ spec:
         - effect: NoSchedule
           key: node-role.kubernetes.io/control-plane
           operator: Exists
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - kube-vip-ds
+            topologyKey: kubernetes.io/hostname
   updateStrategy: {}
 status:
   currentNumberScheduled: 0

@@ -44,3 +44,16 @@
     name: vm.swappiness
     value: 0
     state: present
+
+- name: Copy systemd unit to disable EEE on eth0
+  copy:
+    src: disable-eth0-eee.service
+    dest: /etc/systemd/system/disable-eth0-eee.service
+    mode: '0644'
+
+- name: Disable EEE on eth0 to prevent NIC errors
+  systemd:
+    name: disable-eth0-eee.service
+    state: started
+    enabled: true
+    daemon_reload: true
