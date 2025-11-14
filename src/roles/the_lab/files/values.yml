@@ -6,6 +6,9 @@ gitops:
 stacks:
   - name: bootstrap
     namespace: argocd # Override default value
+    syncWave: 0 # Deploy first (ArgoCD itself)
   - name: system
+    syncWave: 10 # Deploy second (infrastructure components)
   # - name: platform
   - name: apps
+    syncWave: 20 # Deploy last (applications)

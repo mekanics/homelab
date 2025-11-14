@@ -16,6 +16,10 @@ spec:
   template:
     metadata:
       name: '{{ `{{path.basename}}` }}'
+      {{- if $stack.syncWave }}
+      annotations:
+        argocd.argoproj.io/sync-wave: "{{ $stack.syncWave }}"
+      {{- end }}
     
     spec:
       project: default
