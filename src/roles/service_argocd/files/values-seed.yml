@@ -20,4 +20,35 @@ argo-cd:
   repoServer:
     metrics: *metrics
   redis:
+    # Explicitly enable Redis
+    enabled: true
+    name: redis
+
+    # Use official Redis image
+    image:
+      repository: public.ecr.aws/docker/library/redis
+      tag: 7.4.2-alpine
+
+    # CRITICAL: Disable Redis authentication
+    auth:
+      enabled: false
+
+    # Security context
+    containerSecurityContext:
+      runAsNonRoot: true
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      runAsUser: 999
+      seccompProfile:
+        type: RuntimeDefault
+
+    # Resources for Raspberry Pi
+    resources:
+      limits:
+        cpu: 200m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 64Mi
+
     metrics: *metrics

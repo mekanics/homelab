@@ -53,4 +53,24 @@ argo-cd:
   repoServer:
     metrics: *metrics
   redis:
+    enabled: true
+
+    # Security context for Raspberry Pi
+    containerSecurityContext:
+      runAsNonRoot: true
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      runAsUser: 999
+      seccompProfile:
+        type: RuntimeDefault
+
+    # Resources tuned for Raspberry Pi
+    resources:
+      limits:
+        cpu: 200m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 64Mi
+
     metrics: *metrics
