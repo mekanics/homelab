@@ -1,14 +1,6 @@
 ---
 all:
   hosts:
-    # Mac Mini
-    # mars.local:
-    #   ansible_host: 192.168.10.11
-    #   mac: 'c8:2a:14:55:97:24'
-    #   ansible_connection: ssh
-    #   performance: high
-    #   disktype: mmc
-
     # Raspbery Pi
     pi-homelab.local:
       ansible_host: 192.168.10.50
@@ -84,4 +76,4 @@ all:
   # Required Vars
   vars:
     # renovate datasource=github-releases depName=k3s-io/k3s
-    k3s_version: v1.32.1+k3s1
+    k3s_version: v1.34.1+k3s1
