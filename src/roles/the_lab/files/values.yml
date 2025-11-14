@@ -2,7 +2,7 @@
 
 gitops:
   repo: https://github.com/mekanics/homelab
-  revision: main ## HEAD, branch, tag, ...
+  revision: migrate-to-cilium ## HEAD, branch, tag, ...
 stacks:
   - name: bootstrap
     namespace: argocd # Override default value
