@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: apiserver-lb
+  namespace: kube-system
+  labels:
+    advertise: bgp
+  annotations:
+    io.cilium/lb-ipam-ips: "{{ apiserver_vip }}"
+spec:
+  type: LoadBalancer
+  ports:
+  - name: https
+    port: 6443
+    protocol: TCP
+    targetPort: 6443
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: apiserver-lb
+  namespace: kube-system
+  labels:
+    kubernetes.io/service-name: apiserver-lb
+addressType: IPv4
+endpoints:
+- addresses:
+{% for host in groups['servers'] %}
+  - {{ hostvars[host]['ansible_host'] }}
+{% endfor %}
+ports:
+- name: https
+  port: 6443
+  protocol: TCP
+

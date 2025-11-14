@@ -1,0 +1,13 @@
+---
+# Cilium L2 Configuration Variables
+
+# Cilium version
+cilium_version: '1.18.3'
+
+# IP pool for LoadBalancer services (192.168.10.96-111)
+lb_ip_pool_start: '192.168.10.96'
+lb_ip_pool_stop: '192.168.10.111'
+lb_ip_pool_cidr: '192.168.10.96/28' # /28 covers .96-.111, 16 addresses
+
+# API server VIP
+apiserver_vip: '192.168.10.110'

@@ -1,0 +1,23 @@
+---
+apiVersion: cilium.io/v2alpha1
+kind: CiliumL2AnnouncementPolicy
+metadata:
+  name: loadbalancer-ips
+  namespace: kube-system
+spec:
+  # Announce all LoadBalancer services
+  serviceSelector:
+    matchLabels: {}
+  # Match all nodes - any node can respond to ARP
+  nodeSelector:
+    matchExpressions:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+  # Use the LoadBalancer IP pool interface
+  interfaces:
+    - ^eth.*
+    - ^en.*
+  # Enable ARP responder
+  externalIPs: true
+  loadBalancerIPs: true
+

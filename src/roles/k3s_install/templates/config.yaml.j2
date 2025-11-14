@@ -1,10 +1,23 @@
 {% if inventory_hostname == groups['servers'][0] %}
 cluster-init: true
 {% else %}
-server: https://{{ apiserver_endpoint }}:6443
+server: https://{{ bootstrap_server_ip }}:6443
 token-file: {{ k3s_token_file }}
 {% endif %}
 {% if 'servers' in group_names %}
-{{ k3s_server_config | to_nice_yaml }}
+disable:
+{% for item in k3s_server_config.disable %}
+  - {{ item }}
+{% endfor %}
+disable-kube-proxy: {{ k3s_server_config['disable-kube-proxy'] }}
+disable-cloud-controller: {{ k3s_server_config['disable-cloud-controller'] }}
+disable-network-policy: {{ k3s_server_config['disable-network-policy'] }}
+secrets-encryption: {{ k3s_server_config['secrets-encryption'] }}
+node-label: {{ k3s_server_config['node-label'] }}
+flannel-backend: {{ k3s_server_config['flannel-backend'] }}
+tls-san:
+  - {{ apiserver_endpoint }}
+  - 192.168.10.50
+  - 192.168.10.51
 {% endif %}
 data-dir: {{ k3s_server_location }}

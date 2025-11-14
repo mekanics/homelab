@@ -43,16 +43,6 @@
 - name: Init first server node
   when: inventory_hostname == groups['servers'][0]
   block:
-    - name: Copy kube-vip config
-      become: true
-      ansible.builtin.template:
-        src: '{{ item.src }}'
-        dest: '{{ item.dest }}'
-        mode: '0644'
-      loop:
-        - src: kube-vip.yaml.j2
-          dest: '{{ k3s_kubevip_manifest_file }}'
-
     - name: Enable and check K3s service
       become: true
       ansible.builtin.systemd:
@@ -72,9 +62,9 @@
         src: /etc/rancher/k3s/k3s.yaml
       register: kubeconfig_base64
 
-    - name: Write Kubernetes config file with the correct cluster address
+    - name: Write Kubernetes config file with bootstrap server IP
       ansible.builtin.copy:
-        content: "{{ kubeconfig_base64.content | b64decode | replace('127.0.0.1', apiserver_endpoint) }}"
+        content: "{{ kubeconfig_base64.content | b64decode | replace('127.0.0.1', bootstrap_server_ip) | replace('default', 'homelab') }}"
         dest: '{{ playbook_dir }}/kubeconfig.yaml'
         mode: '0600'
       delegate_to: localhost

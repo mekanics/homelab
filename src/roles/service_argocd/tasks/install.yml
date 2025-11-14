@@ -2,7 +2,7 @@
   import_tasks: namespace.yml
 
 - name: Wait for all k8s nodes to be ready
-  shell: kubectl wait --for=condition=Ready nodes --all --timeout=600s
+  shell: kubectl --kubeconfig=kubeconfig.yaml wait --for=condition=Ready nodes --all --timeout=600s
   register: nodes_ready
 
 - name: Render the Argo Helm Umbrella

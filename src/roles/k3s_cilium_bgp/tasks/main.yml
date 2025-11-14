@@ -1,0 +1,105 @@
+---
+# Install Cilium 1.18.3 with BGP control plane support
+- name: Add Cilium Helm repository
+  kubernetes.core.helm_repository:
+    name: cilium
+    repo_url: https://helm.cilium.io/
+  delegate_to: localhost
+  run_once: true
+
+- name: Generate Cilium Helm values file
+  ansible.builtin.template:
+    src: cilium-helm-values.yaml.j2
+    dest: /tmp/cilium-helm-values.yaml
+    mode: '0644'
+  delegate_to: localhost
+  run_once: true
+
+- name: Generate Cilium LoadBalancer IP Pool
+  ansible.builtin.template:
+    src: cilium-lb-ippool.yaml.j2
+    dest: /tmp/cilium-lb-ippool.yaml
+    mode: '0644'
+  delegate_to: localhost
+  run_once: true
+
+- name: Generate API Server LoadBalancer Service
+  ansible.builtin.template:
+    src: apiserver-lb-service.yaml.j2
+    dest: /tmp/apiserver-lb-service.yaml
+    mode: '0644'
+  delegate_to: localhost
+  run_once: true
+
+- name: Generate Cilium L2 Announcement Policy
+  ansible.builtin.template:
+    src: cilium-l2announcement-policy.yaml.j2
+    dest: /tmp/cilium-l2announcement-policy.yaml
+    mode: '0644'
+  delegate_to: localhost
+  run_once: true
+
+- name: Install Cilium using Helm
+  kubernetes.core.helm:
+    name: cilium
+    chart_ref: cilium/cilium
+    chart_version: '{{ cilium_version }}'
+    release_namespace: kube-system
+    create_namespace: false
+    values_files:
+      - /tmp/cilium-helm-values.yaml
+    wait: true
+    wait_timeout: 10m
+  run_once: true
+  delegate_to: localhost
+  environment:
+    KUBECONFIG: '{{ playbook_dir }}/kubeconfig.yaml'
+
+- name: Wait for Cilium to be ready
+  kubernetes.core.k8s_info:
+    kind: Pod
+    namespace: kube-system
+    label_selectors:
+      - k8s-app=cilium
+    wait: true
+    wait_condition:
+      type: Ready
+      status: true
+    wait_timeout: 300
+  delegate_to: localhost
+  run_once: true
+  environment:
+    KUBECONFIG: '{{ playbook_dir }}/kubeconfig.yaml'
+
+- name: Apply Cilium L2 configuration
+  kubernetes.core.k8s:
+    state: present
+    src: '{{ item }}'
+  loop:
+    - /tmp/cilium-lb-ippool.yaml
+    - /tmp/apiserver-lb-service.yaml
+    - /tmp/cilium-l2announcement-policy.yaml
+  delegate_to: localhost
+  run_once: true
+  environment:
+    KUBECONFIG: '{{ playbook_dir }}/kubeconfig.yaml'
+
+- name: Update kubeconfig to use VIP after Cilium is ready
+  ansible.builtin.copy:
+    content: "{{ lookup('file', playbook_dir + '/kubeconfig.yaml') | replace(hostvars[groups['servers'][0]]['ansible_host'], apiserver_vip) }}"
+    dest: '{{ playbook_dir }}/kubeconfig.yaml'
+    mode: '0600'
+  delegate_to: localhost
+  run_once: true
+
+- name: Clean up temporary files
+  ansible.builtin.file:
+    path: '{{ item }}'
+    state: absent
+  loop:
+    - /tmp/cilium-helm-values.yaml
+    - /tmp/cilium-lb-ippool.yaml
+    - /tmp/apiserver-lb-service.yaml
+    - /tmp/cilium-l2announcement-policy.yaml
+  delegate_to: localhost
+  run_once: true

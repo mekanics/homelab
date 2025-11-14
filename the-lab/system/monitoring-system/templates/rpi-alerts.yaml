@@ -8,13 +8,13 @@ metadata:
     app: kube-prometheus-stack
 spec:
   groups:
-  - name: apiserver
-    rules:
-    - alert: KubernetesAPIServerDown
-      expr: up{job="apiserver-vip"} == 0
-      for: 5m
-      labels:
-        severity: critical
-      annotations:
-        summary: "Kubernetes API Server is down"
-        description: "The Kubernetes API server VIP (192.168.10.100:6443) has been unreachable for more than 5 minutes."
+    - name: apiserver
+      rules:
+        - alert: KubernetesAPIServerDown
+          expr: up{job="apiserver-vip"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: 'Kubernetes API Server is down'
+            description: 'The Kubernetes API server VIP (192.168.10.110:6443) has been unreachable for more than 5 minutes.'
