@@ -34,22 +34,19 @@
       set_fact:
         master_key_data: "{{ lookup('file', '{{ role_path }}/files/master.key') | from_yaml }}"
 
-    - name: Strip immutable fields from master key
-      set_fact:
-        master_key_clean:
-          apiVersion: '{{ master_key_data.apiVersion }}'
-          kind: '{{ master_key_data.kind }}'
-          metadata:
-            name: '{{ master_key_data.metadata.name }}'
-            namespace: '{{ master_key_data.metadata.namespace }}'
-            labels: '{{ master_key_data.metadata.labels }}'
-          type: '{{ master_key_data.type }}'
-          data: '{{ master_key_data.data }}'
-
-    - name: Apply restored master key
+    - name: Strip immutable fields and apply master keys
       k8s:
-        definition: '{{ master_key_clean }}'
+        definition:
+          apiVersion: '{{ item.apiVersion }}'
+          kind: '{{ item.kind }}'
+          metadata:
+            name: '{{ item.metadata.name }}'
+            namespace: '{{ item.metadata.namespace }}'
+            labels: '{{ item.metadata.labels }}'
+          type: '{{ item.type }}'
+          data: '{{ item.data }}'
         state: present
+      loop: '{{ master_key_data["items"] }}'
 
 - name: Deploy Sealed Secrets Controller to cluster
   kubernetes.core.helm:
