@@ -24,7 +24,7 @@
     - name: Remove kubeconfig
       delegate_to: localhost
       file:
-        path: '{{ kubeconfig_localPath }}'
+        path: '{{ playbook_dir }}/kubeconfig.yaml'
         state: absent
   tags:
     - k3s
