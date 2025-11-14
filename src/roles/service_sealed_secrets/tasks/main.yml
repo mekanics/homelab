@@ -6,6 +6,51 @@
   tags:
     - secrets
 
+- name: Check for backed-up master key file
+  stat:
+    path: '{{ role_path }}/files/master.key'
+  register: masterkey
+
+- name: Check if sealed secrets key already exists in cluster
+  k8s_info:
+    api_version: v1
+    kind: Secret
+    namespace: kube-system
+    label_selectors:
+      - sealedsecrets.bitnami.com/sealed-secrets-key
+  register: existing_sealed_secret
+  when: masterkey.stat.exists
+  tags:
+    - secrets
+
+- name: Restore master key (before Helm deployment)
+  when:
+    - masterkey.stat.exists
+    - existing_sealed_secret.resources | length == 0
+  tags:
+    - secrets
+  block:
+    - name: Load master key definition
+      set_fact:
+        master_key_data: "{{ lookup('file', '{{ role_path }}/files/master.key') | from_yaml }}"
+
+    - name: Strip immutable fields from master key
+      set_fact:
+        master_key_clean:
+          apiVersion: '{{ master_key_data.apiVersion }}'
+          kind: '{{ master_key_data.kind }}'
+          metadata:
+            name: '{{ master_key_data.metadata.name }}'
+            namespace: '{{ master_key_data.metadata.namespace }}'
+            labels: '{{ master_key_data.metadata.labels }}'
+          type: '{{ master_key_data.type }}'
+          data: '{{ master_key_data.data }}'
+
+    - name: Apply restored master key
+      k8s:
+        definition: '{{ master_key_clean }}'
+        state: present
+
 - name: Deploy Sealed Secrets Controller to cluster
   kubernetes.core.helm:
     update_repo_cache: true
@@ -16,32 +61,6 @@
     create_namespace: true
     release_values: "{{ lookup('file', '{{ role_path }}/files/values.yml') | from_yaml }}"
     wait: true
-  tags:
-    - secrets
-
-- name: Check for the master key
-  stat:
-    path: '{{ role_path }}/files/master.key'
-  register: masterkey
-
-- name: Restore Master key
-  k8s:
-    api_version: v1
-    definition: "{{ lookup('file', '{{ role_path }}/files/master.key') | from_yaml }}"
-    state: present
-    wait: true
-  when: masterkey.stat.exists
-  tags:
-    - secrets
-
-- name: Restart Sealed Secret
-  k8s:
-    api_version: v1
-    kind: Pod
-    namespace: kube-system
-    name: sealed-secrets-controller
-    state: absent
-  when: masterkey.stat.exists
   tags:
     - secrets
 
