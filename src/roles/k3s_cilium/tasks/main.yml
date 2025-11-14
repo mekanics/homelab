@@ -1,5 +1,4 @@
 ---
-# Install Cilium 1.18.3 with BGP control plane support
 - name: Add Cilium Helm repository
   kubernetes.core.helm_repository:
     name: cilium
