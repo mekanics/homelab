@@ -187,3 +187,14 @@ longhorn:
       hajimari.io/icon: cow
     host: &host longhorn.system.mekanics.ch
     tlsSecret: longhorn-tls-certificate
+
+  preUpgradeChecker:
+    jobEnabled: false
+
+  longhornUI:
+    replicas: 1
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
