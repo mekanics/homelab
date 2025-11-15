@@ -1,9 +1,17 @@
 # https://raw.githubusercontent.com/longhorn/longhorn/master/chart/values.yaml
 
 longhorn:
+  defaultBackupStore:
+    # -- Endpoint used to access the default backupstore. (Options: "NFS", "CIFS", "AWS", "GCP", "AZURE")
+    backupTarget: &backupTarget 'nfs://mercury.local:/volume1/longhorn'
+    # -- Name of the Kubernetes secret associated with the default backup target.
+    backupTargetCredentialSecret: ~
+    # -- Number of seconds that Longhorn waits before checking the default backupstore for new backups. The default value is "300". When the value is "0", polling is disabled.
+    pollInterval: ~
+
   defaultSettings:
     # -- The endpoint used to access the backupstore. Available: NFS, CIFS, AWS, GCP, AZURE.
-    backupTarget: 'nfs://mercury.local:/volume1/longhorn'
+    backupTarget: *backupTarget
     # -- The name of the Kubernetes secret associated with the backup target.
     backupTargetCredentialSecret: ~
     # -- If this setting is enabled, Longhorn will automatically attach the volume and takes snapshot/backup
