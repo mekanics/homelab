@@ -1,0 +1,28 @@
+---
+# Cilium Configuration Variables
+cilium_repo_url: https://helm.cilium.io
+cilium_namespace: kube-system
+cilium_version: '1.18.3'
+
+cilium_values:
+  operator:
+    replicas: 1
+  kubeProxyReplacement: true
+  l2announcements:
+    enabled: true
+
+  k8sServiceHost: 127.0.0.1
+  k8sServicePort: 6444
+
+  hubble:
+    relay:
+      enabled: true
+    ui:
+      enabled: false
+
+# IP pool for LoadBalancer services (192.168.10.96-111)
+lb_ip_pool_start: '192.168.10.97'
+lb_ip_pool_stop: '192.168.10.111'
+lb_ip_pool_cidr: '192.168.10.96/28' # /28 covers .96-.111, 16 addresses
+# API server VIP
+apiserver_vip: '192.168.10.110'
