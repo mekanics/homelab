@@ -73,7 +73,7 @@ n8n:
             active: true
         bull:
           redis:
-            host: n8n-valkey-primary
+            host: n8n-valkey
             port: 6379
 
     #    db:
@@ -703,12 +703,8 @@ n8n:
   # Bitnami Valkey configuration
   # https://artifacthub.io/packages/helm/bitnami/valkey
   valkey:
-    enabled: true
+    enabled: false
     architecture: standalone
-
-    image:
-      repository: valkey/valkey
-      tag: 8.1.4
 
     sentinel:
       enabled: false
@@ -740,3 +736,47 @@ n8n:
                   - key: node.homelab.io/storage-type
                     operator: In
                     values: ['ssd']
+
+valkey:
+  auth:
+    enabled: false
+
+  # Persistent storage configuration
+  dataStorage:
+    # Enable persistent volume claim creation
+    enabled: true
+    # Use existing PVC by name (skip dynamic provisioning if set)
+    persistentVolumeClaimName: ''
+    # Subpath inside PVC to mount
+    subPath: ''
+    # Name of the volume (referenced in deployment)
+    volumeName: 'valkey-data'
+    # Request size (e.g. 5Gi) for dynamically provisioned volume
+    requestedSize: '2Gi'
+    # Name of the storage class to use
+    className: 'longhorn'
+    # Access modes for the PVC (e.g., ReadWriteOnce, ReadWriteMany)
+    accessModes:
+      - ReadWriteOnce
+    # If true, keep the PVC on Helm uninstall
+    keepPvc: false
+
+  resources:
+    requests:
+      memory: 128Mi
+
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: node.homelab.io/performance
+                operator: In
+                values: ['high']
+        - weight: 80
+          preference:
+            matchExpressions:
+              - key: node.homelab.io/storage-type
+                operator: In
+                values: ['ssd']
