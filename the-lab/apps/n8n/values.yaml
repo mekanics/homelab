@@ -705,6 +705,11 @@ n8n:
   valkey:
     enabled: true
     architecture: standalone
+
+    image:
+      repository: bitnamilegacy/valkey
+      tag: 8.0.2-debian-12-r6
+
     sentinel:
       enabled: false
     auth:
