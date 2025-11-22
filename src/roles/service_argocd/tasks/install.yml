@@ -5,24 +5,16 @@
   shell: kubectl --kubeconfig=kubeconfig.yaml wait --for=condition=Ready nodes --all --timeout=600s
   register: nodes_ready
 
-- name: Render the Argo Helm Umbrella
-  kubernetes.core.helm_template:
+- name: Deploy ArgoCD using Helm
+  kubernetes.core.helm:
     chart_ref: '{{ role_path }}/files'
-    # output_dir: '{{ role_path }}/files/output'
+    # renovate: datasource=github-releases depName=argoproj/argo-helm
+    chart_version: '9.1.3'
     dependency_update: true
-    include_crds: true
     release_namespace: 'argocd'
     release_name: 'argocd'
-    release_values: "{{ lookup('file', '{{ role_path }}/files/values-seed.yml') | from_yaml }}"
-  register: argo_template_result
-  tags:
-    - argo
-    - gitops
-
-- name: Deploy ArgoCD to cluster
-  k8s:
-    state: present
-    definition: '{{ argo_template_result.stdout | from_yaml_all }}'
+    create_namespace: false
+    values: "{{ lookup('file', '{{ role_path }}/files/values-seed.yml') | from_yaml }}"
     wait: true
   tags:
     - argo
