@@ -11,7 +11,9 @@ spec:
         repoURL: {{ $.Values.gitops.repo }}
         revision: {{ $.Values.gitops.revision }}
         directories:
-          - path: the-lab/{{ $stack.name }}/[!_]*
+          - path: the-lab/{{ $stack.name }}/*
+          - path: the-lab/{{ $stack.name }}/_*
+            exclude: true
   
   template:
     metadata:
