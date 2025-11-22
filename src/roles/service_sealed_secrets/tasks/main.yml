@@ -23,10 +23,17 @@
   stat:
     path: '{{ role_path }}/files/master.key'
   register: masterkey
+  tags:
+    - secrets
+  # Note: Master key restoration is used for disaster recovery.
+  # When a master.key exists, it contains backed-up encryption keys.
+  # The controller will use the most recent key based on CertNotBefore ordering.
 
 - name: Restore Master key (strip immutable fields and apply)
   shell: |
     # Strip immutable fields from master key YAML and apply
+    # This creates/updates the sealed-secrets-key secret in kube-system
+    # Multiple keys can exist; the controller uses the most recent one
     sed -e 's/  uid: .*$//' \
         -e 's/  resourceVersion: .*$//' \
         -e 's/  creationTimestamp: .*$//' \
@@ -36,14 +43,28 @@
   tags:
     - secrets
 
-- name: Restart Sealed Secret
-  k8s:
-    api_version: v1
-    kind: Pod
-    namespace: kube-system
-    name: sealed-secrets-controller
-    state: absent
+- name: Restart Sealed Secrets Controller (required for master key to be loaded)
+  shell: |
+    # Wait a moment for the key to be applied, then restart the controller
+    sleep 5
+    kubectl delete pod -n kube-system -l app.kubernetes.io/name=sealed-secrets
   when: masterkey.stat.exists
+  tags:
+    - secrets
+
+- name: Wait for Sealed Secrets Controller to be ready after restart
+  shell: kubectl wait --for=condition=ready pod -n kube-system -l app.kubernetes.io/name=sealed-secrets --timeout=60s
+  when: masterkey.stat.exists
+  tags:
+    - secrets
+
+- name: Verify master key restoration by checking controller logs
+  shell: |
+    # Check if controller picked up the restored key by looking for key loading messages
+    kubectl logs -n kube-system -l app.kubernetes.io/name=sealed-secrets --tail=50 | grep -i "key\|secret" | tail -5
+  when: masterkey.stat.exists
+  register: key_verification
+  changed_when: false
   tags:
     - secrets
 
