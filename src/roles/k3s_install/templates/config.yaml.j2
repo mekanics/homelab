@@ -17,7 +17,8 @@ node-label: {{ k3s_server_config['node-label'] }}
 flannel-backend: {{ k3s_server_config['flannel-backend'] }}
 tls-san:
   - {{ apiserver_endpoint }}
-  - 192.168.10.50
-  - 192.168.10.51
+{% for host in groups['servers'] %}
+  - {{ hostvars[host]['ansible_host'] }}
+{% endfor %}
 {% endif %}
 data-dir: {{ k3s_server_location }}
