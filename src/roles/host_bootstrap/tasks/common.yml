@@ -59,7 +59,7 @@
     path: '{{ deploy_account.sshKey }}'
     # owner: '{{ deploy_account.user }}'
     # group: '{{ deploy_account.group }}'
-    mode: '0440'
+    mode: '0644'
     regenerate: never
     comment: Ansible deployment key
   when: not stat_ssh.stat.exists
@@ -69,7 +69,7 @@
     src: '{{ deploy_account.sshKey }}.pub'
     dest: '{{ deploy_account.sshKey }}.pub'
     owner: '{{ deploy_account.user }}'
-    mode: '0440'
+    mode: '0644'
     force: false
 
 - name: Add to authorized keys list
