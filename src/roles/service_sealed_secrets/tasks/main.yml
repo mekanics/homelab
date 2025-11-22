@@ -6,48 +6,6 @@
   tags:
     - secrets
 
-- name: Check for backed-up master key file
-  stat:
-    path: '{{ role_path }}/files/master.key'
-  register: masterkey
-
-- name: Check if sealed secrets key already exists in cluster
-  k8s_info:
-    api_version: v1
-    kind: Secret
-    namespace: kube-system
-    label_selectors:
-      - sealedsecrets.bitnami.com/sealed-secrets-key
-  register: existing_sealed_secret
-  when: masterkey.stat.exists
-  tags:
-    - secrets
-
-- name: Restore master key (before Helm deployment)
-  when:
-    - masterkey.stat.exists
-    - existing_sealed_secret.resources | length == 0
-  tags:
-    - secrets
-  block:
-    - name: Load master key definition
-      set_fact:
-        master_key_data: "{{ lookup('file', '{{ role_path }}/files/master.key') | from_yaml }}"
-
-    - name: Strip immutable fields and apply master keys
-      k8s:
-        definition:
-          apiVersion: '{{ item.apiVersion }}'
-          kind: '{{ item.kind }}'
-          metadata:
-            name: '{{ item.metadata.name }}'
-            namespace: '{{ item.metadata.namespace }}'
-            labels: '{{ item.metadata.labels }}'
-          type: '{{ item.type }}'
-          data: '{{ item.data }}'
-        state: present
-      loop: '{{ master_key_data["items"] }}'
-
 - name: Deploy Sealed Secrets Controller to cluster
   kubernetes.core.helm:
     update_repo_cache: true
@@ -58,6 +16,34 @@
     create_namespace: true
     release_values: "{{ lookup('file', '{{ role_path }}/files/values.yml') | from_yaml }}"
     wait: true
+  tags:
+    - secrets
+
+- name: Check for the master key
+  stat:
+    path: '{{ role_path }}/files/master.key'
+  register: masterkey
+
+- name: Restore Master key (strip immutable fields and apply)
+  shell: |
+    # Strip immutable fields from master key YAML and apply
+    sed -e 's/  uid: .*$//' \
+        -e 's/  resourceVersion: .*$//' \
+        -e 's/  creationTimestamp: .*$//' \
+        -e 's/  selfLink: .*$//' \
+        {{ role_path }}/files/master.key | kubectl apply -f -
+  when: masterkey.stat.exists
+  tags:
+    - secrets
+
+- name: Restart Sealed Secret
+  k8s:
+    api_version: v1
+    kind: Pod
+    namespace: kube-system
+    name: sealed-secrets-controller
+    state: absent
+  when: masterkey.stat.exists
   tags:
     - secrets
 
