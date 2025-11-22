@@ -51,6 +51,7 @@ spec:
           - CreateNamespace=true
           - ApplyOutOfSyncOnly=true
           - ServerSideApply=true
+          - RespectIgnoreDifferences=true
 
       # Ignore differences in the creation timestamp of the volume claim template
       ignoreDifferences:
@@ -58,5 +59,10 @@ spec:
           kind: StatefulSet
           jqPathExpressions:
             - '.spec.volumeClaimTemplates[]?.metadata.creationTimestamp'
+
+        - group: apps
+          kind: Deployment
+          jsonPointers:
+            - /spec/replicas
 
 {{- end }}
