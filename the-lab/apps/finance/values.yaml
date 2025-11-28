@@ -55,3 +55,15 @@ fava:
     requests:
       cpu: 250m
       memory: 250Mi
+
+  probes:
+    liveness:
+      enabled: true
+      spec:
+        httpGet:
+          path: /beancount/help
+          port: http
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        timeoutSeconds: 5
+        failureThreshold: 5
