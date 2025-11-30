@@ -73,7 +73,7 @@ n8n:
             active: true
         bull:
           redis:
-            host: n8n-valkey-primary
+            host: n8n-valkey
             port: 6379
 
     #    db:
@@ -118,7 +118,7 @@ n8n:
       # If true, use a Persistent Volume Claim, If false, use emptyDir
       enabled: true
       # what type volume, possible options are [existing, emptyDir, dynamic] dynamic for Dynamic Volume Provisioning, existing for using an existing Claim
-      type: dynamic
+      type: existing
       # Persistent Volume Storage Class
       # If defined, storageClassName: <storageClass>
       # If set to "-", storageClassName: "", which disables dynamic provisioning
@@ -126,7 +126,7 @@ n8n:
       #   set, choosing the default provisioner.  (gp2 on AWS, standard on
       #   GKE, AWS & OpenStack)
       #
-      storageClass: 'longhorn'
+      storageClass: 'nfs'
       # PVC annotations
       #
       # If you need this annotation include it under `values.yml` file and pvc.yml template will add it.
@@ -138,16 +138,16 @@ n8n:
       # Persistent Volume Access Mode
       #
       accessModes:
-        - ReadWriteOnce
+        - ReadWriteMany
       # Persistent Volume size
-      size: 4Gi
+      size: 10Gi
       # Use an existing PVC
-      # existingClaim:
+      existingClaim: nfs-n8n
 
     extraVolumes:
-      - name: nfs-storage
+      - name: nfs-n8n-data
         persistentVolumeClaim:
-          claimName: nfs-n8n
+          claimName: nfs-n8n-data
     #    - name: db-ca-cert
     #      secret:
     #        secretName: db-ca
@@ -156,7 +156,7 @@ n8n:
     #            path: ca.crt
 
     extraVolumeMounts:
-      - name: nfs-storage
+      - name: nfs-n8n-data
         mountPath: /home/node/nfs-data
         readOnly: false
     #    - name: db-ca-cert
@@ -703,8 +703,9 @@ n8n:
   # Bitnami Valkey configuration
   # https://artifacthub.io/packages/helm/bitnami/valkey
   valkey:
-    enabled: true
+    enabled: false
     architecture: standalone
+
     sentinel:
       enabled: false
     auth:
@@ -735,3 +736,47 @@ n8n:
                   - key: node.homelab.io/storage-type
                     operator: In
                     values: ['ssd']
+
+valkey:
+  auth:
+    enabled: false
+
+  # Persistent storage configuration
+  dataStorage:
+    # Enable persistent volume claim creation
+    enabled: true
+    # Use existing PVC by name (skip dynamic provisioning if set)
+    persistentVolumeClaimName: ''
+    # Subpath inside PVC to mount
+    subPath: ''
+    # Name of the volume (referenced in deployment)
+    volumeName: 'valkey-data'
+    # Request size (e.g. 5Gi) for dynamically provisioned volume
+    requestedSize: '2Gi'
+    # Name of the storage class to use
+    className: 'longhorn'
+    # Access modes for the PVC (e.g., ReadWriteOnce, ReadWriteMany)
+    accessModes:
+      - ReadWriteOnce
+    # If true, keep the PVC on Helm uninstall
+    keepPvc: false
+
+  resources:
+    requests:
+      memory: 128Mi
+
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: node.homelab.io/performance
+                operator: In
+                values: ['high']
+        - weight: 80
+          preference:
+            matchExpressions:
+              - key: node.homelab.io/storage-type
+                operator: In
+                values: ['ssd']

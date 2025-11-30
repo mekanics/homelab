@@ -14,7 +14,7 @@ argo-cd:
         enabled: true
 
   dex:
-    metrics: *metrics
+    enabled: false
   controller:
     metrics: *metrics
   repoServer:

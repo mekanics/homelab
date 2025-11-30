@@ -1,0 +1,10 @@
+apiVersion: "cilium.io/v2"
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: "homelab-lb-pool"
+  namespace: kube-system
+spec:
+  blocks:
+  - start: "{{ lb_ip_pool_start }}"
+    stop: "{{ lb_ip_pool_stop }}"
+

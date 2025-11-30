@@ -1,0 +1,33 @@
+---
+# Label nodes after Cilium CNI is ready
+# Nodes must be Ready before they can be labeled
+
+- name: Wait for all nodes to be ready
+  kubernetes.core.k8s_info:
+    kind: Node
+    name: '{{ item }}'
+    wait: true
+    wait_condition:
+      type: Ready
+      status: 'True'
+    wait_timeout: 300
+  loop: "{{ groups['cluster'] }}"
+  delegate_to: localhost
+  run_once: true
+  environment:
+    KUBECONFIG: '{{ playbook_dir }}/kubeconfig.yaml'
+
+- name: Apply custom labels to nodes
+  kubernetes.core.k8s:
+    state: patched
+    kind: Node
+    name: '{{ item }}'
+    definition:
+      metadata:
+        labels: '{{ hostvars[item].k8s_node_labels }}'
+  when: hostvars[item].k8s_node_labels is defined
+  loop: "{{ groups['cluster'] }}"
+  delegate_to: localhost
+  run_once: true
+  environment:
+    KUBECONFIG: '{{ playbook_dir }}/kubeconfig.yaml'

@@ -8,3 +8,9 @@
     k3s_binary_name: "{{ 'k3s-agent' if inventory_hostname in groups.agents else 'k3s' }}"
   roles:
     - k3s_install
+    - k3s_label_nodes
+
+- name: Install Cilium
+  hosts: localhost
+  roles:
+    - k3s_cilium

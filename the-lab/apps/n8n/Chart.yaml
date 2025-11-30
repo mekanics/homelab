@@ -6,3 +6,7 @@ dependencies:
   - name: n8n
     version: 1.1.0
     repository: oci://8gears.container-registry.com/library
+  # https://github.com/valkey-io/valkey-helm
+  - name: valkey
+    version: 0.7.7
+    repository: https://valkey.io/valkey-helm

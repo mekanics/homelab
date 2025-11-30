@@ -65,6 +65,10 @@ lab-bootstrap: about lint
 > @echo "Start the lab Kubernetes cluster-wide services"
 > $(PLAY_CMD) src/03-playbook-the-lab.yml
 
+teardown: about lint
+> @echo "Tear down the Kubernetes cluster"
+> $(PLAY_CMD) src/99-playbook-k3s-teardown.yml
+
 ############################
 
 cluster-install-dev: about
