@@ -255,7 +255,7 @@ n8n:
       httpGet:
         path: /healthz
         port: http
-      initialDelaySeconds: 60
+      initialDelaySeconds: 30
       periodSeconds: 15
       timeoutSeconds: 10
       failureThreshold: 10
