@@ -105,6 +105,8 @@ n8n:
         value: ''
       NODE_FUNCTION_ALLOW_BUILTIN:
         value: '*'
+      N8N_AUTH_DISABLED:
+        value: 'true'
 
     #    N8N_DB_POSTGRESDB_NAME:
     #      valueFrom:
