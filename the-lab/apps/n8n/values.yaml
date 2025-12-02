@@ -255,10 +255,10 @@ n8n:
       httpGet:
         path: /healthz
         port: http
-      initialDelaySeconds: 30
-      periodSeconds: 15
+      initialDelaySeconds: 20
+      periodSeconds: 10
       timeoutSeconds: 10
-      failureThreshold: 10
+      failureThreshold: 15
       successThreshold: 1
 
     # List of initialization containers belonging to the pod. Init containers are executed in order prior to containers being started.
