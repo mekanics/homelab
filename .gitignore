@@ -12,4 +12,6 @@ Chart.lock
 .env.*
 !.env.example
 
+.claude/*.local.json
+
 OLD_*
