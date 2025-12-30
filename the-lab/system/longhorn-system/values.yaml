@@ -32,7 +32,8 @@ longhorn:
     storageOverProvisioningPercentage: ~
     # -- If the minimum available disk capacity exceeds the actual percentage of available disk capacity,
     # the disk becomes unschedulable until more space is freed up. By default, 25.
-    storageMinimalAvailablePercentage: ~
+    # Reduced to 15% to allow more usable space on 500GB disks (~73GB reserved vs ~123GB)
+    storageMinimalAvailablePercentage: 15
     # -- The reserved percentage specifies the percentage of disk space that will not be allocated to the default disk on each new Longhorn node.
     storageReservedPercentageForDefaultDisk: ~
     # -- Upgrade Checker will check for a new Longhorn version periodically.
