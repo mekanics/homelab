@@ -45,6 +45,12 @@ kube-prometheus-stack:
     initChownData:
       enabled: false
 
+    resources:
+      limits:
+        memory: 256Mi
+      requests:
+        memory: 128Mi
+
     persistence:
       enabled: true
       type: pvc
@@ -62,6 +68,16 @@ kube-prometheus-stack:
 
   prometheus:
     prometheusSpec:
+      # Memory optimization for Raspberry Pi cluster
+      retention: 5d
+      retentionSize: 2GB
+      scrapeInterval: 60s
+      evaluationInterval: 60s
+      resources:
+        limits:
+          memory: 1Gi
+        requests:
+          memory: 512Mi
       ruleSelectorNilUsesHelmValues: false
       serviceMonitorSelectorNilUsesHelmValues: false
       podMonitorSelectorNilUsesHelmValues: false
