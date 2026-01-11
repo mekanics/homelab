@@ -20,12 +20,16 @@ cni:
   exclusive: true
 
 # L2 Announcements - Essential for LB-IPAM to work
+# Lease timing optimized for small 2-node cluster with faster failover (~4-8s)
 l2announcements:
   enabled: true
+  leaseDuration: 8s
+  leaseRenewDeadline: 4s
+  leaseRetryPeriod: 1s
 
-# BGP Control Plane for inter-node connectivity
+# BGP Control Plane - Disabled (not needed for L2-only networking)
 bgpControlPlane:
-  enabled: true
+  enabled: false
 
 # LoadBalancer IPAM - Replaces kube-vip/MetalLB
 loadBalancer:
@@ -64,14 +68,10 @@ ipv4NativeRoutingCIDR: 10.42.0.0/16
 # Masquerading
 masquerade: true
 
-# Ingress Controller - Shared mode for minimal resource usage
+# Ingress Controller - Disabled (using ingress-nginx instead)
+# Cilium ingress advanced features require Envoy which is disabled for ARM64 memory constraints
 ingressController:
-  enabled: true
-  default: true
-  loadbalancerMode: shared
-  service:
-    annotations:
-      io.cilium/lb-ipam-ips: "{{ lb_ip_pool_start }}"
+  enabled: false
 
 # Operator configuration
 operator:
@@ -105,8 +105,8 @@ preflight:
 # Basic policy mode
 policyEnforcementMode: default
 
-# Prometheus metrics (lightweight)
+# Prometheus metrics with ServiceMonitor for automatic scraping
 prometheus:
   enabled: true
   serviceMonitor:
-    enabled: false
+    enabled: true
