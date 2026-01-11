@@ -2,6 +2,7 @@
 # Cilium Configuration Variables
 cilium_repo_url: https://helm.cilium.io
 cilium_namespace: kube-system
+# renovate: datasource=github-releases depName=cilium/cilium
 cilium_version: '1.18.3'
 
 cilium_values:
