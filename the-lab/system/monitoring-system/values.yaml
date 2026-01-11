@@ -82,15 +82,11 @@ kube-prometheus-stack:
       serviceMonitorSelectorNilUsesHelmValues: false
       podMonitorSelectorNilUsesHelmValues: false
       probeSelectorNilUsesHelmValues: false
+      # Removed performance affinity to allow better load distribution
+      # Both nodes have SSDs, so storage-type preference is kept
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              preference:
-                matchExpressions:
-                  - key: node.homelab.io/performance
-                    operator: In
-                    values: ['high']
             - weight: 80
               preference:
                 matchExpressions:
