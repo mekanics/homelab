@@ -8,5 +8,5 @@ dependencies:
     repository: oci://8gears.container-registry.com/library
   # https://github.com/valkey-io/valkey-helm
   - name: valkey
-    version: 0.7.7
+    version: 0.9.3
     repository: https://valkey.io/valkey-helm
