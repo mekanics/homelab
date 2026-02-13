@@ -14,11 +14,11 @@ n8n:
   # Global common config for this entire n8n deployment
   #
 
-  image:
-    repository: n8nio/n8n
-    pullPolicy: IfNotPresent
-    # renovate: datasource=github-tags depName=n8n-io/n8n
-    tag: '1.123.20'
+  # image:
+  #   repository: n8nio/n8n
+  #   pullPolicy: IfNotPresent
+  #   renovate: datasource=github-tags depName=n8n-io/n8n
+  #   tag: '1.123.11'
   # imagePullSecrets: []
 
   # # The Name to use for the chart. Will be the prefix of all resources aka. The Chart.Name (default is 'n8n')
