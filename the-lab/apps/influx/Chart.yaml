@@ -6,5 +6,5 @@ dependencies:
     version: 2.1.2
     repository: https://helm.influxdata.com/
   - name: telegraf
-    version: 1.8.65
+    version: 1.8.66
     repository: https://helm.influxdata.com/
