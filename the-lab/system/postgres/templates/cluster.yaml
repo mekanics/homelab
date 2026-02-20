@@ -14,11 +14,11 @@ spec:
 
   resources:
     requests:
-      cpu: {{ .Values.cluster.resources.requests.cpu }}
-      memory: {{ .Values.cluster.resources.requests.memory }}
+      cpu: {{ .Values.cluster.resources.requests.cpu | quote }}
+      memory: {{ .Values.cluster.resources.requests.memory | quote }}
     limits:
-      cpu: {{ .Values.cluster.resources.limits.cpu }}
-      memory: {{ .Values.cluster.resources.limits.memory }}
+      cpu: {{ .Values.cluster.resources.limits.cpu | quote }}
+      memory: {{ .Values.cluster.resources.limits.memory | quote }}
 
   postgresql:
     parameters:
