@@ -1,0 +1,20 @@
+# https://github.com/cloudnative-pg/charts/blob/main/charts/cloudnative-pg/values.yaml
+
+cloudnative-pg:
+  crds:
+    create: true
+
+  resources:
+    limits:
+      cpu: 100m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  monitoring:
+    podMonitorEnabled: true
+    grafanaDashboard:
+      create: true
+      sidecarLabel: grafana_dashboard
+      sidecarLabelValue: '1'
