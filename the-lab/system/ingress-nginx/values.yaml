@@ -12,3 +12,4 @@ ingress-nginx:
         enabled: true
   tcp:
     1883: mosquitto/mosquitto:1883
+    5432: postgres/postgres-cluster-rw:5432
