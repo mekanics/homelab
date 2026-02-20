@@ -76,7 +76,7 @@ longhorn:
     # -- If enabled, Longhorn will automatically delete the workload pod managed by a controller (e.g., Deployment, StatefulSet, DaemonSet, etc...)
     # when Longhorn volume is detached unexpectedly (e.g., during Kubernetes upgrade, Docker reboot, or network disconnect).
     # By deleting the pod, its controller restarts the pod and Kubernetes handles volume reattachment and remount.
-    autoDeletePodWhenVolumeDetachedUnexpectedly: ~
+    autoDeletePodWhenVolumeDetachedUnexpectedly: true
     # -- Disable Longhorn manager to schedule replica on Kubernetes cordoned node. By default, true.
     disableSchedulingOnCordonedNode: ~
     # -- Allow scheduling new Replicas of Volume to the Nodes in the same Zone as existing healthy Replicas.
@@ -89,7 +89,10 @@ longhorn:
     # -- Defines the Longhorn action when a Volume is stuck with a StatefulSet/Deployment Pod on a node that is down.
     nodeDownPodDeletionPolicy: delete-both-statefulset-and-deployment-pod
     # -- Define the policy to use when a node with the last healthy replica of a volume is drained.
-    nodeDrainPolicy: ~
+    # Required for draining nodes that hold the only Longhorn replica of a CNPG volume.
+    # With numberOfReplicas=1 on the longhorn-postgres StorageClass, Longhorn would otherwise
+    # block node drains since it cannot move the last replica elsewhere.
+    nodeDrainPolicy: always-allow
     # -- Automatically detach volumes that are attached manually when the node is cordoned.
     detachManuallyAttachedVolumesWhenCordoned: ~
     # -- The interval in seconds determines how long Longhorn will at least wait to reuse the existing data on a failed replica
