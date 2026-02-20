@@ -31,16 +31,8 @@ paperless:
     - name: PAPERLESS_CONSUMER_POLLING
       value: 30
 
-  database:
-    engine: postgresql
-    postgresql:
-      host: postgres-cluster-rw.postgres.svc
-      port: 5432
-      name: paperless
-      user: paperless
-      existingSecret:
-        name: pg-paperless-credentials
-        key: password
+  postgresql:
+    enabled: false
 
   resources:
     # limits:
@@ -71,6 +63,17 @@ paperless:
     runAsNonRoot: true
     runAsGroup: 1000
     runAsUser: 1000
+  #
+  # postgresql:
+  #   enabled: false
+  #   auth:
+  #     database: paperless
+  #     postgresPassword: paperless
+  #   primary:
+  #     persistence:
+  #       enabled: false
+  #       # storageClass: ""
+  #       # size: 8Gi
 
   redis:
     enabled: true
