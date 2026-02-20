@@ -15,6 +15,12 @@
 
 set -euo pipefail
 
+# Mirror the Helm helper sanitization logic for use in this shell script.
+# pg_name: valid PostgreSQL identifier (database name / role name)
+pg_name()  { echo "$1" | tr '[:upper:]' '[:lower:]' | tr '-' '_' | sed 's/[^a-z0-9_]//g; s/^[0-9]/_&/'; }
+# k8s_name: valid Kubernetes resource name
+k8s_name() { echo "$1" | tr '[:upper:]' '[:lower:]' | tr '_' '-' | sed 's/[^a-z0-9-]//g; s/^-*//; s/-*$//'; }
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 NAMESPACE="postgres"
 OUTPUT="${SCRIPT_DIR}/templates/sealed-secret.yaml"
@@ -61,7 +67,8 @@ fi
 
 # --- Determine which owners already have a sealed secret ---------------------
 already_sealed() {
-  local owner="$1"
+  local owner
+  owner="$(k8s_name "$1")"
   [[ -f "${OUTPUT}" ]] && grep -q "name: pg-${owner}-credentials" "${OUTPUT}"
 }
 
@@ -96,6 +103,8 @@ echo ""
 
 for i in "${!needs_sealing[@]}"; do
   OWNER="${needs_sealing[$i]}"
+  PG_OWNER="$(pg_name "${OWNER}")"
+  K8S_OWNER="$(k8s_name "${OWNER}")"
   PASSWORD=$(openssl rand -base64 32 | tr -dc 'A-Za-z0-9' | head -c 32)
 
   # Resolve the target app namespace for this owner from the parallel NAMESPACES array
@@ -112,7 +121,7 @@ for i in "${!needs_sealing[@]}"; do
 apiVersion: v1
 kind: Secret
 metadata:
-  name: pg-${OWNER}-credentials
+  name: pg-${K8S_OWNER}-credentials
   namespace: ${NAMESPACE}
   annotations:
     reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
@@ -121,11 +130,11 @@ metadata:
     reflector.v1.k8s.emberstack.com/reflection-auto-namespaces: "${APP_NAMESPACE}"
 type: kubernetes.io/basic-auth
 stringData:
-  username: ${OWNER}
+  username: ${PG_OWNER}
   password: ${PASSWORD}
 EOF
 
-  echo "  pg-${OWNER}-credentials  password: ${PASSWORD}"
+  echo "  pg-${K8S_OWNER}-credentials  password: ${PASSWORD}"
 done
 
 echo ""
@@ -136,17 +145,21 @@ NEW_SEALED=$(kubeseal --format yaml --namespace "${NAMESPACE}" < "${TEMP_SECRET}
 if [[ -f "${OUTPUT}" ]] && [[ ${#skipped[@]} -gt 0 ]]; then
   # Remove existing entries for the owners we are re-sealing, then append new ones.
   # This handles --rotate without losing untouched sealed secrets.
-  FILTERED=$(awk -v owners="${needs_sealing[*]}" '
+  # Build a space-separated list of k8s-sanitized owner names for the awk filter.
+  k8s_needs_sealing=()
+  for _o in "${needs_sealing[@]}"; do k8s_needs_sealing+=("$(k8s_name "${_o}")"); done
+  FILTERED=$(awk -v owners="${k8s_needs_sealing[*]}" '
     BEGIN { split(owners, arr, " "); for (k in arr) skip[arr[k]] = 1 }
-    /^---$/ { block = "---\n"; next }
-    { block = block $0 "\n" }
-    /name: pg-/ {
-      match($0, /pg-([^-]+)-credentials/, m)
-      current = m[1]
+    /^---$/ {
+      if (block != "" && !(current in skip)) printf "%s", block
+      block = "---\n"; current = ""; next
     }
-    /^$/ {
-      if (!(current in skip)) printf "%s", block
-      block = ""; current = ""
+    { block = block $0 "\n" }
+    /name: pg-.*-credentials/ {
+      line = $0
+      sub(/.*pg-/, "", line)
+      sub(/-credentials.*/, "", line)
+      current = line
     }
     END { if (block != "" && !(current in skip)) printf "%s", block }
   ' "${OUTPUT}")

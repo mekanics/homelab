@@ -9,6 +9,10 @@ metadata:
     # Removes the previous Job run before creating a new one on the next sync.
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 spec:
+  # Roles are created asynchronously by CNPG after cluster reconciliation.
+  # Allow retries for up to 5 minutes before declaring failure.
+  activeDeadlineSeconds: 300
+  backoffLimit: 10
   template:
     spec:
       containers:
@@ -19,12 +23,12 @@ spec:
             - |
               set -e
               {{- range .Values.databases }}
-              echo "Ensuring database '{{ .name }}' with owner '{{ .owner }}' exists..."
+              echo "Ensuring database '{{ include "postgres.pgName" .name }}' with owner '{{ include "postgres.pgName" .owner }}' exists..."
               psql -h postgres-cluster-rw -U postgres -tc \
-                "SELECT 1 FROM pg_database WHERE datname = '{{ .name }}'" \
+                "SELECT 1 FROM pg_database WHERE datname = '{{ include "postgres.pgName" .name }}'" \
                 | grep -q 1 \
                 || psql -h postgres-cluster-rw -U postgres -c \
-                   "CREATE DATABASE {{ .name }} OWNER {{ .owner }}"
+                   "CREATE DATABASE {{ include "postgres.pgName" .name }} OWNER {{ include "postgres.pgName" .owner }}"
               {{- end }}
               echo "All databases initialised."
           env:
