@@ -8,6 +8,9 @@ databases:
   - name: paperless
     owner: paperless
     namespace: paperless
+  - name: rag-obsidian
+    owner: rag-obsidian
+    namespace: ~
 
 cluster:
   storage:
