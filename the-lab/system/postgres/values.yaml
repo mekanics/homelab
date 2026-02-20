@@ -4,8 +4,10 @@
 databases:
   - name: n8n
     owner: n8n
+    namespace: n8n
   - name: paperless
     owner: paperless
+    namespace: paperless
 
 cluster:
   storage:

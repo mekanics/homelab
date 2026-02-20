@@ -46,6 +46,14 @@ mapfile -t OWNERS < <(
   ' "${SCRIPT_DIR}/values.yaml"
 )
 
+mapfile -t NAMESPACES < <(
+  awk '
+    /^databases:/ { in_db=1; next }
+    in_db && /^[^ ]/ { in_db=0 }
+    in_db && /namespace:/ { gsub(/.*namespace:[[:space:]]*/, ""); print }
+  ' "${SCRIPT_DIR}/values.yaml"
+)
+
 if [[ ${#OWNERS[@]} -eq 0 ]]; then
   echo "ERROR: No databases found in values.yaml" >&2
   exit 1
@@ -86,8 +94,18 @@ echo ""
 # --- Generate plain secrets for only the owners that need sealing ------------
 > "${TEMP_SECRET}"
 
-for OWNER in "${needs_sealing[@]}"; do
+for i in "${!needs_sealing[@]}"; do
+  OWNER="${needs_sealing[$i]}"
   PASSWORD=$(openssl rand -base64 32 | tr -dc 'A-Za-z0-9' | head -c 32)
+
+  # Resolve the target app namespace for this owner from the parallel NAMESPACES array
+  APP_NAMESPACE=""
+  for j in "${!OWNERS[@]}"; do
+    if [[ "${OWNERS[$j]}" == "${OWNER}" ]]; then
+      APP_NAMESPACE="${NAMESPACES[$j]:-}"
+      break
+    fi
+  done
 
   cat >> "${TEMP_SECRET}" << EOF
 ---
@@ -96,6 +114,11 @@ kind: Secret
 metadata:
   name: pg-${OWNER}-credentials
   namespace: ${NAMESPACE}
+  annotations:
+    reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
+    reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces: "${APP_NAMESPACE}"
+    reflector.v1.k8s.emberstack.com/reflection-auto-enabled: "true"
+    reflector.v1.k8s.emberstack.com/reflection-auto-namespaces: "${APP_NAMESPACE}"
 type: kubernetes.io/basic-auth
 stringData:
   username: ${OWNER}

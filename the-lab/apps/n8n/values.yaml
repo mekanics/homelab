@@ -76,10 +76,13 @@ n8n:
             host: n8n-valkey
             port: 6379
 
-    #    db:
-    #      type: postgresdb
-    #      postgresdb:
-    #        host: 192.168.0.52
+      db:
+        type: postgresdb
+        postgresdb:
+          host: postgres-cluster-rw.postgres.svc
+          port: 5432
+          database: n8n
+          user: n8n
 
     # Dictionary for secrets, unlike config:, the values here will end up in the secret file.
     # The YAML entry db.postgresdb.password: my_secret is transformed DB_POSTGRESDB_password=bXlfc2VjcmV0
@@ -95,6 +98,11 @@ n8n:
 
     # Extra environmental variables, so you can reference other configmaps and secrets into n8n as env vars.
     extraEnv: &extraEnv # https://github.com/8gears/n8n-helm-chart/issues/174
+      DB_POSTGRESDB_PASSWORD:
+        valueFrom:
+          secretKeyRef:
+            name: pg-n8n-credentials
+            key: password
       N8N_PORT:
         value: '5678'
       N8N_DIAGNOSTICS_ENABLED:
