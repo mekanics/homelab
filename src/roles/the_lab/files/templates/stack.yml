@@ -65,4 +65,9 @@ spec:
           jsonPointers:
             - /spec/replicas
 
+        - group: postgresql.cnpg.io
+          kind: Cluster
+          managedFieldsManagers:
+            - cnpg-manager
+
 {{- end }}
