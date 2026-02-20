@@ -1,0 +1,29 @@
+# Shared PostgreSQL instance configuration.
+# Each entry drives: a managed role in the Cluster CRD, a database created by
+# the init Job, and expects a pg-<owner>-credentials SealedSecret in this namespace.
+databases:
+  - name: n8n
+    owner: n8n
+  - name: paperless
+    owner: paperless
+
+cluster:
+  storage:
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: '1'
+      memory: 512Mi
+
+backup:
+  nfs:
+    server: mercury.local
+    path: /volume1/homelab/postgres-backup
+    size: 5Gi
+  # Retain this many pg_dumpall files before pruning older ones
+  retainCount: 7
+  # Daily at 02:00 UTC
+  schedule: '0 2 * * *'

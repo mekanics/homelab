@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-postgres-backup
+  labels:
+    app: postgres
+    storage.type: nfs
+spec:
+  capacity:
+    storage: {{ .Values.backup.nfs.size }}
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: nfs
+  mountOptions:
+    - nfsvers=4
+    - proto=tcp
+    - hard
+    - intr
+    - rsize=65536
+    - wsize=65536
+    - timeo=600
+    - retrans=2
+  nfs:
+    server: {{ .Values.backup.nfs.server }}
+    path: {{ .Values.backup.nfs.path }}

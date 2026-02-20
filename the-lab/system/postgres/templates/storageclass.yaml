@@ -1,0 +1,20 @@
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: longhorn-postgres
+  annotations:
+    storageclass.kubernetes.io/is-default-class: 'false'
+provisioner: driver.longhorn.io
+allowVolumeExpansion: true
+# WaitForFirstConsumer ensures the PVC is bound on the same node as the pod,
+# preventing mount failures with strict-local data locality.
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Delete
+parameters:
+  # Single replica: CNPG handles replication at the application level.
+  # Using Longhorn replicas would create unnecessary data duplication.
+  numberOfReplicas: '1'
+  staleReplicaTimeout: '2880'
+  fsType: ext4
+  # Data must live on the same node as the pod for reliable I/O on RPi SSDs.
+  dataLocality: strict-local

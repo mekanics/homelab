@@ -1,0 +1,67 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres-cluster
+spec:
+  instances: 1
+  primaryUpdateStrategy: unsupervised
+  # Required for pg_dump CronJob and admin access. Auto-generates postgres-cluster-superuser secret.
+  enableSuperuserAccess: true
+
+  storage:
+    storageClass: longhorn-postgres
+    size: {{ .Values.cluster.storage.size }}
+
+  resources:
+    requests:
+      cpu: {{ .Values.cluster.resources.requests.cpu }}
+      memory: {{ .Values.cluster.resources.requests.memory }}
+    limits:
+      cpu: {{ .Values.cluster.resources.limits.cpu }}
+      memory: {{ .Values.cluster.resources.limits.memory }}
+
+  postgresql:
+    parameters:
+      # Conservative tuning for Raspberry Pi (512Mi memory limit)
+      shared_buffers: "128MB"
+      effective_cache_size: "256MB"
+      work_mem: "4MB"
+      maintenance_work_mem: "64MB"
+      max_connections: "50"
+
+  monitoring:
+    enablePodMonitor: true
+
+  bootstrap:
+    initdb:
+      # First database is created at bootstrap time.
+      # All remaining databases are created by the init-databases PostSync Job.
+      database: {{ (index .Values.databases 0).name }}
+      owner: {{ (index .Values.databases 0).owner }}
+
+  managed:
+    roles:
+    {{- range .Values.databases }}
+      - name: {{ .owner }}
+        login: true
+        # CNPG continuously reconciles this role's password from the referenced secret.
+        # Rotating credentials is as simple as updating the SealedSecret.
+        passwordSecret:
+          name: pg-{{ .owner }}-credentials
+    {{- end }}
+
+  # Critical for a single-instance cluster: reuse the existing PVC during
+  # maintenance/upgrades instead of trying to rebuild from a nonexistent replica.
+  nodeMaintenanceWindow:
+    reusePVC: true
+
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 80
+          preference:
+            matchExpressions:
+              - key: node.homelab.io/storage-tier
+                operator: In
+                values:
+                  - fast
