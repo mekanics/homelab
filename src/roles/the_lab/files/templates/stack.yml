@@ -65,9 +65,36 @@ spec:
           jsonPointers:
             - /spec/replicas
 
+        # CNPG admission webhook injects these defaults into the Cluster spec at
+        # apply-time; they appear in the live resource but not in the Helm template,
+        # causing a perpetual diff. Ignoring them here stops the sync loop.
         - group: postgresql.cnpg.io
           kind: Cluster
-          managedFieldsManagers:
-            - cnpg-manager
+          jqPathExpressions:
+            - .spec.enablePDB
+            - .spec.failoverDelay
+            - .spec.imageName
+            - .spec.logLevel
+            - .spec.maxSyncReplicas
+            - .spec.minSyncReplicas
+            - .spec.postgresGID
+            - .spec.postgresUID
+            - .spec.primaryUpdateMethod
+            - .spec.probes
+            - .spec.replicationSlots
+            - .spec.smartShutdownTimeout
+            - .spec.startDelay
+            - .spec.stopDelay
+            - .spec.switchoverDelay
+            - '.spec.managed.roles[].connectionLimit'
+            - '.spec.managed.roles[].ensure'
+            - '.spec.managed.roles[].inherit'
+
+        # kubeseal always emits creationTimestamp: null in spec.template.metadata,
+        # but the API server strips null timestamps from the stored object.
+        - group: bitnami.com
+          kind: SealedSecret
+          jqPathExpressions:
+            - .spec.template.metadata.creationTimestamp
 
 {{- end }}
