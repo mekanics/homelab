@@ -9,10 +9,10 @@ metadata:
     # Removes the previous Job run before creating a new one on the next sync.
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 spec:
-  # Roles are created asynchronously by CNPG after cluster reconciliation.
-  # Allow retries for up to 5 minutes before declaring failure.
+  # The script polls pg_roles for up to ~2.5 min per role (30 x 5s).
+  # Keep a generous deadline and backoff in case the pod itself needs restarting.
   activeDeadlineSeconds: 300
-  backoffLimit: 10
+  backoffLimit: 3
   template:
     spec:
       containers:
@@ -22,8 +22,24 @@ spec:
           args:
             - |
               set -e
+
+              wait_for_role() {
+                local role="$1" attempt=0 max=30
+                while ! psql -h postgres-cluster-rw -U postgres -tc \
+                  "SELECT 1 FROM pg_roles WHERE rolname = '${role}'" | grep -q 1; do
+                  attempt=$((attempt + 1))
+                  if [ "$attempt" -ge "$max" ]; then
+                    echo "FATAL: role '${role}' not found after ${max} attempts (CNPG may not have reconciled it yet)"
+                    return 1
+                  fi
+                  echo "  Waiting for CNPG to create role '${role}'... (${attempt}/${max})"
+                  sleep 5
+                done
+              }
+
               {{- range .Values.databases }}
               echo "Ensuring database '{{ include "postgres.pgName" .name }}' with owner '{{ include "postgres.pgName" .owner }}' exists..."
+              wait_for_role '{{ include "postgres.pgName" .owner }}'
               psql -h postgres-cluster-rw -U postgres -tc \
                 "SELECT 1 FROM pg_database WHERE datname = '{{ include "postgres.pgName" .name }}'" \
                 | grep -q 1 \
