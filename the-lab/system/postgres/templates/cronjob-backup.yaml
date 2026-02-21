@@ -9,19 +9,19 @@ spec:
   failedJobsHistoryLimit: 3
   jobTemplate:
     spec:
+      activeDeadlineSeconds: 600
+      backoffLimit: 3
       template:
         spec:
           containers:
             - name: pg-dump
-              # Use the same PostgreSQL image version as the cluster for client compatibility.
-              # ARM64 images are published by the CNPG project for Raspberry Pi.
-              image: ghcr.io/cloudnative-pg/postgresql:17
+              image: {{ .Values.backup.image }}
               command: ['/bin/sh', '-c']
               args:
                 - |
                   set -e
                   TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-                  BACKUP_FILE="/backup/pg_dumpall-${TIMESTAMP}.sql"
+                  BACKUP_FILE="/backup/pg_dumpall-${TIMESTAMP}.sql.gz"
 
                   echo "Starting pg_dumpall at ${TIMESTAMP}..."
                   pg_dumpall \
@@ -29,17 +29,17 @@ spec:
                     -U postgres \
                     --clean \
                     --if-exists \
-                    > "${BACKUP_FILE}"
+                    | gzip > "${BACKUP_FILE}"
 
                   echo "Backup written to ${BACKUP_FILE}"
 
                   # Prune old dumps, keeping only the N most recent
-                  ls -t /backup/pg_dumpall-*.sql \
+                  ls -t /backup/pg_dumpall-*.sql.gz \
                     | tail -n +{{ add1 .Values.backup.retainCount }} \
                     | xargs -r rm -f
 
                   echo "Backup complete. Retained files:"
-                  ls -lh /backup/pg_dumpall-*.sql
+                  ls -lh /backup/pg_dumpall-*.sql.gz
               env:
                 - name: PGPASSWORD
                   valueFrom:

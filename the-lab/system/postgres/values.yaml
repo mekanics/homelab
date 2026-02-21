@@ -24,6 +24,8 @@ cluster:
       memory: 512Mi
 
 backup:
+  # Must match the cluster's major PG version so pg_dumpall is compatible.
+  image: ghcr.io/cloudnative-pg/postgresql:18
   nfs:
     server: mercury.local
     path: /volume1/homelab/postgres-backup

@@ -27,7 +27,7 @@ spec:
       effective_cache_size: "256MB"
       work_mem: "4MB"
       maintenance_work_mem: "64MB"
-      max_connections: "50"
+      max_connections: "100"
 
   monitoring:
     enablePodMonitor: true
