@@ -66,6 +66,14 @@ paperless:
       enabled: true
       existingClaim: 'nfs-paperless-consume'
 
+  extraVolumes:
+    - name: log-ephemeral
+      emptyDir: {}
+
+  extraVolumeMounts:
+    - name: log-ephemeral
+      mountPath: /usr/src/paperless/data/log
+
   podSecurityContext:
     fsGroup: 1000
     runAsNonRoot: true
