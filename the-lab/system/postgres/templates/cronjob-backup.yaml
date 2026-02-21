@@ -31,7 +31,12 @@ spec:
                     --if-exists \
                     | gzip > "${BACKUP_FILE}"
 
-                  echo "Backup written to ${BACKUP_FILE}"
+                  echo "Verifying integrity of ${BACKUP_FILE}..."
+                  gunzip -t "${BACKUP_FILE}"
+                  echo "Integrity check passed."
+
+                  # Remove any uncompressed .sql files left over from before the gzip migration.
+                  ls /backup/pg_dumpall-*.sql 2>/dev/null | xargs -r rm -f
 
                   # Prune old dumps, keeping only the N most recent
                   ls -t /backup/pg_dumpall-*.sql.gz \

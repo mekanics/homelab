@@ -30,7 +30,8 @@ backup:
     server: mercury.local
     path: /volume1/homelab/postgres-backup
     size: 5Gi
-  # Retain this many pg_dumpall files before pruning older ones
-  retainCount: 7
-  # Daily at 02:00 UTC
-  schedule: '0 2 * * *'
+  # Retain this many pg_dumpall files before pruning older ones.
+  # 14 = 7 full days at twice-daily frequency.
+  retainCount: 14
+  # Twice daily: 02:00 and 14:00 UTC. Halves the maximum data loss window to ~12h.
+  schedule: '0 2,14 * * *'
