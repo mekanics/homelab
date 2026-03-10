@@ -1,0 +1,36 @@
+work-vacation-planner:
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: mekanics-ca-issuer
+      hajimari.io/group: Apps
+      hajimari.io/appName: Planner
+      hajimari.io/icon: calendar-month
+    hosts:
+      - host: &host planner.mekanics.ch
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: work-vacation-planner-tls-certificate
+        hosts:
+          - *host
+
+  persistence:
+    data:
+      storageClass: longhorn
+
+  env:
+    - name: TZ
+      value: Europe/Zurich
+
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: node.homelab.io/storage-tier
+                operator: In
+                values: [fast]

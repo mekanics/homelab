@@ -1,0 +1,7 @@
+apiVersion: v2
+name: work-vacation-planner
+version: 0.0.0
+dependencies:
+  - name: work-vacation-planner
+    version: 1.0.0
+    repository: https://mekanics.github.io/charts/
