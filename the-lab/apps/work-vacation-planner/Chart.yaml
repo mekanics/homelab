@@ -3,5 +3,5 @@ name: work-vacation-planner
 version: 0.0.0
 dependencies:
   - name: work-vacation-planner
-    version: 1.0.2
+    version: 1.0.3
     repository: https://mekanics.github.io/charts/
