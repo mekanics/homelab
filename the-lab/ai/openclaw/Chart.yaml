@@ -3,5 +3,5 @@ name: openclaw
 version: 0.0.0
 dependencies:
   - name: openclaw
-    version: 0.1.0
+    version: 0.1.1
     repository: https://mekanics.github.io/charts/
