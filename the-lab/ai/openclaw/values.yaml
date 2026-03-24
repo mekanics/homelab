@@ -6,8 +6,6 @@ openclaw:
   env:
     - name: TZ
       value: Europe/Zurich
-    - name: OPENCLAW_GATEWAY_BIND
-      value: lan
     # Playwright (if custom image)
     # - name: PLAYWRIGHT_BROWSERS_PATH
     #   value: /home/node/.cache/ms-playwright
