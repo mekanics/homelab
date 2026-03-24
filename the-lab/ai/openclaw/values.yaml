@@ -6,6 +6,8 @@ openclaw:
   env:
     - name: TZ
       value: Europe/Zurich
+    - name: OPENCLAW_DISABLE_BONJOUR
+      value: '1'
     # Playwright (if custom image)
     # - name: PLAYWRIGHT_BROWSERS_PATH
     #   value: /home/node/.cache/ms-playwright
