@@ -50,9 +50,10 @@ openclaw:
 
   affinity:
     nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-          - matchExpressions:
-              - key: node.homelab.io/performance
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: node.homelab.io/storage-tier
                 operator: In
-                values: [mid]
+                values: [fast]
