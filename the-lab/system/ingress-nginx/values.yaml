@@ -10,6 +10,9 @@ ingress-nginx:
       enabled: true
       serviceMonitor:
         enabled: true
+    config:
+      # Required for per-ingress configuration-snippet annotations (e.g. custom proxy headers)
+      allow-snippet-annotations: 'true'
   tcp:
     1883: mosquitto/mosquitto:1883
     5432: postgres/postgres-cluster-rw:5432
