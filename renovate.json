@@ -1,6 +1,6 @@
 {
 	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
-	"extends": ["config:recommended", ":separateMultipleMajorReleases"],
+	"extends": ["config:recommended"],
 	"customManagers": [
 		{
 			"customType": "regex",
@@ -11,5 +11,12 @@
 		}
 	],
 	"timezone": "Europe/Zurich",
-	"schedule": ["before 4pm every weekday"]
+	"schedule": ["before 4pm every weekday"],
+	"packageRules": [
+		{
+			"matchPackageNames": ["kube-prometheus-stack"],
+			"extends": ["schedule:monthly"],
+			"groupName": "prometheus-stack"
+		}
+	]
 }
