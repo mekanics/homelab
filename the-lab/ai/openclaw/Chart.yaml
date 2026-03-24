@@ -1,0 +1,7 @@
+apiVersion: v2
+name: openclaw
+version: 0.0.0
+dependencies:
+  - name: openclaw
+    version: 0.1.0
+    repository: https://mekanics.github.io/charts/

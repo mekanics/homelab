@@ -1,22 +1,3 @@
-.venv/
-book/
-
-*.iso
-*.log
-*.png
-*.tgz
-*kubeconfig.yaml
-Chart.lock
-
-.env
-.env.*
-!.env.example
-
-.claude/*.local.json
-
-OLD_*
-
-
 # Helm
 charts/*/charts/
 charts/*/*.tgz

@@ -11,4 +11,6 @@ stacks:
     syncWave: 10 # Deploy second (infrastructure components)
   # - name: platform
   - name: apps
-    syncWave: 20 # Deploy last (applications)
+    syncWave: 20 # Deploy third (applications)
+  - name: ai
+    syncWave: 25 # Deploy last (AI services)
