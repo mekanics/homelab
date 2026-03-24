@@ -16,31 +16,31 @@ openclaw:
     home:
       existingClaim: openclaw-home-nfs
 
-  # ingress:
-  #   enabled: true
-  #   className: nginx
-  #   annotations:
-  #     cert-manager.io/cluster-issuer: mekanics-ca-issuer
-  #     hajimari.io/group: AI
-  #     hajimari.io/appName: OpenClaw
-  #     hajimari.io/icon: robot
-  #     # WebSocket support
-  #     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-  #     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
-  #     nginx.ingress.kubernetes.io/server-snippets: |
-  #       location / {
-  #         proxy_set_header Upgrade $http_upgrade;
-  #         proxy_set_header Connection "upgrade";
-  #       }
-  #   hosts:
-  #     - host: &host openclaw.mekanics.ch
-  #       paths:
-  #         - path: /
-  #           pathType: Prefix
-  #   tls:
-  #     - secretName: openclaw-tls-certificate
-  #       hosts:
-  #         - *host
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: mekanics-ca-issuer
+      hajimari.io/group: AI
+      hajimari.io/appName: OpenClaw
+      hajimari.io/icon: robot
+      # WebSocket support
+      nginx.ingress.kubernetes.io/proxy-read-timeout: '3600'
+      nginx.ingress.kubernetes.io/proxy-send-timeout: '3600'
+      nginx.ingress.kubernetes.io/server-snippets: |
+        location / {
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection "upgrade";
+        }
+    hosts:
+      - host: &host openclaw.mekanics.ch
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: openclaw-tls-certificate
+        hosts:
+          - *host
 
   resources:
     requests:
