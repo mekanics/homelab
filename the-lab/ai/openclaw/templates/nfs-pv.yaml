@@ -17,8 +17,8 @@ spec:
     server: mercury.local
     path: /volume1/openclaw
   mountOptions:
-    - nfsvers=4.1
     - noatime
+    - nolock
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
