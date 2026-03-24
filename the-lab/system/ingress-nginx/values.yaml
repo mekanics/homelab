@@ -10,8 +10,10 @@ ingress-nginx:
       enabled: true
       serviceMonitor:
         enabled: true
-    config:
-      # Required for per-ingress configuration-snippet annotations (e.g. custom proxy headers)
+    # Passed as a startup arg so the admission webhook also honours it.
+    # ConfigMap-only setting is insufficient — the webhook validates snippets
+    # at admission time using the controller's startup flags, not the ConfigMap.
+    extraArgs:
       allow-snippet-annotations: 'true'
   tcp:
     1883: mosquitto/mosquitto:1883
