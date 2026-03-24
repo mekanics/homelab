@@ -10,11 +10,6 @@ ingress-nginx:
       enabled: true
       serviceMonitor:
         enabled: true
-    # Passed as a startup arg so the admission webhook also honours it.
-    # ConfigMap-only setting is insufficient — the webhook validates snippets
-    # at admission time using the controller's startup flags, not the ConfigMap.
-    extraArgs:
-      allow-snippet-annotations: 'true'
   tcp:
     1883: mosquitto/mosquitto:1883
     5432: postgres/postgres-cluster-rw:5432

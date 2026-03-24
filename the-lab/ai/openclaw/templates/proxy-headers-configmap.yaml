@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openclaw-proxy-headers
+  namespace: openclaw
+data:
+  # Satisfies OpenClaw's trusted-proxy auth mode (gateway.auth.trustedProxy.userHeader).
+  # The value is a fixed identity — access control is handled at the network level
+  # (gateway is ClusterIP-only, nginx ingress is the sole entry point).
+  X-Forwarded-User: 'admin@homelab'

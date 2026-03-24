@@ -24,14 +24,11 @@ openclaw:
       hajimari.io/group: AI
       hajimari.io/appName: OpenClaw
       hajimari.io/icon: robot
-      # WebSocket support
       nginx.ingress.kubernetes.io/proxy-read-timeout: '3600'
       nginx.ingress.kubernetes.io/proxy-send-timeout: '3600'
-      # Inject static user identity for trusted-proxy auth + WebSocket upgrade headers
-      nginx.ingress.kubernetes.io/configuration-snippet: |
-        proxy_set_header X-Forwarded-User "admin@homelab";
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
+      # Injects X-Forwarded-User for trusted-proxy auth without requiring snippet annotations.
+      # References the ConfigMap in templates/proxy-headers-configmap.yaml.
+      nginx.ingress.kubernetes.io/proxy-set-headers: openclaw/openclaw-proxy-headers
     hosts:
       - host: &host openclaw.mekanics.ch
         paths:
