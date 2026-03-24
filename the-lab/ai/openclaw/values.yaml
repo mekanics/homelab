@@ -8,6 +8,8 @@ openclaw:
       value: Europe/Zurich
     - name: OPENCLAW_DISABLE_BONJOUR
       value: '1'
+    - name: GIT_CONFIG_GLOBAL
+      value: /home/node/.openclaw/workspace/config/gitconfig
     # Playwright (if custom image)
     # - name: PLAYWRIGHT_BROWSERS_PATH
     #   value: /home/node/.cache/ms-playwright
