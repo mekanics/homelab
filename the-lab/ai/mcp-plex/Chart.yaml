@@ -1,0 +1,7 @@
+apiVersion: v2
+name: mcp-plex
+version: 0.0.0
+dependencies:
+  - name: mcp-server
+    version: 0.1.0
+    repository: https://mekanics.github.io/charts/
