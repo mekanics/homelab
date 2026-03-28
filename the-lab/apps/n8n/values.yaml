@@ -66,6 +66,9 @@ n8n:
       n8n:
         editor_base_url: 'https://workflow.mekanics.ch'
         runners_enabled: true
+        # Trust the nginx ingress proxy for X-Forwarded-For (fixes ERR_ERL_UNEXPECTED_X_FORWARDED_FOR
+        # and the cascading browserId check failures introduced in n8n v1.x with express-rate-limit v7)
+        proxy_hops: 1
 
       webhook_url: 'https://workflow.mekanics.ch'
       queue:
@@ -84,6 +87,12 @@ n8n:
           port: 5432
           database: n8n
           user: n8n
+          # Increase pool size and timeout to handle transient DB connection spikes
+          pool:
+            min: 2
+            max: 10
+          connection:
+            timeout: 30000
 
     # Dictionary for secrets, unlike config:, the values here will end up in the secret file.
     # The YAML entry db.postgresdb.password: my_secret is transformed DB_POSTGRESDB_password=bXlfc2VjcmV0
