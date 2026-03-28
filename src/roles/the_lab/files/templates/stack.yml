@@ -18,6 +18,8 @@ spec:
   template:
     metadata:
       name: '{{ `{{path.basename}}` }}'
+      labels:
+        group: {{ $stack.name }}
       {{- if $stack.syncWave }}
       annotations:
         argocd.argoproj.io/sync-wave: "{{ $stack.syncWave }}"
