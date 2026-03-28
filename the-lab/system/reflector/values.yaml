@@ -7,3 +7,28 @@ reflector:
     limits:
       cpu: 100m
       memory: 128Mi
+
+  # On the Pi cluster, the first HTTP/2 connection to the API server can fail
+  # (SslStream disposed during handshake) while other pods are still starting up.
+  # Reflector recovers automatically, but the default startup probe (5 failures × 10s = 50s)
+  # kills the container before it gets a chance to reconnect.
+  # Increasing failureThreshold to 30 gives 5 minutes for the cluster to settle.
+  startupProbe:
+    httpGet:
+      path: /health/ready
+      port: http
+    timeoutSeconds: 10
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    failureThreshold: 30
+
+  # Also relax the readiness probe — the Kubernetes health check inside reflector
+  # has a 3s timeout; give it enough room on slow Pi hardware.
+  readinessProbe:
+    httpGet:
+      path: /health/ready
+      port: http
+    timeoutSeconds: 10
+    initialDelaySeconds: 10
+    periodSeconds: 15
+    failureThreshold: 10
