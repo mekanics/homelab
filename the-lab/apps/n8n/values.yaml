@@ -69,10 +69,12 @@ n8n:
         # Trust the nginx ingress proxy for X-Forwarded-For (fixes ERR_ERL_UNEXPECTED_X_FORWARDED_FOR
         # and the cascading browserId check failures introduced in n8n v1.x with express-rate-limit v7)
         proxy_hops: 1
-        # Disable workflow history — causes WorkflowHistoryService.getVersion errors on community
-        # edition (requires enterprise license + completed migrations)
+        # Workflow history must remain enabled — the Publish mechanism uses it internally
+        # even in community edition (disabling it causes "Version not found" on publish).
+        # Prune aggressively to keep DB size small on homelab.
         workflow_history:
-          enabled: false
+          enabled: true
+          prune_time: 24
 
       webhook_url: 'https://workflow.mekanics.ch'
       queue:
