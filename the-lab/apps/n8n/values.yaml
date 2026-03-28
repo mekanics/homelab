@@ -14,11 +14,11 @@ n8n:
   # Global common config for this entire n8n deployment
   #
 
-  # image:
-  #   repository: n8nio/n8n
-  #   pullPolicy: IfNotPresent
-  #   renovate: datasource=github-tags depName=n8n-io/n8n
-  #   tag: '1.123.11'
+  image:
+    repository: n8nio/n8n
+    pullPolicy: IfNotPresent
+    # renovate: datasource=docker depName=n8nio/n8n
+    tag: '2.14.2'
   # imagePullSecrets: []
 
   # # The Name to use for the chart. Will be the prefix of all resources aka. The Chart.Name (default is 'n8n')
@@ -69,6 +69,10 @@ n8n:
         # Trust the nginx ingress proxy for X-Forwarded-For (fixes ERR_ERL_UNEXPECTED_X_FORWARDED_FOR
         # and the cascading browserId check failures introduced in n8n v1.x with express-rate-limit v7)
         proxy_hops: 1
+        # Disable workflow history — causes WorkflowHistoryService.getVersion errors on community
+        # edition (requires enterprise license + completed migrations)
+        workflow_history:
+          enabled: false
 
       webhook_url: 'https://workflow.mekanics.ch'
       queue:
