@@ -1,0 +1,7 @@
+apiVersion: v2
+name: mcp-beancount
+version: 0.0.0
+dependencies:
+  - name: mcp-server
+    version: 0.1.2
+    repository: https://mekanics.github.io/charts/
