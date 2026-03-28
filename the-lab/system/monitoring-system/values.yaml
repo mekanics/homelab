@@ -75,9 +75,16 @@ kube-prometheus-stack:
       evaluationInterval: 60s
       resources:
         limits:
-          memory: 1Gi
+          cpu: 500m
+          memory: 1500Mi
         requests:
-          memory: 512Mi
+          cpu: 100m
+          memory: 768Mi
+      # Reduce memory pressure on Pi: compress WAL, limit in-memory chunks
+      walCompression: true
+      tsdbConfig:
+        max_block_duration: 2h
+        min_block_duration: 30m
       ruleSelectorNilUsesHelmValues: false
       serviceMonitorSelectorNilUsesHelmValues: false
       podMonitorSelectorNilUsesHelmValues: false
