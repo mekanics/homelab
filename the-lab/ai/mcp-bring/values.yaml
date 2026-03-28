@@ -1,0 +1,49 @@
+mcp-server:
+  image:
+    repository: ghcr.io/mekanics/mcp-bring
+    tag: latest
+
+  mcp:
+    port: 3000
+    transport: streamable-http
+
+  existingSecret: mcp-bring-secrets
+
+  env:
+    - name: LOG_LEVEL
+      value: WARNING
+
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: mekanics-ca-issuer
+      hajimari.io/group: AI
+      hajimari.io/appName: MCP Bring
+      hajimari.io/icon: shopping
+      nginx.ingress.kubernetes.io/force-ssl-redirect: 'true'
+    hosts:
+      - host: &host mcp-bring.mekanics.ch
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: mcp-bring-tls-certificate
+        hosts:
+          - *host
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+      cpu: 250m
+
+  probes:
+    startup:
+      enabled: true
+    liveness:
+      enabled: true
+    readiness:
+      enabled: true
