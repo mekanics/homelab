@@ -115,6 +115,15 @@ n8n:
         value: '*'
       N8N_AUTH_DISABLED:
         value: 'true'
+      # v2.0: NFS doesn't support strict file permissions (0600) — disable enforcement
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS:
+        value: 'false'
+      # v2.0: Allow access to NFS data mount in addition to default ~/.n8n-files
+      N8N_RESTRICT_FILE_ACCESS_TO:
+        value: '/home/node/.n8n;/home/node/nfs-data'
+      # v2.0: env var access in Code nodes blocked by default — re-enable if workflows need it
+      N8N_BLOCK_ENV_ACCESS_IN_NODE:
+        value: 'false'
 
     #    N8N_DB_POSTGRESDB_NAME:
     #      valueFrom:
