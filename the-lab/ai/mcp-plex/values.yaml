@@ -10,8 +10,6 @@ mcp-server:
   existingSecret: mcp-plex-secrets
 
   env:
-    - name: PLEX_SERVER
-      value: http://plex.the-lab.svc.cluster.local:32400
     - name: LOG_LEVEL
       value: WARNING
 
