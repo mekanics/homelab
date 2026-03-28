@@ -43,30 +43,7 @@ mcp-server:
   probes:
     startup:
       enabled: true
-      spec:
-        httpGet:
-          path: /mcp
-          port: http
-        failureThreshold: 24
-        periodSeconds: 10
-        timeoutSeconds: 5
     liveness:
       enabled: true
-      spec:
-        httpGet:
-          path: /mcp
-          port: http
-        initialDelaySeconds: 10
-        periodSeconds: 30
-        timeoutSeconds: 5
-        failureThreshold: 3
     readiness:
       enabled: true
-      spec:
-        httpGet:
-          path: /mcp
-          port: http
-        initialDelaySeconds: 5
-        periodSeconds: 10
-        timeoutSeconds: 3
-        failureThreshold: 3
