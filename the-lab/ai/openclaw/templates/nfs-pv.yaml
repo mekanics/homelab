@@ -14,7 +14,7 @@ spec:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
   nfs:
-    server: mercury.local
+    server: 192.168.10.12  # mercury.local — static IP avoids mDNS lookup delays at mount time
     path: /volume1/openclaw
   mountOptions:
     - noatime
