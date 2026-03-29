@@ -2,7 +2,7 @@ openclaw:
   image:
     repository: ghcr.io/mekanics/openclaw-image
     # renovate: datasource=docker depName=ghcr.io/mekanics/openclaw-image
-    tag: "43720d6"
+    tag: "5570390"
 
   env:
     - name: TZ
@@ -14,6 +14,19 @@ openclaw:
     # Playwright (if custom image)
     # - name: PLAYWRIGHT_BROWSERS_PATH
     #   value: /home/node/.cache/ms-playwright
+    # Tell V8 its heap ceiling so it doesn't OOM-panic on ARM64 during cold start.
+    # Without this, V8 picks a conservative default and crashes when it can't grow.
+    # 1536 leaves ~512MB headroom under the 2Gi container limit.
+    - name: NODE_OPTIONS
+      value: "--max-old-space-size=1536"
+    # Skip the entry-point self-respawn (saves ~50-100MB peak RSS at startup).
+    - name: OPENCLAW_NO_RESPAWN
+      value: "1"
+    # Persist V8's module compile cache across restarts (stored on NFS PVC).
+    # After the first cold start, Node skips re-parsing 4000+ JS files — meaningful
+    # on ARM64 where JS compilation is CPU/memory intensive.
+    - name: NODE_COMPILE_CACHE
+      value: /home/node/.openclaw/.node-compile-cache
 
   persistence:
     home:
