@@ -31,7 +31,7 @@ openclaw:
   persistence:
     home:
       existingClaim: openclaw-home-nfs
-    compileCache:
+    compile-cache:
       enabled: true
       type: pvc
       mountPath: /home/node/.node-compile-cache
