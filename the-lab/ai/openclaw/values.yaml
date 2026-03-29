@@ -22,15 +22,24 @@ openclaw:
     # Skip the entry-point self-respawn (saves ~50-100MB peak RSS at startup).
     - name: OPENCLAW_NO_RESPAWN
       value: '1'
-    # Persist V8's module compile cache across restarts (stored on NFS PVC).
+    # Persist V8's module compile cache across restarts (stored on Longhorn PVC).
     # After the first cold start, Node skips re-parsing 4000+ JS files — meaningful
     # on ARM64 where JS compilation is CPU/memory intensive.
     - name: NODE_COMPILE_CACHE
-      value: /home/node/.openclaw/.node-compile-cache
+      value: /home/node/.node-compile-cache
 
   persistence:
     home:
       existingClaim: openclaw-home-nfs
+    compileCache:
+      enabled: true
+      type: pvc
+      mountPath: /home/node/.node-compile-cache
+      readOnly: false
+      storageClass: longhorn
+      accessMode: ReadWriteOnce
+      size: 1Gi
+      retain: true
 
   ingress:
     enabled: true
