@@ -1,7 +1,7 @@
 mcp-server:
   image:
     repository: ghcr.io/mekanics/mcp-beancount
-    tag: latest
+    tag: 0.1.0
 
   mcp:
     port: 3000
