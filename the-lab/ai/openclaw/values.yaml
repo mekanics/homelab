@@ -2,7 +2,7 @@ openclaw:
   image:
     repository: ghcr.io/mekanics/openclaw-image
     # renovate: datasource=docker depName=ghcr.io/mekanics/openclaw-image
-    tag: "5570390"
+    tag: '5570390'
 
   env:
     - name: TZ
@@ -18,10 +18,10 @@ openclaw:
     # Without this, V8 picks a conservative default and crashes when it can't grow.
     # 1536 leaves ~512MB headroom under the 2Gi container limit.
     - name: NODE_OPTIONS
-      value: "--max-old-space-size=1536"
+      value: '--max-old-space-size=1536'
     # Skip the entry-point self-respawn (saves ~50-100MB peak RSS at startup).
     - name: OPENCLAW_NO_RESPAWN
-      value: "1"
+      value: '1'
     # Persist V8's module compile cache across restarts (stored on NFS PVC).
     # After the first cold start, Node skips re-parsing 4000+ JS files — meaningful
     # on ARM64 where JS compilation is CPU/memory intensive.
@@ -63,6 +63,12 @@ openclaw:
     limits:
       memory: 2Gi
       cpu: '1'
+
+  probes:
+    startup:
+      spec:
+        # Allows up to 600s (10min) for cold start (60 attempts × 10s)
+        failureThreshold: 60
 
   affinity:
     nodeAffinity:
