@@ -5,10 +5,13 @@ mcp-server:
 
   mcp:
     port: 3000
-    transport: streamable-http
 
   # No secret needed — read-only file access, no credentials
   env:
+    - name: FASTMCP_TRANSPORT
+      value: streamable-http
+    - name: FASTMCP_HOST
+      value: "0.0.0.0"
     - name: BEANCOUNT_FILE
       value: /bean/main.bean
     - name: BASE_CURRENCY

@@ -5,11 +5,14 @@ mcp-server:
 
   mcp:
     port: 3000
-    transport: streamable-http
 
   existingSecret: mcp-plex-secrets
 
   env:
+    - name: FASTMCP_TRANSPORT
+      value: streamable-http
+    - name: FASTMCP_HOST
+      value: "0.0.0.0"
     - name: LOG_LEVEL
       value: WARNING
 
