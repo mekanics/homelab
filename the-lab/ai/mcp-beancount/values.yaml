@@ -28,7 +28,7 @@ mcp-server:
       type: nfs
       mountPath: /bean
       readOnly: true
-      server: mercury.local
+      server: 192.168.10.12
       path: /volume1/homelab/finance.ajo
 
   ingress:
