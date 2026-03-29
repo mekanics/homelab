@@ -70,21 +70,25 @@ kube-prometheus-stack:
     prometheusSpec:
       # Memory optimization for Raspberry Pi cluster
       retention: 5d
-      retentionSize: 2GB
+      retentionSize: 1500MB
       scrapeInterval: 60s
       evaluationInterval: 60s
       resources:
         limits:
           cpu: 500m
-          memory: 1500Mi
+          memory: 2000Mi
         requests:
           cpu: 100m
-          memory: 768Mi
+          memory: 800Mi
       # Reduce memory pressure on Pi: compress WAL, limit in-memory chunks
       walCompression: true
       tsdbConfig:
         max_block_duration: 2h
         min_block_duration: 30m
+      # Cap concurrent queries to prevent memory spikes on Pi 4
+      additionalArgs:
+        - name: query.max-concurrency
+          value: "2"
       ruleSelectorNilUsesHelmValues: false
       serviceMonitorSelectorNilUsesHelmValues: false
       podMonitorSelectorNilUsesHelmValues: false
