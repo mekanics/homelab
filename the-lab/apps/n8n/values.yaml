@@ -81,7 +81,7 @@ n8n:
 
       # Execution pruning — keep DB size manageable on homelab Postgres
       executions_data_prune: 'true'
-      executions_data_max_age: 24
+      executions_data_max_age: 72
 
       db:
         type: postgresdb
