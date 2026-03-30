@@ -39,11 +39,52 @@
     state: absent
     purge: true
 
-- name: Set vm.swappiness to 0
-  sysctl:
-    name: vm.swappiness
-    value: 0
+# ── zram swap ──────────────────────────────────────────────────────────────
+# Provides ~1–2 GB of compressed in-memory swap per node (25% of 4 GB RAM
+# with lz4 compression ratio ~2:1 ≈ 2 GB effective burst buffer).
+# This prevents OOMKill during transient memory spikes without touching disk.
+# kubelet is configured with fail-swap-on=false so it starts alongside zram.
+
+- name: Install zram-tools
+  apt:
+    name: zram-tools
     state: present
+    update_cache: true
+
+- name: Configure zramswap — set ALGO to lz4
+  lineinfile:
+    path: /etc/default/zramswap
+    regexp: '^#?\s*ALGO='
+    line: 'ALGO=lz4'
+    state: present
+
+- name: Configure zramswap — set PERCENT to 25
+  lineinfile:
+    path: /etc/default/zramswap
+    regexp: '^#?\s*PERCENT='
+    line: 'PERCENT=25'
+    state: present
+
+- name: Enable and start zramswap service
+  systemd:
+    name: zramswap
+    state: started
+    enabled: true
+    daemon_reload: true
+
+# ── sysctl tuning ──────────────────────────────────────────────────────────
+# swappiness=10: prefer RAM strongly, only use zram swap under real pressure.
+# (Lower than default 60; higher than old 0 which blocked zram from activating.)
+
+- name: Apply homelab sysctl tuning
+  ansible.posix.sysctl:
+    name: '{{ item.name }}'
+    value: '{{ item.value }}'
+    sysctl_file: /etc/sysctl.d/99-homelab.conf
+    reload: true
+    state: present
+  loop:
+    - { name: vm.swappiness, value: '10' }
 
 - name: Copy systemd unit to disable EEE on eth0
   copy:
