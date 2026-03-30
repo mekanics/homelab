@@ -111,3 +111,70 @@ kube-prometheus-stack:
 
   prometheus-blackbox-exporter:
     enabled: true
+
+  alertmanager:
+    enabled: true
+    alertmanagerSpec:
+      resources:
+        limits:
+          memory: 64Mi
+        requests:
+          memory: 32Mi
+      alertmanagerConfigMatcherStrategy:
+        type: None
+      secrets:
+        - alertmanager-slack-secret
+    config:
+      global:
+        resolve_timeout: 5m
+      route:
+        group_by: ['alertname', 'namespace']
+        group_wait: 30s
+        group_interval: 5m
+        repeat_interval: 4h
+        receiver: slack-default
+        routes:
+          - matchers:
+              - alertname = Watchdog
+            receiver: 'null'
+          - matchers:
+              - severity = critical
+            receiver: slack-critical
+          - matchers:
+              - severity = warning
+            receiver: slack-warning
+      receivers:
+        - name: 'null'
+        - name: slack-default
+          slack_configs:
+            - api_url_secret:
+                name: alertmanager-slack-secret
+                key: webhookUrl
+              channel: '#the-dark-side'
+              title: '{{ template "slack.default.title" . }}'
+              text: '{{ range .Alerts }}{{ .Annotations.summary }}\n{{ end }}'
+              send_resolved: true
+        - name: slack-critical
+          slack_configs:
+            - api_url_secret:
+                name: alertmanager-slack-secret
+                key: webhookUrl
+              channel: '#the-dark-side'
+              title: '🚨 [CRITICAL] {{ .GroupLabels.alertname }}'
+              text: '{{ range .Alerts }}*Summary:* {{ .Annotations.summary }}\n*Description:* {{ .Annotations.description }}\n{{ end }}'
+              send_resolved: true
+        - name: slack-warning
+          slack_configs:
+            - api_url_secret:
+                name: alertmanager-slack-secret
+                key: webhookUrl
+              channel: '#the-dark-side'
+              title: '⚠️ [WARNING] {{ .GroupLabels.alertname }}'
+              text: '{{ range .Alerts }}*Summary:* {{ .Annotations.summary }}\n{{ end }}'
+              send_resolved: true
+      inhibit_rules:
+        - source_matchers:
+            - severity = critical
+          target_matchers:
+            - severity = warning
+          equal: ['alertname', 'namespace']

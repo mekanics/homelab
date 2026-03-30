@@ -76,6 +76,10 @@ openclaw:
       spec:
         # Allows up to 600s (10min) for cold start (60 attempts × 10s)
         failureThreshold: 60
+    liveness:
+      spec:
+        # More tolerant restart threshold — 5 × 30s = 150s before pod restart
+        failureThreshold: 5
 
   affinity:
     nodeAffinity:
