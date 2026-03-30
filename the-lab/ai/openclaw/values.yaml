@@ -27,6 +27,13 @@ openclaw:
     # on ARM64 where JS compilation is CPU/memory intensive.
     - name: NODE_COMPILE_CACHE
       value: /home/node/.node-compile-cache
+    # -------------------------------------------------------------------
+    # lossless-claw (LCM) — context engine plugin
+    # SQLite lives on Longhorn PVC (not NFS) to avoid file-locking issues.
+    # All other LCM config goes directly in openclaw.json (not here).
+    # -------------------------------------------------------------------
+    - name: LCM_DATABASE_PATH
+      value: /home/node/.openclaw-db/lcm.db
 
   persistence:
     home:
@@ -40,6 +47,29 @@ openclaw:
       accessMode: ReadWriteOnce
       size: 1Gi
       retain: true
+    # Dedicated Longhorn PVC for lossless-claw LCM SQLite database.
+    # Must NOT be on NFS (Synology) — SQLite file locking breaks on NFS.
+    # Mounted at a path outside ~/.openclaw to avoid the NFS-backed home volume.
+    lcm-db:
+      enabled: true
+      type: pvc
+      mountPath: /home/node/.openclaw-db
+      readOnly: false
+      storageClass: longhorn
+      accessMode: ReadWriteOnce
+      size: 2Gi
+      retain: true
+
+  # Override the gateway startup command to install the lossless-claw plugin
+  # before the gateway process starts. The plugin is installed into the NFS-backed
+  # home PVC so it persists across pod restarts (install is a no-op if already present).
+  gateway:
+    command:
+      - sh
+      - -ec
+      - |
+        openclaw plugins install @martian-engineering/lossless-claw --yes 2>&1 || true
+        exec node /app/dist/index.js gateway run
 
   ingress:
     enabled: true
