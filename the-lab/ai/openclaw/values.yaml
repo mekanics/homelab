@@ -68,7 +68,7 @@ openclaw:
       - sh
       - -ec
       - |
-        openclaw plugins install @martian-engineering/lossless-claw --yes 2>&1 || true
+        openclaw plugins install @martian-engineering/lossless-claw 2>&1 || true
         exec node /app/dist/index.js gateway run
 
   ingress:
