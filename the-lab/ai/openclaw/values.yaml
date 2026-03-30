@@ -68,6 +68,7 @@ openclaw:
       - sh
       - -ec
       - |
+        npm config set cache /tmp/.npm --global 2>/dev/null || true
         openclaw plugins install @martian-engineering/lossless-claw 2>&1 || true
         exec node /app/dist/index.js gateway run
 
