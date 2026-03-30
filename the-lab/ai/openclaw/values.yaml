@@ -30,24 +30,10 @@ openclaw:
     # -------------------------------------------------------------------
     # lossless-claw (LCM) — context engine plugin
     # SQLite lives on Longhorn PVC (not NFS) to avoid file-locking issues.
+    # All other LCM config lives in openclaw.configOverride below.
     # -------------------------------------------------------------------
     - name: LCM_DATABASE_PATH
       value: /home/node/.openclaw-db/lcm.db
-    # How many recent messages to always include verbatim (no summarization).
-    - name: LCM_FRESH_TAIL_COUNT
-      value: '32'
-    # No depth limit on incremental summarization passes.
-    - name: LCM_INCREMENTAL_MAX_DEPTH
-      value: '-1'
-    # Cosine similarity threshold for context inclusion.
-    - name: LCM_CONTEXT_THRESHOLD
-      value: '0.75'
-    # Use Haiku for summarization — much cheaper than Sonnet.
-    - name: LCM_SUMMARY_MODEL
-      value: anthropic/claude-haiku-4-5
-    # Exclude cron sessions from LCM indexing (agent:*:cron:** pattern).
-    - name: LCM_IGNORE_SESSION_PATTERNS
-      value: 'agent:*:cron:**'
 
   persistence:
     home:
@@ -71,8 +57,44 @@ openclaw:
       readOnly: false
       storageClass: longhorn
       accessMode: ReadWriteOnce
-      size: 10Gi
+      size: 2Gi
       retain: true
+
+  # -------------------------------------------------------------------
+  # lossless-claw plugin config — injected into openclaw.json via ConfigMap.
+  # Non-secret tuning params moved here from env vars (cleaner than a wall
+  # of LCM_* vars; env vars always win on top of this if set).
+  # -------------------------------------------------------------------
+  configOverride: |
+    {
+      "gateway": {
+        "mode": "local",
+        "bind": "lan",
+        "port": 18789,
+        "auth": { "mode": "trusted-proxy", "trustedProxy": { "userHeader": "X-Forwarded-User" } },
+        "controlUi": { "enabled": true }
+      },
+      "agents": {
+        "defaults": { "workspace": "~/.openclaw/workspace" },
+        "list": [{ "id": "default", "name": "OpenClaw Assistant", "workspace": "~/.openclaw/workspace" }]
+      },
+      "cron": { "enabled": false },
+      "plugins": {
+        "slots": { "contextEngine": "lossless-claw" },
+        "entries": {
+          "lossless-claw": {
+            "enabled": true,
+            "config": {
+              "freshTailCount": 32,
+              "contextThreshold": 0.75,
+              "incrementalMaxDepth": -1,
+              "summaryModel": "anthropic/claude-haiku-4-5",
+              "ignoreSessionPatterns": ["agent:*:cron:**"]
+            }
+          }
+        }
+      }
+    }
 
   # Override the gateway startup command to install the lossless-claw plugin
   # before the gateway process starts. The plugin is installed into the NFS-backed
