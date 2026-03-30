@@ -61,7 +61,7 @@ n8n:
     config:
       generic_timezone: Europe/Zurich
       TZ: Europe/Zurich
-      executions_mode: queue
+      executions_mode: regular
 
       n8n:
         editor_base_url: 'https://workflow.mekanics.ch'
@@ -77,14 +77,11 @@ n8n:
           prune_time: 24
 
       webhook_url: 'https://workflow.mekanics.ch'
-      queue:
-        health:
-          check:
-            active: true
-        bull:
-          redis:
-            host: n8n-valkey
-            port: 6379
+      # queue: config removed — regular mode does not use Redis/Valkey
+
+      # Execution pruning — keep DB size manageable on homelab Postgres
+      executions_data_prune: 'true'
+      executions_data_max_age: 24
 
       db:
         type: postgresdb
@@ -141,6 +138,9 @@ n8n:
       # v2.0: env var access in Code nodes blocked by default — re-enable if workflows need it
       N8N_BLOCK_ENV_ACCESS_IN_NODE:
         value: 'false'
+      # Cap Node.js heap to 384MB — keeps main pod under 512Mi limit on Pi
+      NODE_OPTIONS:
+        value: '--max-old-space-size=384'
 
     #    N8N_DB_POSTGRESDB_NAME:
     #      valueFrom:
@@ -314,13 +314,8 @@ n8n:
       port: 80
 
     resources:
-      # We usually recommend not specifying default resources and to leave this as a conscious
-      # choice for the user. This also increases chances charts run on environments with little
-      # resources, such as Minikube. If you do want to specify resources, uncomment the following
-      # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-      # limits:
-      #   cpu: 100m
-      #   memory: 128Mi
+      limits:
+        memory: 512Mi
       requests:
         memory: 256Mi
 
@@ -352,12 +347,16 @@ n8n:
     # Pod termination grace period in seconds
     terminationGracePeriodSeconds: 30
 
+    priorityClassName: low-priority-homelab
+
   # # # # # # # # # # # # # # # #
   #
   # Worker related settings
   #
   worker:
-    enabled: true
+    # Disabled: regular mode does not use a worker process.
+    # Re-enable (and restore queue config) if scaling to queue mode.
+    enabled: false
 
     # additional (to main) config for worker
     config: {}

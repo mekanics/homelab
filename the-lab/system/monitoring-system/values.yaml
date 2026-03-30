@@ -69,8 +69,8 @@ kube-prometheus-stack:
   prometheus:
     prometheusSpec:
       # Memory optimization for Raspberry Pi cluster
-      retention: 5d
-      retentionSize: 2GB
+      retention: 3d
+      retentionSize: 1500MB
       scrapeInterval: 60s
       evaluationInterval: 60s
       resources:

@@ -1,0 +1,28 @@
+# Cluster-wide PriorityClass definitions.
+# Higher value = higher scheduling priority; higher-priority pods preempt lower-priority ones
+# when the cluster is under memory/CPU pressure.
+#
+# Hierarchy:
+#   high-priority-homelab (1000)  — OpenClaw, core AI, critical services
+#   low-priority-homelab   (100)  — background workloads (n8n, etc.)
+#   default k8s baseline    (0)   — everything else
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: high-priority-homelab
+value: 1000
+globalDefault: false
+description: >
+  High-priority class for critical homelab services (OpenClaw, etc.).
+  Pods in this class will preempt low-priority pods under resource pressure.
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: low-priority-homelab
+value: 100
+globalDefault: false
+description: >
+  Low-priority class for background/interruptible workloads (n8n, etc.).
+  These pods are the first candidates for preemption when the cluster is under pressure.

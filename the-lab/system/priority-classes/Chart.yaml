@@ -1,0 +1,4 @@
+apiVersion: v2
+name: priority-classes
+description: Cluster-wide PriorityClass definitions for homelab workload scheduling
+version: 0.1.0

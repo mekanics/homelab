@@ -22,3 +22,9 @@ tls-san:
 {% endfor %}
 {% endif %}
 data-dir: {{ k3s_server_location }}
+# Allow kubelet to start on nodes with zram swap active.
+# NodeSwap feature gate is GA in k8s 1.28+ (enabled by default).
+# Default swapBehavior is NoSwap — OS/zram uses swap for burst buffer,
+# Kubernetes workloads themselves do not swap.
+kubelet-arg:
+  - "fail-swap-on=false"
