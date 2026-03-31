@@ -105,11 +105,7 @@ kube-prometheus-stack:
   prometheus-node-exporter:
     enabled: true
 
-  # Blackbox exporter for API server monitoring
   kube-state-metrics:
-    enabled: true
-
-  prometheus-blackbox-exporter:
     enabled: true
 
   alertmanager:
