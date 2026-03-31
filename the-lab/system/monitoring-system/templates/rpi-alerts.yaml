@@ -11,10 +11,10 @@ spec:
     - name: apiserver
       rules:
         - alert: KubernetesAPIServerDown
-          expr: up{job="apiserver-vip"} == 0
+          expr: up{job="apiserver"} == 0
           for: 5m
           labels:
             severity: critical
           annotations:
             summary: 'Kubernetes API Server is down'
-            description: 'The Kubernetes API server VIP (192.168.10.110:6443) has been unreachable for more than 5 minutes.'
+            description: 'All Kubernetes API server endpoints have been unreachable for more than 5 minutes.'
