@@ -134,8 +134,9 @@ kube-prometheus-stack:
         repeat_interval: 4h
         receiver: slack-default
         routes:
+          # Mute synthetic / k3s-incompatible alerts (no Slack notification)
           - matchers:
-              - alertname = Watchdog
+              - alertname =~ "Watchdog|InfoInhibitor|KubeControllerManagerDown|KubeSchedulerDown|KubeProxyDown"
             receiver: 'null'
           - matchers:
               - severity = critical
