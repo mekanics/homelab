@@ -2,7 +2,7 @@ openclaw:
   image:
     repository: ghcr.io/mekanics/openclaw-image
     # renovate: datasource=docker depName=ghcr.io/mekanics/openclaw-image
-    tag: '43720d6'
+    tag: '5570390'
 
   env:
     - name: TZ
