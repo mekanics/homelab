@@ -76,19 +76,31 @@ openclaw:
   probes:
     startup:
       spec:
-        # Allows up to 600s (10min) for cold start (60 attempts × 10s)
+        exec: null
+        httpGet:
+          path: /healthz
+          port: 18789
         failureThreshold: 60
+        periodSeconds: 10
+        timeoutSeconds: 5
     liveness:
       spec:
-        # More tolerant restart threshold — 10 × 30s = 300s before pod restart
+        exec: null
+        httpGet:
+          path: /healthz
+          port: 18789
         failureThreshold: 10
+        periodSeconds: 30
+        timeoutSeconds: 10
+    readiness:
+      spec:
+        exec: null
+        httpGet:
+          path: /readyz
+          port: 18789
+        failureThreshold: 3
+        periodSeconds: 10
+        timeoutSeconds: 5
 
-  affinity:
-    nodeAffinity:
-      preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 100
-          preference:
-            matchExpressions:
-              - key: node.homelab.io/storage-tier
-                operator: In
-                values: [fast]
+  nodeSelector:
+    node.homelab.io/performance: high
