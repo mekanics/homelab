@@ -80,8 +80,8 @@ openclaw:
         failureThreshold: 60
     liveness:
       spec:
-        # More tolerant restart threshold — 5 × 30s = 150s before pod restart
-        failureThreshold: 5
+        # More tolerant restart threshold — 10 × 30s = 300s before pod restart
+        failureThreshold: 10
 
   affinity:
     nodeAffinity:
