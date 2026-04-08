@@ -20,6 +20,31 @@ influxdb2:
     storageClass: 'longhorn'
     size: 10Gi
 
+  startupProbe:
+    enabled: true
+    path: /health
+    scheme: HTTP
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 5
+    failureThreshold: 30
+
+  livenessProbe:
+    path: /health
+    scheme: HTTP
+    initialDelaySeconds: 0
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  readinessProbe:
+    path: /health
+    scheme: HTTP
+    initialDelaySeconds: 0
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
   resources:
     requests:
       memory: 256Mi
