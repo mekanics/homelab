@@ -70,6 +70,6 @@ spec:
         - group: postgresql.cnpg.io
           kind: Cluster
           managedFieldsManagers:
-            - cnpg-manager
+            - manager
 
 {{- end }}
