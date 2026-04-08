@@ -336,7 +336,7 @@ n8n:
               matchExpressions:
                 - key: node.homelab.io/performance
                   operator: In
-                  values: ['high']
+                  values: ['mid']
           - weight: 80
             preference:
               matchExpressions:

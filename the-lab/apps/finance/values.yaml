@@ -49,12 +49,21 @@ fava:
         timezone: 'Europe/Zurich'
 
   resources:
-    # limits:
-    #   cpu: 500m
-    #   memory: 500Mi
+    limits:
+      memory: 512Mi
     requests:
       cpu: 250m
       memory: 250Mi
+
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: node.homelab.io/performance
+                operator: In
+                values: ['mid']
 
   probes:
     liveness:
