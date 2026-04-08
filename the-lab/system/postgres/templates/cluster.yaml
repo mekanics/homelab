@@ -43,9 +43,10 @@ spec:
     roles:
     {{- range .Values.databases }}
       - name: {{ include "postgres.pgName" .owner }}
+        connectionLimit: -1
+        ensure: present
+        inherit: true
         login: true
-        # CNPG continuously reconciles this role's password from the referenced secret.
-        # Rotating credentials is as simple as updating the SealedSecret.
         passwordSecret:
           name: pg-{{ include "postgres.k8sName" .owner }}-credentials
     {{- end }}
