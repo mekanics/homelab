@@ -5,12 +5,15 @@ databases:
   - name: n8n
     owner: n8n
     namespace: n8n
+    connectionLimit: 20
   - name: paperless
     owner: paperless
     namespace: paperless
+    connectionLimit: 10
   - name: rag_obsidian
     owner: rag_obsidian
     namespace: ~
+    connectionLimit: 10
 
 cluster:
   storage:

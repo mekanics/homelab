@@ -43,7 +43,7 @@ spec:
     roles:
     {{- range .Values.databases }}
       - name: {{ include "postgres.pgName" .owner }}
-        connectionLimit: -1
+        connectionLimit: {{ .connectionLimit | default 20 }}
         ensure: present
         inherit: true
         login: true
