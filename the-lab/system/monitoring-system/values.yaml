@@ -47,9 +47,9 @@ kube-prometheus-stack:
 
     resources:
       limits:
-        memory: 256Mi
+        memory: 384Mi
       requests:
-        memory: 128Mi
+        memory: 256Mi
 
     persistence:
       enabled: true

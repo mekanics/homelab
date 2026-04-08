@@ -35,6 +35,11 @@ hajimari:
         bookmarks:
           - name: Cloudflare
             url: https://dash.cloudflare.com
+  resources:
+    requests:
+      memory: 16Mi
+    limits:
+      memory: 32Mi
   persistence:
     data:
       enabled: false

@@ -43,12 +43,11 @@ paperless:
         key: password
 
   resources:
-    # limits:
-    #   cpu: 1000m
-    #   memory: 1500Mi
+    limits:
+      memory: 1Gi
     requests:
       cpu: 100m
-      memory: 256Mi
+      memory: 384Mi
 
   persistence:
     # -- Configure storage volume settings for the chart under this key.

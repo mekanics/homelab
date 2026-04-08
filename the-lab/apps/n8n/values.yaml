@@ -755,7 +755,9 @@ n8n:
         size: 2Gi
       resources:
         requests:
-          memory: 256Mi
+          memory: 32Mi
+        limits:
+          memory: 64Mi
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -798,7 +800,9 @@ valkey:
 
   resources:
     requests:
-      memory: 128Mi
+      memory: 32Mi
+    limits:
+      memory: 64Mi
 
   affinity:
     nodeAffinity:
