@@ -1,6 +1,6 @@
 {
 	"annotations": { "list": [] },
-	"description": "CPU and memory usage vs requests to identify over/under-provisioned workloads",
+	"description": "CPU and memory usage vs requests and limits to identify over/under-provisioned workloads",
 	"editable": true,
 	"graphTooltip": 1,
 	"links": [],
@@ -192,8 +192,8 @@
 		{
 			"id": 6,
 			"type": "timeseries",
-			"title": "CPU: Usage vs Requests",
-			"description": "Solid lines = actual usage, dashed lines = requests",
+			"title": "CPU: Usage vs Requests vs Limits",
+			"description": "Solid = usage, dashed = requests, dotted = limits",
 			"gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
 			"datasource": { "type": "prometheus", "uid": "${datasource}" },
 			"fieldConfig": {
@@ -216,6 +216,14 @@
 							{ "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } },
 							{ "id": "custom.fillOpacity", "value": 0 }
 						]
+					},
+					{
+						"matcher": { "id": "byFrameRefID", "options": "C" },
+						"properties": [
+							{ "id": "custom.lineStyle", "value": { "fill": "dot" } },
+							{ "id": "custom.fillOpacity", "value": 0 },
+							{ "id": "custom.lineWidth", "value": 2 }
+						]
 					}
 				]
 			},
@@ -233,14 +241,19 @@
 					"refId": "B",
 					"expr": "sum by (namespace) (kube_pod_container_resource_requests{resource=\"cpu\", container!=\"\", namespace=~\"$namespace\"})",
 					"legendFormat": "{{namespace}} requests"
+				},
+				{
+					"refId": "C",
+					"expr": "sum by (namespace) (kube_pod_container_resource_limits{resource=\"cpu\", container!=\"\", namespace=~\"$namespace\"})",
+					"legendFormat": "{{namespace}} limits"
 				}
 			]
 		},
 		{
 			"id": 7,
 			"type": "timeseries",
-			"title": "Memory: Usage vs Requests",
-			"description": "Solid lines = actual usage, dashed lines = requests",
+			"title": "Memory: Usage vs Requests vs Limits",
+			"description": "Solid = usage, dashed = requests, dotted = limits",
 			"gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
 			"datasource": { "type": "prometheus", "uid": "${datasource}" },
 			"fieldConfig": {
@@ -263,6 +276,14 @@
 							{ "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } },
 							{ "id": "custom.fillOpacity", "value": 0 }
 						]
+					},
+					{
+						"matcher": { "id": "byFrameRefID", "options": "C" },
+						"properties": [
+							{ "id": "custom.lineStyle", "value": { "fill": "dot" } },
+							{ "id": "custom.fillOpacity", "value": 0 },
+							{ "id": "custom.lineWidth", "value": 2 }
+						]
 					}
 				]
 			},
@@ -280,6 +301,11 @@
 					"refId": "B",
 					"expr": "sum by (namespace) (kube_pod_container_resource_requests{resource=\"memory\", container!=\"\", namespace=~\"$namespace\"})",
 					"legendFormat": "{{namespace}} requests"
+				},
+				{
+					"refId": "C",
+					"expr": "sum by (namespace) (kube_pod_container_resource_limits{resource=\"memory\", container!=\"\", namespace=~\"$namespace\"})",
+					"legendFormat": "{{namespace}} limits"
 				}
 			]
 		},
@@ -321,6 +347,13 @@
 						]
 					},
 					{
+						"matcher": { "id": "byName", "options": "CPU Limit (m)" },
+						"properties": [
+							{ "id": "unit", "value": "short" },
+							{ "id": "decimals", "value": 0 }
+						]
+					},
+					{
 						"matcher": { "id": "byName", "options": "CPU Efficiency %" },
 						"properties": [
 							{ "id": "unit", "value": "percent" },
@@ -351,6 +384,13 @@
 					},
 					{
 						"matcher": { "id": "byName", "options": "Mem Request" },
+						"properties": [
+							{ "id": "unit", "value": "bytes" },
+							{ "id": "decimals", "value": 0 }
+						]
+					},
+					{
+						"matcher": { "id": "byName", "options": "Mem Limit" },
 						"properties": [
 							{ "id": "unit", "value": "bytes" },
 							{ "id": "decimals", "value": 0 }
@@ -397,10 +437,12 @@
 							"container": 2,
 							"Value #A": 3,
 							"Value #B": 4,
-							"Value #C": 5,
-							"Value #D": 6,
-							"Value #E": 7,
-							"Value #F": 8
+							"Value #G": 5,
+							"Value #C": 6,
+							"Value #D": 7,
+							"Value #E": 8,
+							"Value #H": 9,
+							"Value #F": 10
 						},
 						"renameByName": {
 							"namespace": "Namespace",
@@ -408,9 +450,11 @@
 							"container": "Container",
 							"Value #A": "CPU Usage (m)",
 							"Value #B": "CPU Request (m)",
+							"Value #G": "CPU Limit (m)",
 							"Value #C": "CPU Efficiency %",
 							"Value #D": "Mem Usage",
 							"Value #E": "Mem Request",
+							"Value #H": "Mem Limit",
 							"Value #F": "Mem Efficiency %"
 						}
 					}
@@ -450,6 +494,18 @@
 				{
 					"refId": "F",
 					"expr": "sum by (namespace, pod, container) (container_memory_working_set_bytes{container!=\"\", image!=\"\", namespace=~\"$namespace\"}) / sum by (namespace, pod, container) (kube_pod_container_resource_requests{resource=\"memory\", container!=\"\", namespace=~\"$namespace\"}) * 100",
+					"format": "table",
+					"instant": true
+				},
+				{
+					"refId": "G",
+					"expr": "sum by (namespace, pod, container) (kube_pod_container_resource_limits{resource=\"cpu\", container!=\"\", namespace=~\"$namespace\"}) * 1000",
+					"format": "table",
+					"instant": true
+				},
+				{
+					"refId": "H",
+					"expr": "sum by (namespace, pod, container) (kube_pod_container_resource_limits{resource=\"memory\", container!=\"\", namespace=~\"$namespace\"})",
 					"format": "table",
 					"instant": true
 				}
