@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-resource-efficiency
+  labels:
+    grafana_dashboard: "1"
+data:
+  resource-efficiency.json: |-
+{{- .Files.Get "dashboards/resource-efficiency.json" | nindent 4 }}

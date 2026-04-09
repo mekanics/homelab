@@ -1,0 +1,459 @@
+{
+	"annotations": { "list": [] },
+	"description": "CPU and memory usage vs requests to identify over/under-provisioned workloads",
+	"editable": true,
+	"graphTooltip": 1,
+	"links": [],
+	"schemaVersion": 39,
+	"tags": ["homelab", "resources"],
+	"templating": {
+		"list": [
+			{
+				"current": {},
+				"hide": 0,
+				"includeAll": false,
+				"multi": false,
+				"name": "datasource",
+				"options": [],
+				"query": "prometheus",
+				"queryValue": "",
+				"refresh": 1,
+				"regex": "",
+				"skipUrlSync": false,
+				"type": "datasource"
+			},
+			{
+				"current": { "selected": true, "text": ["All"], "value": ["$__all"] },
+				"datasource": { "type": "prometheus", "uid": "${datasource}" },
+				"definition": "label_values(kube_pod_container_info{container!=\"\"}, namespace)",
+				"hide": 0,
+				"includeAll": true,
+				"multi": true,
+				"name": "namespace",
+				"options": [],
+				"query": "label_values(kube_pod_container_info{container!=\"\"}, namespace)",
+				"refresh": 2,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 1,
+				"type": "query"
+			}
+		]
+	},
+	"time": { "from": "now-3h", "to": "now" },
+	"timepicker": {},
+	"timezone": "",
+	"title": "Resource Efficiency",
+	"uid": "homelab-resource-efficiency",
+	"version": 1,
+	"refresh": "5m",
+	"panels": [
+		{
+			"id": 1,
+			"type": "stat",
+			"title": "Cluster CPU Usage",
+			"gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+			"datasource": { "type": "prometheus", "uid": "${datasource}" },
+			"fieldConfig": {
+				"defaults": {
+					"unit": "percent",
+					"decimals": 1,
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{ "color": "green", "value": null },
+							{ "color": "yellow", "value": 60 },
+							{ "color": "red", "value": 80 }
+						]
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"reduceOptions": { "calcs": ["lastNotNull"] },
+				"colorMode": "background",
+				"graphMode": "area"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "round((1 - avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m]))) * 100, 0.1)",
+					"instant": true
+				}
+			]
+		},
+		{
+			"id": 2,
+			"type": "stat",
+			"title": "Cluster Memory Usage",
+			"gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+			"datasource": { "type": "prometheus", "uid": "${datasource}" },
+			"fieldConfig": {
+				"defaults": {
+					"unit": "percent",
+					"decimals": 1,
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{ "color": "green", "value": null },
+							{ "color": "yellow", "value": 60 },
+							{ "color": "red", "value": 80 }
+						]
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"reduceOptions": { "calcs": ["lastNotNull"] },
+				"colorMode": "background",
+				"graphMode": "area"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "round((1 - sum(node_memory_MemAvailable_bytes) / sum(node_memory_MemTotal_bytes)) * 100, 0.1)",
+					"instant": true
+				}
+			]
+		},
+		{
+			"id": 3,
+			"type": "stat",
+			"title": "Running Pods",
+			"gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+			"datasource": { "type": "prometheus", "uid": "${datasource}" },
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"decimals": 0,
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [{ "color": "blue", "value": null }]
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"reduceOptions": { "calcs": ["lastNotNull"] },
+				"colorMode": "background",
+				"graphMode": "none"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "count(kube_pod_status_phase{phase=\"Running\"})",
+					"instant": true
+				}
+			]
+		},
+		{
+			"id": 4,
+			"type": "stat",
+			"title": "Containers Missing CPU Requests",
+			"description": "Running containers without a CPU resource request defined",
+			"gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+			"datasource": { "type": "prometheus", "uid": "${datasource}" },
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"decimals": 0,
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{ "color": "green", "value": null },
+							{ "color": "yellow", "value": 1 },
+							{ "color": "red", "value": 5 }
+						]
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"reduceOptions": { "calcs": ["lastNotNull"] },
+				"colorMode": "background",
+				"graphMode": "none"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "count(kube_pod_container_info{container!=\"\"} unless on(namespace, pod, container) kube_pod_container_resource_requests{resource=\"cpu\", container!=\"\"}) or vector(0)",
+					"instant": true
+				}
+			]
+		},
+		{
+			"id": 5,
+			"type": "row",
+			"title": "Resource Usage by Namespace",
+			"gridPos": { "h": 1, "w": 24, "x": 0, "y": 4 },
+			"collapsed": false,
+			"panels": []
+		},
+		{
+			"id": 6,
+			"type": "timeseries",
+			"title": "CPU: Usage vs Requests",
+			"description": "Solid lines = actual usage, dashed lines = requests",
+			"gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+			"datasource": { "type": "prometheus", "uid": "${datasource}" },
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"custom": {
+						"drawStyle": "line",
+						"lineInterpolation": "smooth",
+						"lineWidth": 1,
+						"fillOpacity": 10,
+						"spanNulls": true,
+						"axisBorderShow": false,
+						"scaleDistribution": { "type": "linear" }
+					}
+				},
+				"overrides": [
+					{
+						"matcher": { "id": "byFrameRefID", "options": "B" },
+						"properties": [
+							{ "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } },
+							{ "id": "custom.fillOpacity", "value": 0 }
+						]
+					}
+				]
+			},
+			"options": {
+				"tooltip": { "mode": "multi", "sort": "desc" },
+				"legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "lastNotNull"] }
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "sum by (namespace) (rate(container_cpu_usage_seconds_total{container!=\"\", image!=\"\", namespace=~\"$namespace\"}[5m]))",
+					"legendFormat": "{{namespace}} usage"
+				},
+				{
+					"refId": "B",
+					"expr": "sum by (namespace) (kube_pod_container_resource_requests{resource=\"cpu\", container!=\"\", namespace=~\"$namespace\"})",
+					"legendFormat": "{{namespace}} requests"
+				}
+			]
+		},
+		{
+			"id": 7,
+			"type": "timeseries",
+			"title": "Memory: Usage vs Requests",
+			"description": "Solid lines = actual usage, dashed lines = requests",
+			"gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
+			"datasource": { "type": "prometheus", "uid": "${datasource}" },
+			"fieldConfig": {
+				"defaults": {
+					"unit": "bytes",
+					"custom": {
+						"drawStyle": "line",
+						"lineInterpolation": "smooth",
+						"lineWidth": 1,
+						"fillOpacity": 10,
+						"spanNulls": true,
+						"axisBorderShow": false,
+						"scaleDistribution": { "type": "linear" }
+					}
+				},
+				"overrides": [
+					{
+						"matcher": { "id": "byFrameRefID", "options": "B" },
+						"properties": [
+							{ "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } },
+							{ "id": "custom.fillOpacity", "value": 0 }
+						]
+					}
+				]
+			},
+			"options": {
+				"tooltip": { "mode": "multi", "sort": "desc" },
+				"legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "lastNotNull"] }
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "sum by (namespace) (container_memory_working_set_bytes{container!=\"\", image!=\"\", namespace=~\"$namespace\"})",
+					"legendFormat": "{{namespace}} usage"
+				},
+				{
+					"refId": "B",
+					"expr": "sum by (namespace) (kube_pod_container_resource_requests{resource=\"memory\", container!=\"\", namespace=~\"$namespace\"})",
+					"legendFormat": "{{namespace}} requests"
+				}
+			]
+		},
+		{
+			"id": 8,
+			"type": "row",
+			"title": "Container Resource Efficiency",
+			"gridPos": { "h": 1, "w": 24, "x": 0, "y": 13 },
+			"collapsed": false,
+			"panels": []
+		},
+		{
+			"id": 9,
+			"type": "table",
+			"title": "Container Resource Details",
+			"description": "Per-container resource usage, requests, and efficiency ratios. Efficiency = usage / request x 100.",
+			"gridPos": { "h": 12, "w": 24, "x": 0, "y": 14 },
+			"datasource": { "type": "prometheus", "uid": "${datasource}" },
+			"fieldConfig": {
+				"defaults": {
+					"custom": {
+						"filterable": true,
+						"align": "auto"
+					}
+				},
+				"overrides": [
+					{
+						"matcher": { "id": "byName", "options": "CPU Usage (m)" },
+						"properties": [
+							{ "id": "unit", "value": "short" },
+							{ "id": "decimals", "value": 1 }
+						]
+					},
+					{
+						"matcher": { "id": "byName", "options": "CPU Request (m)" },
+						"properties": [
+							{ "id": "unit", "value": "short" },
+							{ "id": "decimals", "value": 0 }
+						]
+					},
+					{
+						"matcher": { "id": "byName", "options": "CPU Efficiency %" },
+						"properties": [
+							{ "id": "unit", "value": "percent" },
+							{ "id": "decimals", "value": 0 },
+							{ "id": "custom.cellOptions", "value": { "type": "color-background", "mode": "basic" } },
+							{
+								"id": "thresholds",
+								"value": {
+									"mode": "absolute",
+									"steps": [
+										{ "color": "red", "value": null },
+										{ "color": "orange", "value": 20 },
+										{ "color": "yellow", "value": 40 },
+										{ "color": "green", "value": 60 },
+										{ "color": "yellow", "value": 100 },
+										{ "color": "red", "value": 150 }
+									]
+								}
+							}
+						]
+					},
+					{
+						"matcher": { "id": "byName", "options": "Mem Usage" },
+						"properties": [
+							{ "id": "unit", "value": "bytes" },
+							{ "id": "decimals", "value": 1 }
+						]
+					},
+					{
+						"matcher": { "id": "byName", "options": "Mem Request" },
+						"properties": [
+							{ "id": "unit", "value": "bytes" },
+							{ "id": "decimals", "value": 0 }
+						]
+					},
+					{
+						"matcher": { "id": "byName", "options": "Mem Efficiency %" },
+						"properties": [
+							{ "id": "unit", "value": "percent" },
+							{ "id": "decimals", "value": 0 },
+							{ "id": "custom.cellOptions", "value": { "type": "color-background", "mode": "basic" } },
+							{
+								"id": "thresholds",
+								"value": {
+									"mode": "absolute",
+									"steps": [
+										{ "color": "red", "value": null },
+										{ "color": "orange", "value": 20 },
+										{ "color": "yellow", "value": 40 },
+										{ "color": "green", "value": 60 },
+										{ "color": "yellow", "value": 100 },
+										{ "color": "red", "value": 150 }
+									]
+								}
+							}
+						]
+					}
+				]
+			},
+			"options": {
+				"showHeader": true,
+				"sortBy": [{ "displayName": "Mem Efficiency %", "desc": true }],
+				"footer": { "show": false }
+			},
+			"transformations": [
+				{ "id": "merge", "options": {} },
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": { "Time": true },
+						"indexByName": {
+							"namespace": 0,
+							"pod": 1,
+							"container": 2,
+							"Value #A": 3,
+							"Value #B": 4,
+							"Value #C": 5,
+							"Value #D": 6,
+							"Value #E": 7,
+							"Value #F": 8
+						},
+						"renameByName": {
+							"namespace": "Namespace",
+							"pod": "Pod",
+							"container": "Container",
+							"Value #A": "CPU Usage (m)",
+							"Value #B": "CPU Request (m)",
+							"Value #C": "CPU Efficiency %",
+							"Value #D": "Mem Usage",
+							"Value #E": "Mem Request",
+							"Value #F": "Mem Efficiency %"
+						}
+					}
+				}
+			],
+			"targets": [
+				{
+					"refId": "A",
+					"expr": "sum by (namespace, pod, container) (rate(container_cpu_usage_seconds_total{container!=\"\", image!=\"\", namespace=~\"$namespace\"}[5m])) * 1000",
+					"format": "table",
+					"instant": true
+				},
+				{
+					"refId": "B",
+					"expr": "sum by (namespace, pod, container) (kube_pod_container_resource_requests{resource=\"cpu\", container!=\"\", namespace=~\"$namespace\"}) * 1000",
+					"format": "table",
+					"instant": true
+				},
+				{
+					"refId": "C",
+					"expr": "sum by (namespace, pod, container) (rate(container_cpu_usage_seconds_total{container!=\"\", image!=\"\", namespace=~\"$namespace\"}[5m])) / sum by (namespace, pod, container) (kube_pod_container_resource_requests{resource=\"cpu\", container!=\"\", namespace=~\"$namespace\"}) * 100",
+					"format": "table",
+					"instant": true
+				},
+				{
+					"refId": "D",
+					"expr": "sum by (namespace, pod, container) (container_memory_working_set_bytes{container!=\"\", image!=\"\", namespace=~\"$namespace\"})",
+					"format": "table",
+					"instant": true
+				},
+				{
+					"refId": "E",
+					"expr": "sum by (namespace, pod, container) (kube_pod_container_resource_requests{resource=\"memory\", container!=\"\", namespace=~\"$namespace\"})",
+					"format": "table",
+					"instant": true
+				},
+				{
+					"refId": "F",
+					"expr": "sum by (namespace, pod, container) (container_memory_working_set_bytes{container!=\"\", image!=\"\", namespace=~\"$namespace\"}) / sum by (namespace, pod, container) (kube_pod_container_resource_requests{resource=\"memory\", container!=\"\", namespace=~\"$namespace\"}) * 100",
+					"format": "table",
+					"instant": true
+				}
+			]
+		}
+	]
+}
