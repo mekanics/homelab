@@ -46,10 +46,10 @@ kube-prometheus-stack:
       enabled: false
 
     resources:
-      limits:
-        memory: 384Mi
       requests:
         memory: 256Mi
+      limits:
+        memory: 384Mi
 
     persistence:
       enabled: true
@@ -76,10 +76,10 @@ kube-prometheus-stack:
       resources:
         limits:
           cpu: 500m
-          memory: 1500Mi
+          memory: 2048Mi
         requests:
           cpu: 100m
-          memory: 768Mi
+          memory: 1024Mi
       # Reduce memory pressure on Pi: compress WAL, limit in-memory chunks
       walCompression: true
       tsdbConfig:
