@@ -43,8 +43,8 @@ fava:
         timezone: 'Europe/Zurich'
 
   resources:
-    limits:
-      memory: 192Mi
     requests:
       cpu: 100m
       memory: 128Mi
+    limits:
+      memory: 384Mi
