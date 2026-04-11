@@ -314,10 +314,10 @@ n8n:
       port: 80
 
     resources:
-      limits:
-        memory: 512Mi
       requests:
-        memory: 256Mi
+        memory: 384Mi
+      limits:
+        memory: 768Mi
 
     autoscaling:
       enabled: false
