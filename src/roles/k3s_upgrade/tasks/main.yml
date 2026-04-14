@@ -40,6 +40,14 @@
 - name: Update node only if needed
   when: installed_k3s_version is version(k3s_version, '<')
   block:
+    - name: Drain node before upgrade
+      when: "'servers' in group_names"
+      ansible.builtin.command:
+        cmd: >
+          k3s kubectl drain {{ inventory_hostname }}
+          --ignore-daemonsets --delete-emptydir-data --timeout=300s
+      changed_when: true
+
     - name: Find K3s service files
       ansible.builtin.find:
         paths: '{{ systemd_dir }}'
@@ -84,6 +92,22 @@
         state: restarted
         daemon_reload: true
         name: k3s
+
+    - name: Wait for node to be Ready after upgrade
+      when: "'servers' in group_names"
+      ansible.builtin.command:
+        cmd: k3s kubectl wait node/{{ inventory_hostname }} --for=condition=Ready --timeout=30s
+      register: node_ready
+      until: node_ready.rc == 0
+      retries: 8
+      delay: 15
+      changed_when: false
+
+    - name: Uncordon node after upgrade
+      when: "'servers' in group_names"
+      ansible.builtin.command:
+        cmd: k3s kubectl uncordon {{ inventory_hostname }}
+      changed_when: true
 
     - name: Restart K3s service [agent]
       when: "'agents' in group_names"
