@@ -75,7 +75,7 @@ all:
 
     agents:
       hosts:
-        pi-homelab-worker-1.local:
+        # pi-homelab-worker-1.local:
 
     cluster:
       children:
