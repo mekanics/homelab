@@ -148,3 +148,9 @@
     state: started
     enabled: true
     daemon_reload: true
+
+# Flush here so a reboot (if cgroup flags changed) happens at the end of this
+# role rather than at the end of the play. This guarantees the node is back and
+# running the correct kernel before any subsequent roles or playbooks execute.
+- name: Apply pending handlers
+  ansible.builtin.meta: flush_handlers
