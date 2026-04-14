@@ -42,7 +42,6 @@ all:
       ansible_connection: ssh
       performance: high
       disctype: 'ssd'
-      zram_percent: 10 # 10% of 16 GB = ~1.6 GB device; default 25% would waste 4 GB
       # Kubernetes node labels
       k8s_node_labels:
         node.homelab.io/performance: high

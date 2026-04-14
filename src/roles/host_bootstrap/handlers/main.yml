@@ -2,3 +2,9 @@
   reboot:
     reboot_timeout: 3600
   register: reboot_status
+
+- name: Restart zram swap
+  ansible.builtin.systemd:
+    name: systemd-zram-setup@zram0.service
+    state: restarted
+    daemon_reload: true
