@@ -10,6 +10,11 @@
   remote_user: '{{ bootstrap_account.user }}'
   become: true
   become_method: ansible.builtin.sudo
+  vars:
+    ansible_user: '{{ bootstrap_account.user }}'
+    ansible_ssh_private_key_file: "{{ lookup('env', 'BOOTSTRAP_SSH_KEY_FILE') }}"
+    ansible_password: "{{ lookup('env', 'BOOTSTRAP_PASSWORD') }}"
+    ansible_become_pass: "{{ lookup('env', 'BOOTSTRAP_PASSWORD') }}"
   roles:
     - host_bootstrap
     - install_packages
