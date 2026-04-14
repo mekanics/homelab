@@ -59,9 +59,9 @@
     purge: true
 
 # ── zram swap ──────────────────────────────────────────────────────────────
-# Provides ~1–2 GB of compressed in-memory swap per node (25% of 4 GB RAM
-# with lz4 compression ratio ~2:1 ≈ 2 GB effective burst buffer).
-# This prevents OOMKill during transient memory spikes without touching disk.
+# Provides compressed in-memory swap as a burst buffer (lz4, ~2:1 ratio).
+# zram_percent defaults to 25 (role defaults); override in host_vars for nodes
+# where a lower cap is more appropriate (e.g. 10% on the 16 GB Pi 5 node).
 # kubelet is configured with fail-swap-on=false so it starts alongside zram.
 
 - name: Install zram-tools
@@ -77,11 +77,11 @@
     line: 'ALGO=lz4'
     state: present
 
-- name: Configure zramswap — set PERCENT to 25
+- name: Configure zramswap — set PERCENT
   lineinfile:
     path: /etc/default/zramswap
     regexp: '^#?\s*PERCENT='
-    line: 'PERCENT=25'
+    line: 'PERCENT={{ zram_percent }}'
     state: present
 
 - name: Enable and start zramswap service

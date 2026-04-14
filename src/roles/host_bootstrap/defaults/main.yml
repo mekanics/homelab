@@ -1,0 +1,5 @@
+---
+# zram burst-buffer size as a percentage of total RAM.
+# With lz4 compression (~2:1 ratio), 25% of RAM yields ~50% effective swap capacity.
+# Override per host in host_vars/ for nodes where a lower cap is more appropriate.
+zram_percent: 25

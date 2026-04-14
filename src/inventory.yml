@@ -36,21 +36,22 @@ all:
         node.longhorn.io/create-default-disk: 'true'
 
     # # Raspberry Pi 5 — 16 GB — M.2 NVMe hat
-    # pi-homelab-master-2.local:
-    #   ansible_host: 192.168.10.52
-    #   mac: 'TBD'
-    #   ansible_connection: ssh
-    #   performance: high
-    #   disctype: 'ssd'
-    #   # Kubernetes node labels
-    #   k8s_node_labels:
-    #     node.homelab.io/performance: high
-    #     node.homelab.io/storage-type: ssd
-    #     node.homelab.io/storage-tier: fast
-    #     node.homelab.io/arch: arm64
-    #     node.homelab.io/location: office
-    #     node.homelab.io/generation: pi5
-    #     node.longhorn.io/create-default-disk: 'true'
+    pi-homelab-master-2.local:
+      ansible_host: 192.168.10.52
+      mac: '88:a2:9e:a7:2c:a'
+      ansible_connection: ssh
+      performance: high
+      disctype: 'ssd'
+      zram_percent: 10 # 10% of 16 GB = ~1.6 GB device; default 25% would waste 4 GB
+      # Kubernetes node labels
+      k8s_node_labels:
+        node.homelab.io/performance: high
+        node.homelab.io/storage-type: ssd
+        node.homelab.io/storage-tier: fast
+        node.homelab.io/arch: arm64
+        node.homelab.io/location: office
+        node.homelab.io/generation: pi5
+        node.longhorn.io/create-default-disk: 'true'
 
     # homelab-2.local:
     #   ansible_host: 192.168.10.22
@@ -70,11 +71,11 @@ all:
       hosts:
         pi-homelab.local:
         pi-homelab-master-1.local:
-        # pi-homelab-master-2.local:
+        pi-homelab-master-2.local:
 
     agents:
       hosts:
-        # pi-homelab-worker-1.local:
+        pi-homelab-worker-1.local:
 
     cluster:
       children:
