@@ -25,32 +25,61 @@
   # waitsync args: max-tries=30, max-correction=0.1s, max-skew=0 (unlimited),
   # interval=10s → waits up to 5 min for initial sync on cold boot
 
-- name: Activating cgroup support
+# Three separate passes so each flag is checked independently. A single regex
+# matching the exact ordered triplet would miss partial prior states and
+# append duplicate flags on re-runs.
+- name: Activate cgroup_enable=cpuset in cmdline.txt
   ansible.builtin.lineinfile:
     path: /boot/firmware/cmdline.txt
-    regexp: '^((?!.*\bcgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory\b).*)$'
-    line: '\1 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory'
+    regexp: '^((?!.*\bcgroup_enable=cpuset\b).*)$'
+    line: '\1 cgroup_enable=cpuset'
     backrefs: true
     state: present
-  register: cgroup_flags
   notify: Reboot
+
+- name: Activate cgroup_memory=1 in cmdline.txt
+  ansible.builtin.lineinfile:
+    path: /boot/firmware/cmdline.txt
+    regexp: '^((?!.*\bcgroup_memory=1\b).*)$'
+    line: '\1 cgroup_memory=1'
+    backrefs: true
+    state: present
+  notify: Reboot
+
+- name: Activate cgroup_enable=memory in cmdline.txt
+  ansible.builtin.lineinfile:
+    path: /boot/firmware/cmdline.txt
+    regexp: '^((?!.*\bcgroup_enable=memory\b).*)$'
+    line: '\1 cgroup_enable=memory'
+    backrefs: true
+    state: present
+  notify: Reboot
+
+- name: Check WiFi block state
+  ansible.builtin.command: rfkill list wifi
+  register: rfkill_status
+  changed_when: false
 
 - name: Disable WiFi on cluster nodes
   ansible.builtin.command: rfkill block wifi
   changed_when: true
+  when: '"Soft blocked: yes" not in rfkill_status.stdout'
 
 - name: Turn off swap
-  command: 'dphys-swapfile swapoff'
-  register: swapfile_status
-  ignore_errors: true
+  ansible.builtin.command: dphys-swapfile swapoff
+  register: swapoff_result
+  changed_when: false
+  failed_when:
+    - swapoff_result.rc != 0
+    - "'No such file or directory' not in swapoff_result.msg"
 
 - name: Uninstall dphys-swapfile
-  command: 'dphys-swapfile uninstall'
-  register: swapfile_status
-  ignore_errors: true
-
-- name: Remove dphys-swapfile from startup
-  command: 'update-rc.d dphys-swapfile remove'
+  ansible.builtin.command: dphys-swapfile uninstall
+  register: swapuninstall_result
+  changed_when: false
+  failed_when:
+    - swapuninstall_result.rc != 0
+    - "'No such file or directory' not in swapuninstall_result.msg"
 
 - name: Purge dphys-swapfile
   ansible.builtin.apt:
@@ -60,36 +89,32 @@
 
 # ── zram swap ──────────────────────────────────────────────────────────────
 # Provides compressed in-memory swap as a burst buffer (lz4, ~2:1 ratio).
-# zram_percent defaults to 25 (role defaults); override in host_vars for nodes
-# where a lower cap is more appropriate (e.g. 10% on the 16 GB Pi 5 node).
+# Uses systemd-zram-generator (ships with Raspberry Pi OS Bookworm) rather than
+# the legacy zram-tools package, which conflicts with the generator on Bookworm.
+# Fixed at zram_size_mb (default 512 MiB) — enough to absorb transient memory
+# spikes without masking OOM situations Kubernetes should handle via eviction.
 # kubelet is configured with fail-swap-on=false so it starts alongside zram.
 
-- name: Install zram-tools
+- name: Remove zram-tools if installed
   ansible.builtin.apt:
     name: zram-tools
-    state: present
-    update_cache: true
+    state: absent
+    purge: true
 
-- name: Configure zramswap — set ALGO to lz4
-  ansible.builtin.lineinfile:
-    path: /etc/default/zramswap
-    regexp: '^#?\s*ALGO='
-    line: 'ALGO=lz4'
-    state: present
+- name: Configure zram via systemd-zram-generator
+  ansible.builtin.template:
+    src: zram-generator.conf.j2
+    dest: /etc/systemd/zram-generator.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart zram swap
 
-- name: Configure zramswap — set PERCENT
-  ansible.builtin.lineinfile:
-    path: /etc/default/zramswap
-    regexp: '^#?\s*PERCENT='
-    line: 'PERCENT={{ zram_percent }}'
-    state: present
-
-- name: Enable and start zramswap service
-  systemd:
-    name: zramswap
-    state: started
-    enabled: true
+- name: Start zram swap unit
+  ansible.builtin.systemd:
+    name: dev-zram0.swap
     daemon_reload: true
+    state: started
 
 # ── sysctl tuning ──────────────────────────────────────────────────────────
 # swappiness=10: prefer RAM strongly, only use zram swap under real pressure.
@@ -112,7 +137,7 @@
     mode: '0644'
 
 - name: Disable EEE on eth0 to prevent NIC errors
-  systemd:
+  ansible.builtin.systemd:
     name: disable-eth0-eee.service
     state: started
     enabled: true

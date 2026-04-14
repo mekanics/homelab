@@ -35,16 +35,18 @@
     validate: 'visudo -cf %s'
 
 - name: Ensures {{ deploy_account.user }} user SSH dir exists
-  file:
-    path: ~/.ssh
+  ansible.builtin.file:
+    path: '/home/{{ deploy_account.user }}/.ssh'
     state: directory
+    owner: '{{ deploy_account.user }}'
+    group: '{{ deploy_account.group }}'
     mode: '0700'
 
 - name: Check if local {{ deploy_account.user }} SSH key exists
   delegate_to: localhost
   run_once: true
   become: false
-  stat:
+  ansible.builtin.stat:
     path: '{{ deploy_account.sshKey }}.pub'
   register: stat_ssh
 
@@ -63,14 +65,6 @@
     regenerate: never
     comment: Ansible deployment key
   when: not stat_ssh.stat.exists
-
-- name: Upload {{ deploy_account.user }} public key
-  ansible.builtin.copy:
-    src: '{{ deploy_account.sshKey }}.pub'
-    dest: '{{ deploy_account.sshKey }}.pub'
-    owner: '{{ deploy_account.user }}'
-    mode: '0644'
-    force: false
 
 - name: Add to authorized keys list
   ansible.posix.authorized_key:
