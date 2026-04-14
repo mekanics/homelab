@@ -1,4 +1,30 @@
 ---
+# ── NTP / time synchronization ─────────────────────────────────────────────
+# Pi boards have no hardware RTC; clock starts in the past until NTP syncs.
+# Kubernetes/etcd require accurate time. chrony is the default NTP daemon on
+# Debian 12+ and handles rapid initial sync better than systemd-timesyncd.
+
+- name: Ensure chrony is installed
+  ansible.builtin.apt:
+    name: chrony
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Enable and start chrony
+  ansible.builtin.systemd:
+    name: chrony
+    state: started
+    enabled: true
+
+- name: Wait for time synchronization
+  ansible.builtin.command: chronyc waitsync 30 0.1 0 10
+  register: chrony_waitsync
+  changed_when: false
+  failed_when: chrony_waitsync.rc != 0
+  # waitsync args: max-tries=30, max-correction=0.1s, max-skew=0 (unlimited),
+  # interval=10s → waits up to 5 min for initial sync on cold boot
+
 - name: Activating cgroup support
   lineinfile:
     path: /boot/firmware/cmdline.txt
