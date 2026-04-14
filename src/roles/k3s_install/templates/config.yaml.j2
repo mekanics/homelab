@@ -20,6 +20,8 @@ tls-san:
 {% for host in groups['servers'] %}
   - {{ hostvars[host]['ansible_host'] }}
 {% endfor %}
+etcd-snapshot-schedule-cron: {{ k3s_server_config['etcd-snapshot-schedule-cron'] }}
+etcd-snapshot-retention: {{ k3s_server_config['etcd-snapshot-retention'] }}
 {% endif %}
 data-dir: {{ k3s_server_location }}
 # Allow kubelet to start on nodes with zram swap active.

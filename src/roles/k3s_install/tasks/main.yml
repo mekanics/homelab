@@ -5,6 +5,13 @@
   tags:
     - install
     - k3s
+
+- name: Configure etcd snapshots and off-node shipping
+  import_tasks: etcd_snapshots.yml
+  tags:
+    - install
+    - k3s
+    - etcd-snapshots
 # - name: Install k3s
 #   tags:
 #     - install

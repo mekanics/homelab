@@ -18,3 +18,10 @@ k3s_server_config:
   flannel-backend: none
   secrets-encryption: true
   node-label: "{{ (k8s_node_labels | default({})).items() | map('join', '=') | list }}"
+  etcd-snapshot-schedule-cron: '0 */6 * * *'
+  etcd-snapshot-retention: 10
+
+k3s_etcd_snapshot_nfs:
+  server: mercury.local
+  path: /volume1/homelab/k3s-etcd-snapshots
+  mount_point: /mnt/mercury-k3s-snapshots
