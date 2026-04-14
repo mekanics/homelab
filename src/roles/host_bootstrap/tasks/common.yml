@@ -27,7 +27,7 @@
   when: ansible_facts['os_family'] == "Darwin"
 
 - name: Add {{ deploy_account.user }} user to sudoers group
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/sudoers
     state: present
     regexp: '^%{{ deploy_account.user }}'
@@ -52,7 +52,7 @@
   delegate_to: localhost
   run_once: true
   become: false
-  openssh_keypair:
+  community.crypto.openssh_keypair:
     state: present
     type: ed25519
     # Check local context $USER's homedir
@@ -65,7 +65,7 @@
   when: not stat_ssh.stat.exists
 
 - name: Upload {{ deploy_account.user }} public key
-  copy:
+  ansible.builtin.copy:
     src: '{{ deploy_account.sshKey }}.pub'
     dest: '{{ deploy_account.sshKey }}.pub'
     owner: '{{ deploy_account.user }}'
@@ -73,7 +73,7 @@
     force: false
 
 - name: Add to authorized keys list
-  authorized_key:
+  ansible.posix.authorized_key:
     comment: Ansible deployment key
     user: '{{ deploy_account.user }}'
     state: present
@@ -82,5 +82,5 @@
     - '{{ deploy_account.sshKey }}.pub'
 
 - name: Set hostname
-  hostname:
+  ansible.builtin.hostname:
     name: '{{ inventory_hostname }}'
