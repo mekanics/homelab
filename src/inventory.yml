@@ -15,6 +15,7 @@ all:
         node.homelab.io/storage-tier: fast
         node.homelab.io/arch: arm64
         node.homelab.io/location: office
+        node.homelab.io/generation: pi4
         node.longhorn.io/create-default-disk: 'true'
 
     # Raspbery Pi 5
@@ -31,6 +32,7 @@ all:
         node.homelab.io/storage-tier: fast
         node.homelab.io/arch: arm64
         node.homelab.io/location: office
+        node.homelab.io/generation: pi5
         node.longhorn.io/create-default-disk: 'true'
 
     # Raspberry Pi 5 — 16 GB — M.2 NVMe hat
@@ -47,6 +49,7 @@ all:
         node.homelab.io/storage-tier: fast
         node.homelab.io/arch: arm64
         node.homelab.io/location: office
+        node.homelab.io/generation: pi5
         node.longhorn.io/create-default-disk: 'true'
 
     # homelab-2.local:

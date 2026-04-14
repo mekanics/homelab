@@ -104,3 +104,4 @@ openclaw:
 
   nodeSelector:
     node.homelab.io/performance: high
+    node.homelab.io/generation: pi5
