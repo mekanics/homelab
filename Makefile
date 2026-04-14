@@ -1,4 +1,4 @@
-.PHONY: about ping facts lint
+.PHONY: about ping facts lint requirements
 
 # Tips: https://tech.davis-hansson.com/p/make
 SHELL := bash
@@ -37,6 +37,9 @@ ping: about
 facts: about
 > @echo "Gather facts on cluster"
 > ansible cluster -m setup
+
+requirements:
+> ansible-galaxy collection install -r requirements.yml --upgrade
 
 lint:
 > ansible-lint

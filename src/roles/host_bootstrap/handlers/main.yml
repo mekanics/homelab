@@ -1,4 +1,11 @@
 - name: Reboot
-  reboot:
-    reboot_timeout: 3600
-  register: reboot_status
+  ansible.builtin.reboot:
+    reboot_timeout: 300
+    reboot_command: systemctl reboot
+    msg: Rebooting to apply kernel parameter changes
+
+- name: Restart zram swap
+  ansible.builtin.systemd:
+    name: systemd-zram-setup@zram0.service
+    state: restarted
+    daemon_reload: true

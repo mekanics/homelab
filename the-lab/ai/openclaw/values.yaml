@@ -66,9 +66,9 @@ openclaw:
   resources:
     requests:
       cpu: 250m
-      memory: 1Gi
-    limits:
       memory: 2Gi
+    limits:
+      memory: 4Gi
       cpu: '1'
 
   priorityClassName: high-priority-homelab
@@ -104,3 +104,4 @@ openclaw:
 
   nodeSelector:
     node.homelab.io/performance: high
+    node.homelab.io/generation: pi5

@@ -51,10 +51,16 @@
         state: started
         enabled: true
 
-    - name: Pause to allow first server startup
+    - name: Wait for first server API to be reachable
+      become: true
       when: (groups['servers'] | length) > 1
-      ansible.builtin.pause:
-        seconds: 30
+      ansible.builtin.command:
+        cmd: k3s kubectl get nodes
+      register: node_check
+      until: node_check.rc == 0
+      retries: 40
+      delay: 10
+      changed_when: false
 
     - name: Get Kubernetes config file
       become: true

@@ -27,3 +27,15 @@
     - cilium-lb-ippool.yaml.j2
     - apiserver-lb-service.yaml.j2
     - coredns-configmap.yaml.j2
+
+- name: Wait for API server VIP to become reachable
+  ansible.builtin.wait_for:
+    host: '{{ apiserver_vip }}'
+    port: 6443
+    timeout: 60
+
+- name: Rewrite kubeconfig to use API server VIP
+  ansible.builtin.copy:
+    content: "{{ lookup('file', playbook_dir + '/kubeconfig.yaml') | replace(hostvars[groups['servers'][0]]['ansible_host'], apiserver_vip) }}"
+    dest: '{{ playbook_dir }}/kubeconfig.yaml'
+    mode: '0600'

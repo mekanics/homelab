@@ -1,0 +1,6 @@
+---
+# zram burst-buffer size in MiB. With lz4 compression (~2:1 ratio) this yields
+# roughly double the effective swap capacity. Sized to absorb transient memory
+# spikes without masking real OOM situations that Kubernetes should handle
+# through pod eviction. 512 MiB is appropriate for all nodes in this cluster.
+zram_size_mb: 512

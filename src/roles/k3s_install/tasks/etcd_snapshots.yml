@@ -1,0 +1,46 @@
+---
+- name: Install nfs-common for NFS client support
+  become: true
+  ansible.builtin.apt:
+    name: nfs-common
+    state: present
+  when: '"servers" in group_names'
+
+- name: Create NFS mount point for etcd snapshots
+  become: true
+  ansible.builtin.file:
+    path: '{{ k3s_etcd_snapshot_nfs.mount_point }}'
+    state: directory
+  when: '"servers" in group_names'
+
+- name: Mount NFS etcd snapshot target
+  become: true
+  ansible.posix.mount:
+    src: '{{ k3s_etcd_snapshot_nfs.server }}:{{ k3s_etcd_snapshot_nfs.path }}'
+    path: '{{ k3s_etcd_snapshot_nfs.mount_point }}'
+    fstype: nfs
+    opts: nfsvers=4,proto=tcp,hard,rsize=65536,wsize=65536,timeo=600,retrans=2
+    state: mounted
+  when: '"servers" in group_names'
+
+- name: Create per-node snapshot subdirectory on NFS
+  become: true
+  ansible.builtin.file:
+    path: '{{ k3s_etcd_snapshot_nfs.mount_point }}/{{ inventory_hostname }}'
+    state: directory
+  when: '"servers" in group_names'
+
+- name: Schedule cron job to sync etcd snapshots to NFS
+  become: true
+  ansible.builtin.cron:
+    name: sync-etcd-snapshots-to-nfs
+    minute: '30'
+    hour: '*/6'
+    job: >-
+      rsync -rlpt --delete
+      {{ k3s_server_location }}/server/db/snapshots/
+      {{ k3s_etcd_snapshot_nfs.mount_point }}/{{ inventory_hostname }}/
+      >> /var/log/etcd-snapshot-sync.log 2>&1
+    user: root
+    state: present
+  when: '"servers" in group_names'

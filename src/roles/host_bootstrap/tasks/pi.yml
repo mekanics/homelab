@@ -1,76 +1,126 @@
 ---
-- name: Activating cgroup support
-  lineinfile:
+# ── NTP / time synchronization ─────────────────────────────────────────────
+# Pi boards have no hardware RTC; clock starts in the past until NTP syncs.
+# Kubernetes/etcd require accurate time. chrony is the default NTP daemon on
+# Debian 12+ and handles rapid initial sync better than systemd-timesyncd.
+
+- name: Ensure chrony is installed
+  ansible.builtin.apt:
+    name: chrony
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Enable and start chrony
+  ansible.builtin.systemd:
+    name: chrony
+    state: started
+    enabled: true
+
+- name: Wait for time synchronization
+  ansible.builtin.command: chronyc waitsync 30 0.1 0 10
+  register: chrony_waitsync
+  changed_when: false
+  failed_when: chrony_waitsync.rc != 0
+  # waitsync args: max-tries=30, max-correction=0.1s, max-skew=0 (unlimited),
+  # interval=10s → waits up to 5 min for initial sync on cold boot
+
+# Three separate passes so each flag is checked independently. A single regex
+# matching the exact ordered triplet would miss partial prior states and
+# append duplicate flags on re-runs.
+- name: Activate cgroup_enable=cpuset in cmdline.txt
+  ansible.builtin.lineinfile:
     path: /boot/firmware/cmdline.txt
-    regexp: '^((?!.*\bcgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory\b).*)$'
-    line: '\1 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory'
+    regexp: '^((?!.*\bcgroup_enable=cpuset\b).*)$'
+    line: '\1 cgroup_enable=cpuset'
     backrefs: true
     state: present
-  register: cgroup_flags
   notify: Reboot
 
-- name: Check if wlan0 is active
-  command: 'ip link show wlan0'
-  register: wlan_status
-  ignore_errors: true
-
-- name: Activate the promiscuous mode on wlan0
-  shell:
-    cmd: 'ifconfig wlan0 promisc'
+- name: Activate cgroup_memory=1 in cmdline.txt
+  ansible.builtin.lineinfile:
+    path: /boot/firmware/cmdline.txt
+    regexp: '^((?!.*\bcgroup_memory=1\b).*)$'
+    line: '\1 cgroup_memory=1'
+    backrefs: true
+    state: present
   notify: Reboot
-  when: wlan_status.rc == 0
+
+- name: Activate cgroup_enable=memory in cmdline.txt
+  ansible.builtin.lineinfile:
+    path: /boot/firmware/cmdline.txt
+    regexp: '^((?!.*\bcgroup_enable=memory\b).*)$'
+    line: '\1 cgroup_enable=memory'
+    backrefs: true
+    state: present
+  notify: Reboot
+
+- name: Check WiFi block state
+  ansible.builtin.command: rfkill list wifi
+  register: rfkill_status
+  changed_when: false
+
+- name: Disable WiFi on cluster nodes
+  ansible.builtin.command: rfkill block wifi
+  changed_when: true
+  when: '"Soft blocked: yes" not in rfkill_status.stdout'
 
 - name: Turn off swap
-  command: 'dphys-swapfile swapoff'
-  register: swapfile_status
-  ignore_errors: true
+  ansible.builtin.command: dphys-swapfile swapoff
+  register: swapoff_result
+  changed_when: false
+  failed_when:
+    - swapoff_result.rc != 0
+    - "'No such file or directory' not in swapoff_result.msg"
 
 - name: Uninstall dphys-swapfile
-  command: 'dphys-swapfile uninstall'
-  register: swapfile_status
-  ignore_errors: true
-
-- name: Remove dphys-swapfile from startup
-  command: 'update-rc.d dphys-swapfile remove'
+  ansible.builtin.command: dphys-swapfile uninstall
+  register: swapuninstall_result
+  changed_when: false
+  failed_when:
+    - swapuninstall_result.rc != 0
+    - "'No such file or directory' not in swapuninstall_result.msg"
 
 - name: Purge dphys-swapfile
-  apt:
+  ansible.builtin.apt:
     name: dphys-swapfile
     state: absent
     purge: true
 
 # ── zram swap ──────────────────────────────────────────────────────────────
-# Provides ~1–2 GB of compressed in-memory swap per node (25% of 4 GB RAM
-# with lz4 compression ratio ~2:1 ≈ 2 GB effective burst buffer).
-# This prevents OOMKill during transient memory spikes without touching disk.
+# Provides compressed in-memory swap as a burst buffer (lz4, ~2:1 ratio).
+# Uses systemd-zram-generator (ships with Raspberry Pi OS Bookworm) rather than
+# the legacy zram-tools package, which conflicts with the generator on Bookworm.
+# Fixed at zram_size_mb (default 512 MiB) — enough to absorb transient memory
+# spikes without masking OOM situations Kubernetes should handle via eviction.
 # kubelet is configured with fail-swap-on=false so it starts alongside zram.
 
-- name: Install zram-tools
-  apt:
+- name: Remove zram-tools if installed
+  ansible.builtin.apt:
     name: zram-tools
-    state: present
-    update_cache: true
+    state: absent
+    purge: true
 
-- name: Configure zramswap — set ALGO to lz4
-  lineinfile:
-    path: /etc/default/zramswap
-    regexp: '^#?\s*ALGO='
-    line: 'ALGO=lz4'
+- name: Install systemd-zram-generator
+  ansible.builtin.apt:
+    name: systemd-zram-generator
     state: present
+    update_cache: false
 
-- name: Configure zramswap — set PERCENT to 25
-  lineinfile:
-    path: /etc/default/zramswap
-    regexp: '^#?\s*PERCENT='
-    line: 'PERCENT=25'
-    state: present
+- name: Configure zram via systemd-zram-generator
+  ansible.builtin.template:
+    src: zram-generator.conf.j2
+    dest: /etc/systemd/zram-generator.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart zram swap
 
-- name: Enable and start zramswap service
-  systemd:
-    name: zramswap
-    state: started
-    enabled: true
+- name: Start zram swap unit
+  ansible.builtin.systemd:
+    name: dev-zram0.swap
     daemon_reload: true
+    state: started
 
 # ── sysctl tuning ──────────────────────────────────────────────────────────
 # swappiness=10: prefer RAM strongly, only use zram swap under real pressure.
@@ -87,14 +137,20 @@
     - { name: vm.swappiness, value: '10' }
 
 - name: Copy systemd unit to disable EEE on eth0
-  copy:
+  ansible.builtin.copy:
     src: disable-eth0-eee.service
     dest: /etc/systemd/system/disable-eth0-eee.service
     mode: '0644'
 
 - name: Disable EEE on eth0 to prevent NIC errors
-  systemd:
+  ansible.builtin.systemd:
     name: disable-eth0-eee.service
     state: started
     enabled: true
     daemon_reload: true
+
+# Flush here so a reboot (if cgroup flags changed) happens at the end of this
+# role rather than at the end of the play. This guarantees the node is back and
+# running the correct kernel before any subsequent roles or playbooks execute.
+- name: Apply pending handlers
+  ansible.builtin.meta: flush_handlers

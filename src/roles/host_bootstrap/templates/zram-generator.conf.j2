@@ -1,0 +1,8 @@
+# Managed by Ansible — do not edit manually.
+# zram device used as a compressed in-memory swap burst buffer.
+# lz4 compression (~2:1 ratio): {{ zram_size_mb }} MiB → ~{{ zram_size_mb * 2 }} MiB effective swap.
+
+[zram0]
+zram-size = {{ zram_size_mb }}
+compression-algorithm = lz4
+swap-priority = 5

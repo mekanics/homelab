@@ -5,7 +5,9 @@ Wants=network.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/sbin/ethtool --set-eee eth0 eee off
+# Ignore exit code 76 (EOPNOTSUPP): Pi 5's NIC driver does not expose EEE
+# controls via ethtool netlink; on Pi 4 the command succeeds and disables EEE.
+ExecStart=/bin/sh -c '/usr/sbin/ethtool --set-eee eth0 eee off || true'
 RemainAfterExit=yes
 StandardOutput=journal
 

@@ -7,7 +7,7 @@ cilium_version: '1.18.3'
 
 cilium_values:
   operator:
-    replicas: 1
+    replicas: 2
   kubeProxyReplacement: true
   l2announcements:
     enabled: true

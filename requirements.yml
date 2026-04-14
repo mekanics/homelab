@@ -1,0 +1,17 @@
+---
+# Ansible collection dependencies for this homelab.
+# Install / upgrade with:
+#   ansible-galaxy collection install -r requirements.yml --upgrade
+#
+# Versions are minimum-pinned to what is known to work. Bump as needed
+# when upgrading Ansible or dependent tooling (e.g. helm plugins).
+
+collections:
+  - name: ansible.posix
+    version: '>=1.5.4'
+
+  - name: community.crypto
+    version: '>=2.15.1'
+
+  - name: kubernetes.core
+    version: '>=6.3.0'
