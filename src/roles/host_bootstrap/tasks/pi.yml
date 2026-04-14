@@ -101,6 +101,12 @@
     state: absent
     purge: true
 
+- name: Install systemd-zram-generator
+  ansible.builtin.apt:
+    name: systemd-zram-generator
+    state: present
+    update_cache: false
+
 - name: Configure zram via systemd-zram-generator
   ansible.builtin.template:
     src: zram-generator.conf.j2
