@@ -9,16 +9,9 @@
   register: cgroup_flags
   notify: Reboot
 
-- name: Check if wlan0 is active
-  command: 'ip link show wlan0'
-  register: wlan_status
-  ignore_errors: true
-
-- name: Activate the promiscuous mode on wlan0
-  shell:
-    cmd: 'ifconfig wlan0 promisc'
-  notify: Reboot
-  when: wlan_status.rc == 0
+- name: Disable WiFi on cluster nodes
+  ansible.builtin.command: rfkill block wifi
+  changed_when: true
 
 - name: Turn off swap
   command: 'dphys-swapfile swapoff'
