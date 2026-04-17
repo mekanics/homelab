@@ -55,15 +55,15 @@ fava:
     limits:
       memory: 768Mi
 
-  affinity:
-    nodeAffinity:
-      preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 100
-          preference:
-            matchExpressions:
-              - key: node.homelab.io/performance
-                operator: In
-                values: ['mid']
+  # affinity:
+  #   nodeAffinity:
+  #     preferredDuringSchedulingIgnoredDuringExecution:
+  #       - weight: 100
+  #         preference:
+  #           matchExpressions:
+  #             - key: node.homelab.io/performance
+  #               operator: In
+  #               values: ['mid']
 
   probes:
     liveness:
