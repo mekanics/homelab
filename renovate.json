@@ -17,6 +17,14 @@
 			"matchPackageNames": ["kube-prometheus-stack"],
 			"extends": ["schedule:monthly"],
 			"groupName": "prometheus-stack"
+		},
+		{
+			"matchPackageNames": ["reflector"],
+			"matchUpdateTypes": ["patch"],
+			"extends": ["schedule:monthly"],
+			"minimumReleaseAge": "7 days",
+			"automerge": true,
+			"automergeType": "branch"
 		}
 	]
 }
