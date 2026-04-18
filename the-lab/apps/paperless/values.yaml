@@ -44,6 +44,8 @@ paperless:
       value: '1800'
     - name: PAPERLESS_DB_CONN_MAX_AGE
       value: '60'
+    - name: PAPERLESS_CONSUMER_DELETE_DUPLICATES
+      value: 'true'
 
   database:
     engine: postgresql
