@@ -9,7 +9,7 @@ databases:
   - name: paperless
     owner: paperless
     namespace: paperless
-    connectionLimit: 10
+    connectionLimit: 25
   - name: rag_obsidian
     owner: rag_obsidian
     namespace: ~
