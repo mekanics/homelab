@@ -28,6 +28,10 @@ paperless:
       value: Europe/Zurich
     - name: PAPERLESS_OCR_LANGUAGE
       value: deu+eng
+    - name: PAPERLESS_OCR_MODE
+      value: skip
+    - name: PAPERLESS_OCR_SKIP_ARCHIVE_FILE
+      value: with_text
     - name: PAPERLESS_FILENAME_FORMAT
       value: '{{ document_type }}/{{ correspondent }}/{{ created_year }}/{{ created }}_{{ title }}'
     - name: PAPERLESS_CONSUMER_POLLING
@@ -38,6 +42,8 @@ paperless:
       value: '1'
     - name: PAPERLESS_WORKER_TIMEOUT
       value: '1800'
+    - name: PAPERLESS_DB_CONN_MAX_AGE
+      value: '60'
 
   database:
     engine: postgresql
