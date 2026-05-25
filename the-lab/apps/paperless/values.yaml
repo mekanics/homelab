@@ -41,7 +41,7 @@ paperless:
     - name: PAPERLESS_WORKER_TIMEOUT
       value: '1800'
     - name: PAPERLESS_DB_CONN_MAX_AGE
-      value: '60'
+      value: '0'
     - name: PAPERLESS_CONSUMER_DELETE_DUPLICATES
       value: 'true'
 
@@ -58,10 +58,10 @@ paperless:
 
   resources:
     limits:
-      memory: 1536Mi
+      memory: 3072Mi
     requests:
-      cpu: 100m
-      memory: 512Mi
+      cpu: 200m
+      memory: 768Mi
 
   persistence:
     # -- Configure storage volume settings for the chart under this key.
