@@ -23,6 +23,10 @@ tls-san:
 etcd-snapshot-schedule-cron: {{ k3s_server_config['etcd-snapshot-schedule-cron'] }}
 etcd-snapshot-retention: {{ k3s_server_config['etcd-snapshot-retention'] }}
 {% endif %}
+# Pin the Kubernetes node name to the inventory hostname so a host that is
+# reinstalled re-registers under the same name instead of creating a duplicate
+# node object (e.g. the OS dropping the ".local" suffix).
+node-name: {{ inventory_hostname }}
 data-dir: {{ k3s_server_location }}
 # Allow kubelet to start on nodes with zram swap active.
 # NodeSwap feature gate is GA in k8s 1.28+ (enabled by default).
