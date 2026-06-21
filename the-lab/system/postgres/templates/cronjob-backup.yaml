@@ -11,6 +11,7 @@ spec:
     spec:
       activeDeadlineSeconds: 600
       backoffLimit: 3
+      ttlSecondsAfterFinished: {{ .Values.backup.ttlSecondsAfterFinished }}
       template:
         spec:
           containers:
@@ -21,6 +22,7 @@ spec:
                 - |
                   set -e
                   TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+                  WORK_FILE="/work/pg_dumpall-${TIMESTAMP}.sql.gz"
                   BACKUP_FILE="/backup/pg_dumpall-${TIMESTAMP}.sql.gz"
 
                   echo "Starting pg_dumpall at ${TIMESTAMP}..."
@@ -29,11 +31,15 @@ spec:
                     -U postgres \
                     --clean \
                     --if-exists \
-                    | gzip > "${BACKUP_FILE}"
+                    | gzip > "${WORK_FILE}"
 
-                  echo "Verifying integrity of ${BACKUP_FILE}..."
-                  gunzip -t "${BACKUP_FILE}"
+                  echo "Verifying integrity of ${WORK_FILE}..."
+                  gunzip -t "${WORK_FILE}"
                   echo "Integrity check passed."
+
+                  echo "Copying to NFS backup store..."
+                  cp "${WORK_FILE}" "${BACKUP_FILE}"
+                  rm -f "${WORK_FILE}"
 
                   # Remove any uncompressed .sql files left over from before the gzip migration.
                   ls /backup/pg_dumpall-*.sql 2>/dev/null | xargs -r rm -f
@@ -52,9 +58,13 @@ spec:
                       name: postgres-cluster-superuser
                       key: password
               volumeMounts:
+                - name: work
+                  mountPath: /work
                 - name: backup
                   mountPath: /backup
           volumes:
+            - name: work
+              emptyDir: {}
             - name: backup
               persistentVolumeClaim:
                 claimName: nfs-postgres-backup

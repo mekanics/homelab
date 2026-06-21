@@ -38,3 +38,6 @@ backup:
   retainCount: 14
   # Twice daily: 02:00 and 14:00 UTC. Halves the maximum data loss window to ~12h.
   schedule: '0 2,14 * * *'
+  # Jobs self-delete after this many seconds (failed or succeeded), preventing indefinite
+  # Alertmanager re-notifications. 48h gives enough window to catch and review a failed run.
+  ttlSecondsAfterFinished: 172800

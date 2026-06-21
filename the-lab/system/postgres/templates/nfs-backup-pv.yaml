@@ -15,11 +15,11 @@ spec:
   mountOptions:
     - nfsvers=4
     - proto=tcp
-    - hard
+    - soft
     - intr
     - rsize=65536
     - wsize=65536
-    - timeo=600
+    - timeo=100
     - retrans=2
   nfs:
     server: {{ .Values.backup.nfs.server }}
