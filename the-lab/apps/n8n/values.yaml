@@ -39,6 +39,10 @@ n8n:
     enabled: true
     annotations:
       cert-manager.io/cluster-issuer: mekanics-ca-issuer
+      # ingress-nginx defaults to a 1m body limit, which rejects Form/webhook
+      # uploads with a 413 (surfaced in-browser as a misleading "Origin null" CORS
+      # error). n8n itself allows 16 MiB, so 64m keeps nginx from being the bottleneck.
+      nginx.ingress.kubernetes.io/proxy-body-size: 64m
       hajimari.io/group: Apps
       hajimari.io/appName: Workflow
       hajimari.io/icon: auto-awesome
