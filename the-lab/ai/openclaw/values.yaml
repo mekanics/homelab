@@ -18,7 +18,9 @@ openclaw:
     # Without this, V8 picks a conservative default and crashes when it can't grow.
     # 1536 leaves ~512MB headroom under the 2Gi container limit.
     - name: NODE_OPTIONS
-      value: '--max-old-space-size=1536'
+      value: '--max-old-space-size=3072'
+    - name: UV_THREADPOOL_SIZE
+      value: '128'
     # Skip the entry-point self-respawn (saves ~50-100MB peak RSS at startup).
     - name: OPENCLAW_NO_RESPAWN
       value: '1'
@@ -89,18 +91,20 @@ openclaw:
         httpGet:
           path: /healthz
           port: 18789
-        failureThreshold: 10
-        periodSeconds: 30
-        timeoutSeconds: 10
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        timeoutSeconds: 5
+        failureThreshold: 6
     readiness:
       spec:
         exec: null
         httpGet:
           path: /readyz
           port: 18789
-        failureThreshold: 3
-        periodSeconds: 10
-        timeoutSeconds: 5
+        initialDelaySeconds: 10
+        periodSeconds: 5
+        timeoutSeconds: 3
+        failureThreshold: 2
 
   nodeSelector:
     node.homelab.io/performance: high
