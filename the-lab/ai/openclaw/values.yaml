@@ -16,7 +16,9 @@ openclaw:
     #   value: /home/node/.cache/ms-playwright
     # Tell V8 its heap ceiling so it doesn't OOM-panic on ARM64 during cold start.
     # Without this, V8 picks a conservative default and crashes when it can't grow.
-    # 1536 leaves ~512MB headroom under the 2Gi container limit.
+    # 3072 leaves ~1Gi headroom under the 4Gi limit for non-heap RSS (native
+    # modules, buffers) and for the node children the gateway spawns — they
+    # inherit NODE_OPTIONS, so this is a per-process ceiling, not a total.
     - name: NODE_OPTIONS
       value: '--max-old-space-size=3072'
     - name: UV_THREADPOOL_SIZE
