@@ -16,9 +16,13 @@ openclaw:
     #   value: /home/node/.cache/ms-playwright
     # Tell V8 its heap ceiling so it doesn't OOM-panic on ARM64 during cold start.
     # Without this, V8 picks a conservative default and crashes when it can't grow.
-    # 1536 leaves ~512MB headroom under the 2Gi container limit.
+    # 3072 leaves ~1Gi headroom under the 4Gi limit for non-heap RSS (native
+    # modules, buffers) and for the node children the gateway spawns — they
+    # inherit NODE_OPTIONS, so this is a per-process ceiling, not a total.
     - name: NODE_OPTIONS
-      value: '--max-old-space-size=1536'
+      value: '--max-old-space-size=3072'
+    - name: UV_THREADPOOL_SIZE
+      value: '128'
     # Skip the entry-point self-respawn (saves ~50-100MB peak RSS at startup).
     - name: OPENCLAW_NO_RESPAWN
       value: '1'
@@ -83,24 +87,29 @@ openclaw:
         failureThreshold: 60
         periodSeconds: 10
         timeoutSeconds: 5
+    # Deliberately tolerant: the 03:00 memory-dreaming run blocks the event
+    # loop for ~37s, and restarting mid-run costs a cold start on top of the
+    # readiness gap. 10 x 30s rides the stall out; readiness below is what
+    # takes the pod out of rotation while it's unresponsive.
     liveness:
       spec:
         exec: null
         httpGet:
           path: /healthz
           port: 18789
-        failureThreshold: 10
         periodSeconds: 30
         timeoutSeconds: 10
+        failureThreshold: 10
     readiness:
       spec:
         exec: null
         httpGet:
           path: /readyz
           port: 18789
-        failureThreshold: 3
-        periodSeconds: 10
-        timeoutSeconds: 5
+        initialDelaySeconds: 10
+        periodSeconds: 5
+        timeoutSeconds: 3
+        failureThreshold: 2
 
   nodeSelector:
     node.homelab.io/performance: high
