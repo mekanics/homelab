@@ -87,16 +87,19 @@ openclaw:
         failureThreshold: 60
         periodSeconds: 10
         timeoutSeconds: 5
+    # Deliberately tolerant: the 03:00 memory-dreaming run blocks the event
+    # loop for ~37s, and restarting mid-run costs a cold start on top of the
+    # readiness gap. 10 x 30s rides the stall out; readiness below is what
+    # takes the pod out of rotation while it's unresponsive.
     liveness:
       spec:
         exec: null
         httpGet:
           path: /healthz
           port: 18789
-        initialDelaySeconds: 30
-        periodSeconds: 10
-        timeoutSeconds: 5
-        failureThreshold: 6
+        periodSeconds: 30
+        timeoutSeconds: 10
+        failureThreshold: 10
     readiness:
       spec:
         exec: null
