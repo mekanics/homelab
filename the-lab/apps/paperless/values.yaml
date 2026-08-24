@@ -27,12 +27,12 @@ paperless:
     - name: PAPERLESS_OCR_LANGUAGE
       value: deu+eng
     - name: PAPERLESS_OCR_MODE
-      value: skip
-    - name: PAPERLESS_OCR_SKIP_ARCHIVE_FILE
-      value: with_text
+      value: auto
+    - name: PAPERLESS_ARCHIVE_FILE_GENERATION
+      value: auto
     - name: PAPERLESS_FILENAME_FORMAT
       value: '{{ document_type }}/{{ correspondent }}/{{ created_year }}/{{ created }}_{{ title }}'
-    - name: PAPERLESS_CONSUMER_POLLING
+    - name: PAPERLESS_CONSUMER_POLLING_INTERVAL
       value: 30
     - name: PAPERLESS_TASK_WORKERS
       value: '1'
@@ -44,6 +44,19 @@ paperless:
       value: '0'
     - name: PAPERLESS_CONSUMER_DELETE_DUPLICATES
       value: 'true'
+    # v3: allauth login rate limiting needs trusted proxy config behind nginx ingress
+    - name: PAPERLESS_TRUSTED_PROXIES
+      value: '10.42.0.0/16'
+    - name: PAPERLESS_ALLAUTH_TRUSTED_PROXY_COUNT
+      value: '1'
+
+  # v3 requires PAPERLESS_SECRET_KEY — Alex must create this K8s secret manually:
+  #   kubectl create secret generic paperless-secret-key \
+  #     --from-literal=secret-key=<your-secret> -n paperless
+  secretKey:
+    existingSecret:
+      name: paperless-secret-key
+      key: secret-key
 
   database:
     engine: postgresql
