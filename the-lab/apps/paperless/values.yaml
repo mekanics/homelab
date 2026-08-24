@@ -44,6 +44,11 @@ paperless:
       value: '0'
     - name: PAPERLESS_CONSUMER_DELETE_DUPLICATES
       value: 'true'
+    # v3: allauth login rate limiting needs trusted proxy config behind nginx ingress
+    - name: PAPERLESS_TRUSTED_PROXIES
+      value: '10.42.0.0/16'
+    - name: PAPERLESS_ALLAUTH_TRUSTED_PROXY_COUNT
+      value: '1'
 
   # v3 requires PAPERLESS_SECRET_KEY — Alex must create this K8s secret manually:
   #   kubectl create secret generic paperless-secret-key \
