@@ -20,6 +20,10 @@ influxdb2:
     storageClass: 'longhorn'
     size: 20Gi
 
+  # First-boot only (DOCKER_INFLUXDB_INIT_RETENTION). Live waid-bucket
+  # retention is 365d, applied by templates/archive-setup-job.yaml after
+  # daily solar/grid archives exist in waid-bucket-downsampled.
+
   startupProbe:
     enabled: true
     path: /health

@@ -1,0 +1,46 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: influx-archive-setup
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  # Monthly backfill of ~3 years of 1Hz power can take a while on a Pi.
+  activeDeadlineSeconds: 2400
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 86400
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: sync-archive
+          image: influxdb:2.7.4-alpine
+          command: ['/bin/sh', '/tasks/sync-archive.sh']
+          env:
+            - name: INFLUX_HOST
+              value: http://influx-influxdb2:80
+            - name: INFLUX_ORG
+              value: waid
+            - name: INFLUX_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: influxdb-auth
+                  key: admin-token
+            - name: TASKS_DIR
+              value: /tasks
+          volumeMounts:
+            - name: tasks
+              mountPath: /tasks
+              readOnly: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
+      volumes:
+        - name: tasks
+          configMap:
+            name: influx-archive-scripts
+            defaultMode: 0555

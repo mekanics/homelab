@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: influx-archive-scripts
+data:
+  downsample-yieldday.flux: |
+{{ .Files.Get "tasks/downsample-yieldday.flux" | indent 4 }}
+  downsample-energy-daily.flux: |
+{{ .Files.Get "tasks/downsample-energy-daily.flux" | indent 4 }}
+  sync-archive.sh: |
+{{ .Files.Get "tasks/sync-archive.sh" | indent 4 }}

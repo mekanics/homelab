@@ -23,6 +23,10 @@ kube-prometheus-stack:
       - grafana-clock-panel
       - fetzerch-sunandmoon-datasource
 
+    sidecar:
+      dashboards:
+        folderAnnotation: grafana_folder
+
     grafana.ini:
       server:
         root_url: https://grafana.mekanics.ch

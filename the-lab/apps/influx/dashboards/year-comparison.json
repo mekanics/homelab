@@ -1,0 +1,507 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Month-over-year solar yield and grid energy from waid-bucket-downsampled (daily totals). Live 24h boards still read raw waid-bucket.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "liveNow": false,
+  "refresh": "1h",
+  "schemaVersion": 39,
+  "tags": [
+    "waid",
+    "solar",
+    "energy"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "influxdb",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-12M",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "Europe/Zurich",
+  "title": "Waid / Year comparison",
+  "uid": "waid-year-comparison",
+  "version": 1,
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Solar this month",
+      "description": "Sum of daily yieldday (channel 0) since the 1st, in kWh.",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${datasource}"
+          },
+          "query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name: \"Europe/Zurich\")\nstart = date.truncate(t: now(), unit: 1mo)\nfrom(bucket: \"waid-bucket-downsampled\")\n  |> range(start: start)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"solar\" and r[\"_field\"] == \"yieldday\" and r[\"channel\"] == \"0\")\n  |> group()\n  |> sum()\n  |> map(fn: (r) => ({ r with _value: r._value / 1000.0 }))"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Solar same month last year",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${datasource}"
+          },
+          "query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name: \"Europe/Zurich\")\nthisMonth = date.truncate(t: now(), unit: 1mo)\nstart = date.add(d: -1y, to: thisMonth)\nstop = date.add(d: 1mo, to: start)\nfrom(bucket: \"waid-bucket-downsampled\")\n  |> range(start: start, stop: stop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"solar\" and r[\"_field\"] == \"yieldday\" and r[\"channel\"] == \"0\")\n  |> group()\n  |> sum()\n  |> map(fn: (r) => ({ r with _value: r._value / 1000.0 }))"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Grid this month",
+      "description": "Net kWh from the grid (import positive, export negative).",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${datasource}"
+          },
+          "query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name: \"Europe/Zurich\")\nstart = date.truncate(t: now(), unit: 1mo)\nfrom(bucket: \"waid-bucket-downsampled\")\n  |> range(start: start)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"energy_daily\" and r[\"_field\"] == \"grid_net_kwh\")\n  |> group()\n  |> sum()"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Grid same month last year",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${datasource}"
+          },
+          "query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name: \"Europe/Zurich\")\nthisMonth = date.truncate(t: now(), unit: 1mo)\nstart = date.add(d: -1y, to: thisMonth)\nstop = date.add(d: 1mo, to: start)\nfrom(bucket: \"waid-bucket-downsampled\")\n  |> range(start: start, stop: stop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"energy_daily\" and r[\"_field\"] == \"grid_net_kwh\")\n  |> group()\n  |> sum()"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "barchart",
+      "title": "Monthly solar yield",
+      "description": "Daily yieldday summed per month, overlaid for this year / last year / two years ago. Set the picker to 12 months.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 4
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "orientation": "vertical",
+        "xTickLabelRotation": 0,
+        "barWidth": 0.7,
+        "groupWidth": 0.7,
+        "stacking": "none"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${datasource}"
+          },
+          "query": "from(bucket: \"waid-bucket-downsampled\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"solar\" and r[\"_field\"] == \"yieldday\" and r[\"channel\"] == \"0\")\n  |> aggregateWindow(every: 1mo, fn: sum, createEmpty: false)\n  |> map(fn: (r) => ({ r with _value: r._value / 1000.0, _field: \"this year\" }))\n  |> drop(columns: [\"channel\", \"serial\", \"topic\", \"host\"])"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${datasource}"
+          },
+          "query": "import \"date\"\nfrom(bucket: \"waid-bucket-downsampled\")\n  |> range(start: date.add(d: -1y, to: v.timeRangeStart), stop: date.add(d: -1y, to: v.timeRangeStop))\n  |> filter(fn: (r) => r[\"_measurement\"] == \"solar\" and r[\"_field\"] == \"yieldday\" and r[\"channel\"] == \"0\")\n  |> aggregateWindow(every: 1mo, fn: sum, createEmpty: false)\n  |> timeShift(duration: 1y)\n  |> map(fn: (r) => ({ r with _value: r._value / 1000.0, _field: \"last year\" }))\n  |> drop(columns: [\"channel\", \"serial\", \"topic\", \"host\"])"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${datasource}"
+          },
+          "query": "import \"date\"\nfrom(bucket: \"waid-bucket-downsampled\")\n  |> range(start: date.add(d: -2y, to: v.timeRangeStart), stop: date.add(d: -2y, to: v.timeRangeStop))\n  |> filter(fn: (r) => r[\"_measurement\"] == \"solar\" and r[\"_field\"] == \"yieldday\" and r[\"channel\"] == \"0\")\n  |> aggregateWindow(every: 1mo, fn: sum, createEmpty: false)\n  |> timeShift(duration: 2y)\n  |> map(fn: (r) => ({ r with _value: r._value / 1000.0, _field: \"two years ago\" }))\n  |> drop(columns: [\"channel\", \"serial\", \"topic\", \"host\"])"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "barchart",
+      "title": "Monthly grid net energy",
+      "description": "Import positive, export negative. Overlay this year / last year / two years ago.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 4
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "orientation": "vertical",
+        "barWidth": 0.7,
+        "groupWidth": 0.7,
+        "stacking": "none"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${datasource}"
+          },
+          "query": "from(bucket: \"waid-bucket-downsampled\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"energy_daily\" and r[\"_field\"] == \"grid_net_kwh\")\n  |> aggregateWindow(every: 1mo, fn: sum, createEmpty: false)\n  |> map(fn: (r) => ({ r with _field: \"this year\" }))"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${datasource}"
+          },
+          "query": "import \"date\"\nfrom(bucket: \"waid-bucket-downsampled\")\n  |> range(start: date.add(d: -1y, to: v.timeRangeStart), stop: date.add(d: -1y, to: v.timeRangeStop))\n  |> filter(fn: (r) => r[\"_measurement\"] == \"energy_daily\" and r[\"_field\"] == \"grid_net_kwh\")\n  |> aggregateWindow(every: 1mo, fn: sum, createEmpty: false)\n  |> timeShift(duration: 1y)\n  |> map(fn: (r) => ({ r with _field: \"last year\" }))"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${datasource}"
+          },
+          "query": "import \"date\"\nfrom(bucket: \"waid-bucket-downsampled\")\n  |> range(start: date.add(d: -2y, to: v.timeRangeStart), stop: date.add(d: -2y, to: v.timeRangeStop))\n  |> filter(fn: (r) => r[\"_measurement\"] == \"energy_daily\" and r[\"_field\"] == \"grid_net_kwh\")\n  |> aggregateWindow(every: 1mo, fn: sum, createEmpty: false)\n  |> timeShift(duration: 2y)\n  |> map(fn: (r) => ({ r with _field: \"two years ago\" }))"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Daily solar yield",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 13
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "decimals": 2,
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 40,
+            "lineWidth": 0,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "sum"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${datasource}"
+          },
+          "query": "from(bucket: \"waid-bucket-downsampled\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"solar\" and r[\"_field\"] == \"yieldday\" and r[\"channel\"] == \"0\")\n  |> map(fn: (r) => ({ r with _value: r._value / 1000.0, _field: \"this year\" }))\n  |> drop(columns: [\"channel\", \"serial\", \"topic\", \"host\"])"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${datasource}"
+          },
+          "query": "import \"date\"\nfrom(bucket: \"waid-bucket-downsampled\")\n  |> range(start: date.add(d: -1y, to: v.timeRangeStart), stop: date.add(d: -1y, to: v.timeRangeStop))\n  |> filter(fn: (r) => r[\"_measurement\"] == \"solar\" and r[\"_field\"] == \"yieldday\" and r[\"channel\"] == \"0\")\n  |> timeShift(duration: 1y)\n  |> map(fn: (r) => ({ r with _value: r._value / 1000.0, _field: \"last year\" }))\n  |> drop(columns: [\"channel\", \"serial\", \"topic\", \"host\"])"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Daily grid net energy",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 13
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "decimals": 2,
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 40,
+            "lineWidth": 0,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "sum"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${datasource}"
+          },
+          "query": "from(bucket: \"waid-bucket-downsampled\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"energy_daily\" and r[\"_field\"] == \"grid_net_kwh\")\n  |> map(fn: (r) => ({ r with _field: \"this year\" }))"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${datasource}"
+          },
+          "query": "import \"date\"\nfrom(bucket: \"waid-bucket-downsampled\")\n  |> range(start: date.add(d: -1y, to: v.timeRangeStart), stop: date.add(d: -1y, to: v.timeRangeStop))\n  |> filter(fn: (r) => r[\"_measurement\"] == \"energy_daily\" and r[\"_field\"] == \"grid_net_kwh\")\n  |> timeShift(duration: 1y)\n  |> map(fn: (r) => ({ r with _field: \"last year\" }))"
+        }
+      ]
+    }
+  ]
+}
