@@ -15,6 +15,8 @@ from(bucket: "waid-bucket")
         fn: (r) => r["_measurement"] == "mqtt_consumer" and r["_field"] == "total_act_power",
     )
     |> drop(columns: ["host", "topic"])
+    |> group()
+    |> sort(columns: ["_time"])
     |> window(every: 1d, location: location)
     |> integral(unit: 1h)
     |> map(
