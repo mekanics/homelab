@@ -1,0 +1,108 @@
+# One-shot migration: seed the Longhorn `openclaw-state` PVC from the shared
+# control-plane database that currently lives on the NFS home volume.
+#
+# Not rendered by Helm or ArgoCD — only `templates/` is. Apply by hand.
+#
+# Why a separate Job rather than doing this in the gateway pod: the Longhorn
+# volume mounts *over* /home/node/.openclaw/state, so a pod with the normal
+# layout cannot see the NFS copy it is supposed to read. This Job mounts both
+# volumes side by side at non-nested paths instead.
+#
+# Preconditions:
+#   1. The Synology export maps root to admin. Until then root cannot traverse
+#      the share at all and the copy fails. Verify on a node with:
+#        sudo mount -t nfs4 -o ro 192.168.10.12:/volume1/openclaw /mnt/x
+#        sudo ls /mnt/x/state/
+#   2. openclaw is deployed with debug.enabled=true, so the gateway is parked
+#      and has not created a fresh database on the empty volume.
+#   3. nodeName below matches the node holding the attached RWO volumes:
+#        kubectl -n openclaw get pod -o wide
+#
+# After it completes, set debug.enabled=false and let the gateway start.
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: openclaw-seed-state
+  namespace: openclaw
+spec:
+  backoffLimit: 0 # A partial copy needs inspection, not a blind retry.
+  template:
+    metadata:
+      name: openclaw-seed-state
+    spec:
+      restartPolicy: Never
+      # RWO volumes admit multiple pods only on the node they are attached to.
+      nodeName: pi-homelab-master-2.local
+      containers:
+        - name: seed
+          # renovate datasource=docker depName=busybox
+          image: busybox:1.38
+          # Root, not 1000: the NFS `state` directory is mode 0000, so only the
+          # admin-mapped root identity can traverse it. Ownership is handed back
+          # to 1000:1000 at the end.
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          command:
+            - sh
+            - -ec
+            - |
+              if [ -s /new/openclaw.sqlite ]; then
+                echo "REFUSING: /new/openclaw.sqlite already exists and is non-empty."
+                echo "The volume has already been seeded, or the gateway ran unparked."
+                exit 1
+              fi
+
+              echo "--- source (NFS) ---"
+              ls -lan /nfs/state/
+
+              if [ ! -f /nfs/state/openclaw.sqlite ]; then
+                echo "No openclaw.sqlite on the share; nothing to migrate."
+                echo "The gateway will create a fresh database. Exiting clean."
+                exit 0
+              fi
+
+              # -a preserves mtimes, which is how a stale -wal is spotted later.
+              # The gateway is parked, so the database is quiescent and a plain
+              # file copy cannot capture a torn database/WAL pair.
+              cp -a /nfs/state/openclaw.sqlite /new/
+              for sidecar in openclaw.sqlite-wal openclaw.sqlite-shm; do
+                if [ -f "/nfs/state/$sidecar" ]; then
+                  cp -a "/nfs/state/$sidecar" /new/
+                  echo "copied $sidecar"
+                fi
+              done
+
+              chown -R 1000:1000 /new
+              chmod 0755 /new
+
+              echo "--- destination (Longhorn) ---"
+              ls -lan /new/
+
+              src=$(wc -c < /nfs/state/openclaw.sqlite)
+              dst=$(wc -c < /new/openclaw.sqlite)
+              if [ "$src" != "$dst" ]; then
+                echo "FAILED: size mismatch src=$src dst=$dst"
+                exit 1
+              fi
+              echo "OK: openclaw.sqlite copied and verified ($src bytes)"
+          volumeMounts:
+            - name: nfs
+              mountPath: /nfs
+              readOnly: true
+            - name: state
+              mountPath: /new
+      volumes:
+        - name: nfs
+          persistentVolumeClaim:
+            claimName: openclaw-home-nfs
+            readOnly: true
+        - name: state
+          persistentVolumeClaim:
+            claimName: openclaw-state

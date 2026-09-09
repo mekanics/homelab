@@ -4,6 +4,13 @@ openclaw:
     # renovate: datasource=docker depName=ghcr.io/mekanics/openclaw-image
     tag: '2026.9.2-slim@sha256:0815494ffedc512daf308ea6cdd17b6953808da13c6754f9416e1a2824b35e5f'
 
+  # Park the gateway (sleep infinity) so `openclaw doctor --fix` and
+  # `openclaw backup create` can take the state ownership lock. Home PVC is
+  # ReadWriteOnce — this replaces the gateway, it is not a second pod.
+  # Chart 0.4.0+ honours this.
+  debug:
+    enabled: true
+
   env:
     - name: TZ
       value: Europe/Zurich
@@ -42,6 +49,30 @@ openclaw:
       storageClass: longhorn
       accessMode: ReadWriteOnce
       size: 1Gi
+      retain: true
+    # Shared control-plane SQLite ($OPENCLAW_STATE_DIR/state/openclaw.sqlite).
+    # Must not live on the NFS home volume: WAL mode needs a shared-memory
+    # -shm file that NFS cannot provide, and nocto + actimeo=600 there hide
+    # the attribute changes SQLite relies on.
+    #
+    # Nests inside the `home` mount, which works only because the chart sorts
+    # persistence keys alphabetically and "home" < "state", so kubelet mounts
+    # the parent first. A key sorting before "home" cannot nest under it.
+    # Requires the Synology export to grant the NFS client root traversal —
+    # the container runtime resolves this mount target as uid 0. Root is
+    # currently squashed to an identity the share's ACL refuses, so a nested
+    # mount here fails: verified on a node with `mount --bind` inside a
+    # read-only mount of the export. Keep this disabled until that is fixed,
+    # then flip it and seed the volume via
+    # migrations/2026-09-09-seed-state-pvc.yaml.
+    state:
+      enabled: false
+      type: pvc
+      mountPath: /home/node/.openclaw/state
+      readOnly: false
+      storageClass: longhorn
+      accessMode: ReadWriteOnce
+      size: 2Gi
       retain: true
   ingress:
     enabled: true
