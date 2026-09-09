@@ -48,13 +48,12 @@ from(bucket: \"waid-bucket\")
   |> sort(columns: [\"_time\"])
   |> window(every: 1d, location: location)
   |> integral(unit: 1h)
-  |> map(fn: (r) => ({ r with
+  |> map(fn: (r) => ({
       _time: r._stop,
       _value: r._value / 1000.0,
       _field: \"grid_net_kwh\",
       _measurement: \"energy_daily\"
     }))
-  |> window(every: inf)
   |> to(bucket: \"waid-bucket-downsampled\", org: \"${INFLUX_ORG}\")
 " >/dev/null
 }
