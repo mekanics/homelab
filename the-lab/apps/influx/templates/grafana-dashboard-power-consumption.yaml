@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-waid-power-consumption
+  labels:
+    grafana_dashboard: "1"
+  annotations:
+    grafana_folder: Waid
+data:
+  waid-power-consumption.json: |-
+{{- .Files.Get "dashboards/power-consumption.json" | nindent 4 }}

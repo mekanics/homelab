@@ -18,6 +18,10 @@ kube-prometheus-stack:
         access: proxy
         basicAuth: false
         editable: true
+        jsonData:
+          # Waid, Zürich — lat/lon required for correct sun altitude
+          latitude: 47.39
+          longitude: 8.52
 
     plugins:
       - grafana-clock-panel

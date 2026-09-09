@@ -1,0 +1,635 @@
+{
+  "annotations": { "list": [] },
+  "description": "Daily-driver energy board: house load, solar, grid, autarky, self-consumption. Drill to Solar Balkon or Power Consumption for raw phase/inverter data.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Solar Balkon",
+      "tooltip": "",
+      "type": "link",
+      "url": "/d/oF29ybP4z/solar-balkon"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Power Consumption",
+      "tooltip": "",
+      "type": "link",
+      "url": "/d/OE8ldbA7z/power-consumption"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Year comparison",
+      "tooltip": "",
+      "type": "link",
+      "url": "/d/waid-year-comparison/waid-year-comparison"
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "House load",
+      "description": "grid + solar. Instantaneous total consumption.",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+      "datasource": { "type": "influxdb", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "decimals": 0,
+          "color": { "mode": "fixed", "fixedColor": "text" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "text", "value": null }] }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "influxdb", "uid": "${datasource}" },
+          "query": "import \"date\"\n\ngrid = from(bucket: \"waid-bucket\")\n  |> range(start: date.sub(d: 5m, from: v.timeRangeStop), stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"mqtt_consumer\" and r[\"_field\"] == \"total_act_power\")\n  |> last()\n  |> map(fn: (r) => ({r with _field: \"grid\"}))\n\nsolar = from(bucket: \"waid-bucket\")\n  |> range(start: date.sub(d: 5m, from: v.timeRangeStop), stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"solar\" and r[\"_field\"] == \"power\" and r.channel == \"0\")\n  |> last()\n  |> map(fn: (r) => ({r with _field: \"solar\"}))\n\nunion(tables: [grid, solar])\n  |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({r with _value: r.grid + if exists r.solar then r.solar else 0.0}))\n  |> keep(columns: [\"_time\", \"_value\"])"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Solar now",
+      "description": "Inverter AC output. 0 W when asleep — not No data.",
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
+      "datasource": { "type": "influxdb", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "decimals": 0,
+          "noValue": "0 W",
+          "color": { "mode": "fixed", "fixedColor": "yellow" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "yellow", "value": null }] }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "influxdb", "uid": "${datasource}" },
+          "query": "import \"date\"\n\nfrom(bucket: \"waid-bucket\")\n  |> range(start: date.sub(d: 120m, from: v.timeRangeStop), stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"solar\" and r[\"_field\"] == \"power\" and r.channel == \"0\")\n  |> aggregateWindow(every: 5m, fn: mean, createEmpty: true)\n  |> fill(value: 0.0)\n  |> last()"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Grid now",
+      "description": "Positive = drawing from grid. Negative = feeding in.",
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
+      "datasource": { "type": "influxdb", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "green", "value": -9999 },
+              { "color": "text", "value": 0 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "influxdb", "uid": "${datasource}" },
+          "query": "import \"date\"\n\nfrom(bucket: \"waid-bucket\")\n  |> range(start: date.sub(d: 5m, from: v.timeRangeStop), stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"mqtt_consumer\" and r[\"_field\"] == \"total_act_power\")\n  |> last()"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Autarky today",
+      "description": "self-consumed solar / house load. How self-sufficient the apartment is today.",
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
+      "datasource": { "type": "influxdb", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "text", "value": null },
+              { "color": "yellow", "value": 0.15 },
+              { "color": "green", "value": 0.30 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "influxdb", "uid": "${datasource}" },
+          "query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name: \"Europe/Zurich\")\n\nday_start = date.truncate(t: v.timeRangeStop, unit: 1d)\n\ngrid_raw = from(bucket: \"waid-bucket\")\n  |> range(start: day_start, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"mqtt_consumer\" and r[\"_field\"] == \"total_act_power\")\n  |> drop(columns: [\"host\", \"topic\"])\n  |> group()\n\nsolar_raw = from(bucket: \"waid-bucket\")\n  |> range(start: day_start, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"solar\" and r[\"_field\"] == \"power\" and r.channel == \"0\")\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: true)\n  |> fill(value: 0.0)\n  |> drop(columns: [\"host\", \"channel\", \"serial\", \"topic\"])\n  |> group()\n\nexport_kwh = grid_raw\n  |> map(fn: (r) => ({r with _value: if r._value < 0.0 then -r._value else 0.0}))\n  |> integral(unit: 1h)\n  |> map(fn: (r) => ({r with _value: r._value / 1000.0}))\n\nsolar_kwh = solar_raw\n  |> integral(unit: 1h)\n  |> map(fn: (r) => ({r with _value: r._value / 1000.0, _field: \"solar_kwh\"}))\n\nload_kwh = union(tables: [grid_raw, solar_raw])\n  |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({r with _value: r.total_act_power + (if exists r.power then r.power else 0.0)}))\n  |> filter(fn: (r) => r._value > 0.0)\n  |> integral(unit: 1h)\n  |> map(fn: (r) => ({r with _value: r._value / 1000.0, _field: \"load_kwh\"}))\n\nunion(tables: [solar_kwh, load_kwh, export_kwh])\n  |> pivot(rowKey: [\"_stop\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({\n      _time: r._stop,\n      _value: if r.load_kwh > 0.0\n        then (r.solar_kwh - (if exists r.grid_export_kwh then r.grid_export_kwh else 0.0)) / r.load_kwh\n        else 0.0\n    }))"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Self-consumption today",
+      "description": "self-consumed solar / total solar produced. How much of what the panels made stayed in the apartment.",
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 0 },
+      "datasource": { "type": "influxdb", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "text", "value": null },
+              { "color": "yellow", "value": 0.50 },
+              { "color": "green", "value": 0.75 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "influxdb", "uid": "${datasource}" },
+          "query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name: \"Europe/Zurich\")\n\nday_start = date.truncate(t: v.timeRangeStop, unit: 1d)\n\ngrid_raw = from(bucket: \"waid-bucket\")\n  |> range(start: day_start, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"mqtt_consumer\" and r[\"_field\"] == \"total_act_power\")\n  |> drop(columns: [\"host\", \"topic\"])\n  |> group()\n\nsolar_raw = from(bucket: \"waid-bucket\")\n  |> range(start: day_start, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"solar\" and r[\"_field\"] == \"power\" and r.channel == \"0\")\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: true)\n  |> fill(value: 0.0)\n  |> drop(columns: [\"host\", \"channel\", \"serial\", \"topic\"])\n  |> group()\n\nexport_kwh = grid_raw\n  |> map(fn: (r) => ({r with _value: if r._value < 0.0 then -r._value else 0.0}))\n  |> integral(unit: 1h)\n  |> map(fn: (r) => ({r with _value: r._value / 1000.0, _field: \"export_kwh\"}))\n\nsolar_kwh = solar_raw\n  |> integral(unit: 1h)\n  |> map(fn: (r) => ({r with _value: r._value / 1000.0, _field: \"solar_kwh\"}))\n\nunion(tables: [solar_kwh, export_kwh])\n  |> pivot(rowKey: [\"_stop\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({\n      _time: r._stop,\n      _value: if r.solar_kwh > 0.0\n        then (r.solar_kwh - (if exists r.export_kwh then r.export_kwh else 0.0)) / r.solar_kwh\n        else 0.0\n    }))"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Cost today",
+      "description": "Estimated cost: grid import today × tariff variable.",
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 0 },
+      "datasource": { "type": "influxdb", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyCHF",
+          "decimals": 2,
+          "color": { "mode": "fixed", "fixedColor": "text" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "influxdb", "uid": "${datasource}" },
+          "query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name: \"Europe/Zurich\")\n\nday_start = date.truncate(t: v.timeRangeStop, unit: 1d)\n\nfrom(bucket: \"waid-bucket\")\n  |> range(start: day_start, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"mqtt_consumer\" and r[\"_field\"] == \"total_act_power\")\n  |> drop(columns: [\"host\", \"topic\"])\n  |> group()\n  |> map(fn: (r) => ({r with _value: if r._value > 0.0 then r._value else 0.0}))\n  |> integral(unit: 1h)\n  |> map(fn: (r) => ({r with _value: r._value / 1000.0 * ${tariff}}))"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Load / Solar / Grid",
+      "description": "House load = grid + solar. Grid negative when exporting. Sun altitude on the right axis shows why solar starts and stops.",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 4 },
+      "datasource": { "type": "datasource", "uid": "-- Mixed --" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "spanNulls": false,
+            "showPoints": "never",
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false,
+            "scaleDistribution": { "type": "linear" },
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "House load" },
+            "properties": [
+              { "id": "displayName", "value": "House load" },
+              { "id": "color", "value": { "fixedColor": "text", "mode": "fixed" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Solar" },
+            "properties": [
+              { "id": "displayName", "value": "Solar" },
+              { "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" } },
+              { "id": "custom.fillOpacity", "value": 10 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Grid" },
+            "properties": [
+              { "id": "displayName", "value": "Grid" },
+              { "id": "color", "value": { "fixedColor": "blue", "mode": "fixed" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Sun altitude" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "#80808060", "mode": "fixed" } },
+              { "id": "custom.axisPlacement", "value": "right" },
+              { "id": "unit", "value": "degree" },
+              { "id": "custom.lineWidth", "value": 1 },
+              { "id": "custom.fillOpacity", "value": 0 },
+              { "id": "custom.lineStyle", "value": { "dash": [4, 4], "fill": "dash" } },
+              { "id": "custom.thresholdsStyle", "value": { "mode": "off" } }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "calcs": ["lastNotNull", "mean"],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "influxdb", "uid": "${datasource}" },
+          "query": "grid = from(bucket: \"waid-bucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"mqtt_consumer\" and r[\"_field\"] == \"total_act_power\")\n  |> drop(columns: [\"host\", \"topic\"])\n  |> group()\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> map(fn: (r) => ({r with _field: \"grid\"}))\n\nsolar = from(bucket: \"waid-bucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"solar\" and r[\"_field\"] == \"power\" and r.channel == \"0\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: true)\n  |> fill(value: 0.0)\n  |> drop(columns: [\"host\", \"channel\", \"serial\", \"topic\"])\n  |> group()\n  |> map(fn: (r) => ({r with _field: \"solar\"}))\n\nunion(tables: [grid, solar])\n  |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({\n      _time: r._time,\n      Grid: r.grid,\n      Solar: if exists r.solar then r.solar else 0.0,\n      \"House load\": r.grid + (if exists r.solar then r.solar else 0.0)\n    }))\n  |> group()"
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "fetzerch-sunandmoon-datasource", "uid": "P64382691D9610877" },
+          "hide": false,
+          "refId": "B",
+          "target": ["sun_altitude"]
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "type": "stat",
+      "title": "Produced today",
+      "description": "Solar yield since local midnight (inverter yieldday counter).",
+      "gridPos": { "h": 3, "w": 4, "x": 0, "y": 16 },
+      "datasource": { "type": "influxdb", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watth",
+          "decimals": 0,
+          "color": { "mode": "fixed", "fixedColor": "yellow" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "influxdb", "uid": "${datasource}" },
+          "query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name: \"Europe/Zurich\")\n\nday_start = date.truncate(t: v.timeRangeStop, unit: 1d)\n\nfrom(bucket: \"waid-bucket\")\n  |> range(start: day_start, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"solar\" and r[\"_field\"] == \"yieldday\" and r.channel == \"0\")\n  |> last()"
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "type": "stat",
+      "title": "Self-consumed today",
+      "description": "Solar that stayed in the apartment (produced − exported).",
+      "gridPos": { "h": 3, "w": 4, "x": 4, "y": 16 },
+      "datasource": { "type": "influxdb", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watth",
+          "decimals": 0,
+          "color": { "mode": "fixed", "fixedColor": "green" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "influxdb", "uid": "${datasource}" },
+          "query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name: \"Europe/Zurich\")\n\nday_start = date.truncate(t: v.timeRangeStop, unit: 1d)\n\ngrid_raw = from(bucket: \"waid-bucket\")\n  |> range(start: day_start, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"mqtt_consumer\" and r[\"_field\"] == \"total_act_power\")\n  |> drop(columns: [\"host\", \"topic\"])\n  |> group()\n\nexport_wh = grid_raw\n  |> map(fn: (r) => ({r with _value: if r._value < 0.0 then -r._value else 0.0}))\n  |> integral(unit: 1h)\n\nyield_wh = from(bucket: \"waid-bucket\")\n  |> range(start: day_start, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"solar\" and r[\"_field\"] == \"yieldday\" and r.channel == \"0\")\n  |> last()\n  |> map(fn: (r) => ({r with _field: \"yieldday\"}))\n\nunion(tables: [yield_wh, export_wh])\n  |> pivot(rowKey: [\"_stop\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({r with _value: r.yieldday - (if exists r.total_act_power then r.total_act_power else 0.0)}))"
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "type": "stat",
+      "title": "Exported today",
+      "description": "Solar fed back to the grid.",
+      "gridPos": { "h": 3, "w": 4, "x": 8, "y": 16 },
+      "datasource": { "type": "influxdb", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watth",
+          "decimals": 0,
+          "color": { "mode": "fixed", "fixedColor": "blue" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "influxdb", "uid": "${datasource}" },
+          "query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name: \"Europe/Zurich\")\n\nday_start = date.truncate(t: v.timeRangeStop, unit: 1d)\n\nfrom(bucket: \"waid-bucket\")\n  |> range(start: day_start, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"mqtt_consumer\" and r[\"_field\"] == \"total_act_power\")\n  |> drop(columns: [\"host\", \"topic\"])\n  |> group()\n  |> map(fn: (r) => ({r with _value: if r._value < 0.0 then -r._value else 0.0}))\n  |> integral(unit: 1h)"
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "type": "stat",
+      "title": "Imported today",
+      "description": "Energy drawn from the grid.",
+      "gridPos": { "h": 3, "w": 4, "x": 12, "y": 16 },
+      "datasource": { "type": "influxdb", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watth",
+          "decimals": 0,
+          "color": { "mode": "fixed", "fixedColor": "orange" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "influxdb", "uid": "${datasource}" },
+          "query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name: \"Europe/Zurich\")\n\nday_start = date.truncate(t: v.timeRangeStop, unit: 1d)\n\nfrom(bucket: \"waid-bucket\")\n  |> range(start: day_start, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"mqtt_consumer\" and r[\"_field\"] == \"total_act_power\")\n  |> drop(columns: [\"host\", \"topic\"])\n  |> group()\n  |> map(fn: (r) => ({r with _value: if r._value > 0.0 then r._value else 0.0}))\n  |> integral(unit: 1h)"
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "type": "stat",
+      "title": "House load today",
+      "description": "Total household consumption (import + self-consumed solar).",
+      "gridPos": { "h": 3, "w": 4, "x": 16, "y": 16 },
+      "datasource": { "type": "influxdb", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watth",
+          "decimals": 0,
+          "color": { "mode": "fixed", "fixedColor": "text" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "influxdb", "uid": "${datasource}" },
+          "query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name: \"Europe/Zurich\")\n\nday_start = date.truncate(t: v.timeRangeStop, unit: 1d)\n\ngrid_raw = from(bucket: \"waid-bucket\")\n  |> range(start: day_start, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"mqtt_consumer\" and r[\"_field\"] == \"total_act_power\")\n  |> drop(columns: [\"host\", \"topic\"])\n  |> group()\n\nsolar_raw = from(bucket: \"waid-bucket\")\n  |> range(start: day_start, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"solar\" and r[\"_field\"] == \"power\" and r.channel == \"0\")\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: true)\n  |> fill(value: 0.0)\n  |> drop(columns: [\"host\", \"channel\", \"serial\", \"topic\"])\n  |> group()\n\nunion(tables: [grid_raw, solar_raw])\n  |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({r with _value: r.total_act_power + (if exists r.power then r.power else 0.0)}))\n  |> filter(fn: (r) => r._value > 0.0)\n  |> integral(unit: 1h)"
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "type": "stat",
+      "title": "Yield total (all time)",
+      "description": "Total lifetime kWh from the inverter.",
+      "gridPos": { "h": 3, "w": 4, "x": 20, "y": 16 },
+      "datasource": { "type": "influxdb", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "decimals": 2,
+          "color": { "mode": "fixed", "fixedColor": "text" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "influxdb", "uid": "${datasource}" },
+          "query": "from(bucket: \"waid-bucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"solar\" and r[\"_field\"] == \"yieldtotal\" and r.channel == \"0\")\n  |> last()"
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "type": "barchart",
+      "title": "Daily energy (last 30 days)",
+      "description": "Solar yield and grid import/export per day from the downsampled archive. Grid import and export are gross (not net).",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 19 },
+      "datasource": { "type": "influxdb", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "decimals": 1,
+          "custom": {
+            "fillOpacity": 70,
+            "gradientMode": "none",
+            "lineWidth": 1,
+            "axisCenteredZero": false
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Solar yield" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Grid import" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Grid export" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "blue", "mode": "fixed" } }]
+          }
+        ]
+      },
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.7,
+        "groupWidth": 0.7,
+        "fullHighlight": false,
+        "stacking": "none",
+        "orientation": "auto",
+        "showValue": "never",
+        "legend": {
+          "calcs": ["sum", "mean"],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "influxdb", "uid": "${datasource}" },
+          "query": "import \"timezone\"\nimport \"date\"\noption location = timezone.location(name: \"Europe/Zurich\")\n\nstart = date.truncate(t: date.add(d: -30d, to: v.timeRangeStop), unit: 1d)\nstop = date.truncate(t: date.add(d: 1d, to: v.timeRangeStop), unit: 1d)\n\nsolar = from(bucket: \"waid-bucket-downsampled\")\n  |> range(start: start, stop: stop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"solar\" and r[\"_field\"] == \"yieldday\" and r.channel == \"0\")\n  |> aggregateWindow(every: 1d, fn: last, createEmpty: false, location: location)\n  |> map(fn: (r) => ({_time: r._time, _value: r._value / 1000.0, _field: \"Solar yield\"}))\n  |> drop(columns: [\"channel\", \"serial\", \"topic\", \"host\"])\n\nimport_ = from(bucket: \"waid-bucket-downsampled\")\n  |> range(start: start, stop: stop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"energy_daily\" and r[\"_field\"] == \"grid_import_kwh\")\n  |> map(fn: (r) => ({_time: r._time, _value: r._value, _field: \"Grid import\"}))\n\nexport_ = from(bucket: \"waid-bucket-downsampled\")\n  |> range(start: start, stop: stop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"energy_daily\" and r[\"_field\"] == \"grid_export_kwh\")\n  |> map(fn: (r) => ({_time: r._time, _value: r._value, _field: \"Grid export\"}))\n\nunion(tables: [solar, import_, export_])\n  |> group(columns: [\"_field\"])"
+        }
+      ]
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 39,
+  "tags": ["waid", "energy"],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "influxdb",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": { "selected": false, "text": "0.2238", "value": "0.2238" },
+        "hide": 0,
+        "name": "tariff",
+        "label": "Tariff (CHF/kWh)",
+        "options": [
+          { "selected": true, "text": "0.2238", "value": "0.2238" }
+        ],
+        "query": "0.2238",
+        "skipUrlSync": false,
+        "type": "textbox"
+      }
+    ]
+  },
+  "time": { "from": "now-24h", "to": "now" },
+  "timepicker": {},
+  "timezone": "Europe/Zurich",
+  "title": "Waid / Energy",
+  "uid": "waid-energy",
+  "version": 1
+}
