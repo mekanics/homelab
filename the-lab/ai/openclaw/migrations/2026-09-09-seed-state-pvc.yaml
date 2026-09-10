@@ -85,7 +85,7 @@ spec:
                 echo "No openclaw.sqlite on the share; Longhorn stays empty."
               fi
 
-              chmod 0755 /new
+              chmod 0755 /new 2>/dev/null || echo "WARN: chmod /new skipped (volume not owned by 1000)"
 
               echo "--- destination (Longhorn) ---"
               ls -lan /new/
