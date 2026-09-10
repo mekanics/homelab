@@ -131,19 +131,20 @@ openclaw:
         periodSeconds: 30
         timeoutSeconds: 10
         failureThreshold: 10
-    # Loopback exec, not kubelet httpGet. trustedProxies is 10.0.0.0/8 so
-    # ingress-nginx can inject X-Forwarded-User; that CIDR also covers the
-    # node's Cilium address, and kubelet httpGet from there is classified as
-    # unattributable proxy traffic. /readyz and /startupz then 403.
-    # /startupz (not /readyz): OpenClaw admission probe — a Slack account
-    # failure must not evict the Control UI from Service endpoints.
+    # Loopback exec, not kubelet httpGet. Live openclaw.json (PVC) must list
+    # only the ingress-nginx controller pod IP in gateway.trustedProxies — not
+    # 10.0.0.0/8. That supernet also covers kubelet/Cilium host IPs and
+    # SNATed clients, which OpenClaw then cannot attribute (403).
+    # After an ingress-nginx reschedule, replace the /32 and restart:
+    #   NGINX_IP=$(kubectl -n ingress-nginx get pods -l app.kubernetes.io/component=controller -o jsonpath='{.items[0].status.podIP}')
+    #   kubectl -n openclaw exec deploy/openclaw -c gateway -- \
+    #     openclaw config set gateway.trustedProxies "[\"$NGINX_IP\"]" --strict-json --replace
+    #   kubectl -n openclaw rollout restart deploy/openclaw
+    # /startupz (not /readyz) comes from chart 0.5.0+ as a loopback exec.
+    # Homelab only overrides timings so an event-loop stall still drops
+    # the pod from Service endpoints quickly.
     readiness:
       spec:
-        exec:
-          command:
-            - node
-            - -e
-            - "require('http').get('http://127.0.0.1:18789/startupz', r => process.exit(r.statusCode < 400 ? 0 : 1)).on('error', () => process.exit(1))"
         initialDelaySeconds: 10
         periodSeconds: 5
         timeoutSeconds: 3
