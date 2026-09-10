@@ -9,7 +9,7 @@ openclaw:
   # ReadWriteOnce — this replaces the gateway, it is not a second pod.
   # Chart 0.4.0+ honours this.
   debug:
-    enabled: false
+    enabled: true
 
   env:
     - name: TZ
@@ -50,25 +50,18 @@ openclaw:
       accessMode: ReadWriteOnce
       size: 1Gi
       retain: true
-    # Shared control-plane SQLite ($OPENCLAW_STATE_DIR/state/openclaw.sqlite).
-    # Must not live on the NFS home volume: WAL mode needs a shared-memory
-    # -shm file that NFS cannot provide, and nocto + actimeo=600 there hide
+    # Shared control-plane SQLite. Must not live on the NFS home volume:
+    # WAL needs a -shm file NFS cannot provide, and nocto + actimeo=600 hide
     # the attribute changes SQLite relies on.
     #
-    # Nests inside the `home` mount, which works only because the chart sorts
-    # persistence keys alphabetically and "home" < "state", so kubelet mounts
-    # the parent first. A key sorting before "home" cannot nest under it.
-    # Requires the Synology export to grant the NFS client root traversal —
-    # the container runtime resolves this mount target as uid 0. Root is
-    # currently squashed to an identity the share's ACL refuses, so a nested
-    # mount here fails: verified on a node with `mount --bind` inside a
-    # read-only mount of the export. Keep this disabled until that is fixed,
-    # then flip it and seed the volume via
-    # migrations/2026-09-09-seed-state-pvc.yaml.
+    # Sibling mount, not nested under `home`. kubelet would resolve a nested
+    # mount target as uid 0, and the Synology export squashes root. After the
+    # parked seed Job copies the database, NFS `state/` is replaced with a
+    # uid-1000 symlink to this path (migrations/2026-09-09-seed-state-pvc.yaml).
     state:
-      enabled: false
+      enabled: true
       type: pvc
-      mountPath: /home/node/.openclaw/state
+      mountPath: /home/node/.openclaw-state
       readOnly: false
       storageClass: longhorn
       accessMode: ReadWriteOnce

@@ -1,24 +1,20 @@
-# One-shot migration: seed the Longhorn `openclaw-state` PVC from the shared
-# control-plane database that currently lives on the NFS home volume.
+# One-shot migration: seed the Longhorn `openclaw-state` PVC from the NFS
+# home volume, then replace NFS `state/` with a symlink to the sibling mount.
 #
 # Not rendered by Helm or ArgoCD — only `templates/` is. Apply by hand.
 #
-# Why a separate Job rather than doing this in the gateway pod: the Longhorn
-# volume mounts *over* /home/node/.openclaw/state, so a pod with the normal
-# layout cannot see the NFS copy it is supposed to read. This Job mounts both
-# volumes side by side at non-nested paths instead.
+# Sidecar mounts, not a nested overlay: the gateway pod cannot see the NFS
+# `state/` directory once it is a symlink into Longhorn, and a nested
+# Longhorn mount on the export needs uid 0 (root squash). This Job mounts
+# both volumes side by side, copies, then rewrites the NFS path.
 #
 # Preconditions:
-#   1. The Synology export maps root to admin. Until then root cannot traverse
-#      the share at all and the copy fails. Verify on a node with:
-#        sudo mount -t nfs4 -o ro 192.168.10.12:/volume1/openclaw /mnt/x
-#        sudo ls /mnt/x/state/
-#   2. openclaw is deployed with debug.enabled=true, so the gateway is parked
-#      and has not created a fresh database on the empty volume.
-#   3. nodeName below matches the node holding the attached RWO volumes:
+#   1. debug.enabled=true (gateway parked, SQLite quiescent).
+#   2. persistence.state enabled at /home/node/.openclaw-state.
+#   3. nodeName matches the node holding the attached RWO volumes:
 #        kubectl -n openclaw get pod -o wide
 #
-# After it completes, set debug.enabled=false and let the gateway start.
+# After it completes, set debug.enabled=false.
 ---
 apiVersion: batch/v1
 kind: Job
@@ -34,16 +30,16 @@ spec:
       restartPolicy: Never
       # RWO volumes admit multiple pods only on the node they are attached to.
       nodeName: pi-homelab-master-2.local
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
       containers:
         - name: seed
           # renovate datasource=docker depName=busybox
           image: busybox:1.38
-          # Root, not 1000: the NFS `state` directory is mode 0000, so only the
-          # admin-mapped root identity can traverse it. Ownership is handed back
-          # to 1000:1000 at the end.
           securityContext:
-            runAsUser: 0
-            runAsGroup: 0
+            runAsUser: 1000
+            runAsGroup: 1000
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             capabilities:
@@ -53,6 +49,11 @@ spec:
             - sh
             - -ec
             - |
+              if [ -L /nfs/state ]; then
+                echo "Already migrated: /nfs/state -> $(readlink /nfs/state)"
+                exit 0
+              fi
+
               if [ -s /new/openclaw.sqlite ]; then
                 echo "REFUSING: /new/openclaw.sqlite already exists and is non-empty."
                 echo "The volume has already been seeded, or the gateway ran unparked."
@@ -62,47 +63,49 @@ spec:
               echo "--- source (NFS) ---"
               ls -lan /nfs/state/
 
-              if [ ! -f /nfs/state/openclaw.sqlite ]; then
-                echo "No openclaw.sqlite on the share; nothing to migrate."
-                echo "The gateway will create a fresh database. Exiting clean."
-                exit 0
+              if [ -f /nfs/state/openclaw.sqlite ]; then
+                # Parked gateway: quiescent SQLite, plain copy cannot tear WAL.
+                cp -a /nfs/state/openclaw.sqlite /new/
+                for sidecar in openclaw.sqlite-wal openclaw.sqlite-shm; do
+                  if [ -f "/nfs/state/$sidecar" ]; then
+                    cp -a "/nfs/state/$sidecar" /new/
+                    echo "copied $sidecar"
+                  fi
+                done
+
+                src=$(md5sum /nfs/state/openclaw.sqlite | awk '{print $1}')
+                dst=$(md5sum /new/openclaw.sqlite | awk '{print $1}')
+                echo "src md5=$src"
+                echo "dst md5=$dst"
+                if [ "$src" != "$dst" ]; then
+                  echo "FAILED: md5 mismatch"
+                  exit 1
+                fi
+              else
+                echo "No openclaw.sqlite on the share; Longhorn stays empty."
               fi
 
-              # -a preserves mtimes, which is how a stale -wal is spotted later.
-              # The gateway is parked, so the database is quiescent and a plain
-              # file copy cannot capture a torn database/WAL pair.
-              cp -a /nfs/state/openclaw.sqlite /new/
-              for sidecar in openclaw.sqlite-wal openclaw.sqlite-shm; do
-                if [ -f "/nfs/state/$sidecar" ]; then
-                  cp -a "/nfs/state/$sidecar" /new/
-                  echo "copied $sidecar"
-                fi
-              done
-
-              chown -R 1000:1000 /new
               chmod 0755 /new
 
               echo "--- destination (Longhorn) ---"
               ls -lan /new/
 
-              src=$(wc -c < /nfs/state/openclaw.sqlite)
-              dst=$(wc -c < /new/openclaw.sqlite)
-              if [ "$src" != "$dst" ]; then
-                echo "FAILED: size mismatch src=$src dst=$dst"
-                exit 1
-              fi
-              echo "OK: openclaw.sqlite copied and verified ($src bytes)"
+              echo "--- swapping NFS state/ for a symlink ---"
+              mv /nfs/state /nfs/state.nfs-migrated-2026-09-10
+              ln -s /home/node/.openclaw-state /nfs/state
+              echo "link: $(ls -ln /nfs/state)"
+
+              echo "OK"
           volumeMounts:
             - name: nfs
               mountPath: /nfs
-              readOnly: true
+              readOnly: false
             - name: state
               mountPath: /new
       volumes:
         - name: nfs
           persistentVolumeClaim:
             claimName: openclaw-home-nfs
-            readOnly: true
         - name: state
           persistentVolumeClaim:
             claimName: openclaw-state
