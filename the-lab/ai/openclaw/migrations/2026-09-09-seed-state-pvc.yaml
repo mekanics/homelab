@@ -1,5 +1,6 @@
 # One-shot migration: seed the Longhorn `openclaw-state` PVC from the NFS
-# home volume, then replace NFS `state/` with a symlink to the sibling mount.
+# home volume, then replace NFS `state/` with a symlink into a uid-1000
+# directory on the sibling volume (not the mount root).
 #
 # Not rendered by Helm or ArgoCD — only `templates/` is. Apply by hand.
 #
@@ -8,6 +9,10 @@
 # Longhorn mount on the export needs uid 0 (root squash). This Job mounts
 # both volumes side by side, copies, then rewrites the NFS path.
 #
+# The symlink target is /home/node/.openclaw-state/db, not the volume root.
+# OpenClaw chmod(state, 0700) follows the link; the fsGroup mount root is
+# owned by uid 0, so chmod there is EPERM.
+#
 # Preconditions:
 #   1. debug.enabled=true (gateway parked, SQLite quiescent).
 #   2. persistence.state enabled at /home/node/.openclaw-state.
@@ -15,6 +20,8 @@
 #        kubectl -n openclaw get pod -o wide
 #
 # After it completes, set debug.enabled=false.
+# If a previous run linked at the mount root, apply
+# migrations/2026-09-10-retarget-state-dir.yaml instead of re-running this.
 ---
 apiVersion: batch/v1
 kind: Job
@@ -49,32 +56,37 @@ spec:
             - sh
             - -ec
             - |
-              if [ -L /nfs/state ]; then
-                echo "Already migrated: /nfs/state -> $(readlink /nfs/state)"
+              want=/home/node/.openclaw-state/db
+              if [ -L /nfs/state ] && [ "$(readlink /nfs/state)" = "$want" ]; then
+                echo "Already migrated: /nfs/state -> $want"
                 exit 0
               fi
 
-              if [ -s /new/openclaw.sqlite ]; then
-                echo "REFUSING: /new/openclaw.sqlite already exists and is non-empty."
+              if [ -s /new/db/openclaw.sqlite ] || [ -s /new/openclaw.sqlite ]; then
+                echo "REFUSING: sqlite already exists on the Longhorn volume."
                 echo "The volume has already been seeded, or the gateway ran unparked."
+                echo "If the symlink still points at the mount root, apply"
+                echo "migrations/2026-09-10-retarget-state-dir.yaml instead."
                 exit 1
               fi
 
               echo "--- source (NFS) ---"
               ls -lan /nfs/state/
 
+              mkdir -m 0700 /new/db
+
               if [ -f /nfs/state/openclaw.sqlite ]; then
                 # Parked gateway: quiescent SQLite, plain copy cannot tear WAL.
-                cp -a /nfs/state/openclaw.sqlite /new/
+                cp -a /nfs/state/openclaw.sqlite /new/db/
                 for sidecar in openclaw.sqlite-wal openclaw.sqlite-shm; do
                   if [ -f "/nfs/state/$sidecar" ]; then
-                    cp -a "/nfs/state/$sidecar" /new/
+                    cp -a "/nfs/state/$sidecar" /new/db/
                     echo "copied $sidecar"
                   fi
                 done
 
                 src=$(md5sum /nfs/state/openclaw.sqlite | awk '{print $1}')
-                dst=$(md5sum /new/openclaw.sqlite | awk '{print $1}')
+                dst=$(md5sum /new/db/openclaw.sqlite | awk '{print $1}')
                 echo "src md5=$src"
                 echo "dst md5=$dst"
                 if [ "$src" != "$dst" ]; then
@@ -85,14 +97,14 @@ spec:
                 echo "No openclaw.sqlite on the share; Longhorn stays empty."
               fi
 
-              chmod 0755 /new 2>/dev/null || echo "WARN: chmod /new skipped (volume not owned by 1000)"
+              chmod 0700 /new/db
 
               echo "--- destination (Longhorn) ---"
-              ls -lan /new/
+              ls -lan /new/db/
 
               echo "--- swapping NFS state/ for a symlink ---"
               mv /nfs/state /nfs/state.nfs-migrated-2026-09-10
-              ln -s /home/node/.openclaw-state /nfs/state
+              ln -s "$want" /nfs/state
               echo "link: $(ls -ln /nfs/state)"
 
               echo "OK"

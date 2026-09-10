@@ -1,0 +1,76 @@
+# One-shot: move sqlite off the Longhorn mount root into a uid-1000
+# directory, then point NFS state/ at that directory.
+#
+# OpenClaw chmod(state, 0700) follows the symlink. The volume root is
+# root:1000 (fsGroup) so chmod is EPERM. A child dir owned by 1000 works.
+#
+# Not rendered by Helm. Apply by hand. Idempotent if already retargeted.
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: openclaw-retarget-state-dir
+  namespace: openclaw
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      name: openclaw-retarget-state-dir
+    spec:
+      restartPolicy: Never
+      nodeName: pi-homelab-master-2.local
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+      containers:
+        - name: retarget
+          # renovate datasource=docker depName=busybox
+          image: busybox:1.38
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          command:
+            - sh
+            - -ec
+            - |
+              target=/home/node/.openclaw-state/db
+              if [ -L /nfs/state ] && [ "$(readlink /nfs/state)" = "$target" ]; then
+                echo "Already retargeted: /nfs/state -> $target"
+                ls -lan /new/db/
+                exit 0
+              fi
+
+              mkdir -m 0700 /new/db
+              for f in openclaw.sqlite openclaw.sqlite-wal openclaw.sqlite-shm; do
+                if [ -f "/new/$f" ]; then
+                  mv "/new/$f" /new/db/
+                  echo "moved $f"
+                fi
+              done
+              chmod 0700 /new/db
+
+              echo "--- destination ---"
+              ls -lan /new/db/
+
+              rm /nfs/state
+              ln -s "$target" /nfs/state
+              echo "link: $(ls -ln /nfs/state)"
+              echo "OK"
+          volumeMounts:
+            - name: nfs
+              mountPath: /nfs
+              readOnly: false
+            - name: state
+              mountPath: /new
+      volumes:
+        - name: nfs
+          persistentVolumeClaim:
+            claimName: openclaw-home-nfs
+        - name: state
+          persistentVolumeClaim:
+            claimName: openclaw-state

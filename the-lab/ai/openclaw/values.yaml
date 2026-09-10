@@ -56,8 +56,10 @@ openclaw:
     #
     # Sibling mount, not nested under `home`. kubelet would resolve a nested
     # mount target as uid 0, and the Synology export squashes root. After the
-    # parked seed Job copies the database, NFS `state/` is replaced with a
-    # uid-1000 symlink to this path (migrations/2026-09-09-seed-state-pvc.yaml).
+    # parked seed Job copies the database into a uid-1000 directory on this
+    # volume, NFS `state/` is a symlink to that directory — not the mount root.
+    # OpenClaw chmod(state, 0700) follows the symlink and EPERMs on an
+    # fsGroup-owned volume root (migrations/2026-09-09-seed-state-pvc.yaml).
     state:
       enabled: true
       type: pvc
