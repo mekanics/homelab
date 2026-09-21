@@ -1,0 +1,139 @@
+# One-shot migration: copy NFS `agents/` onto the Longhorn `openclaw-state`
+# volume, then replace NFS `agents/` with a symlink into a uid-1000
+# directory on the sibling volume (not the mount root).
+#
+# Not rendered by Helm or ArgoCD — only `templates/` is. Apply by hand.
+#
+# Sidecar mounts, not a nested overlay: the gateway pod cannot see the NFS
+# `agents/` directory once it is a symlink into Longhorn, and a nested
+# Longhorn mount on the export needs uid 0 (root squash). This Job mounts
+# both volumes side by side, copies, then rewrites the NFS path.
+#
+# The symlink target is /home/node/.openclaw-state/agents, not the volume
+# root. OpenClaw chmod follows the link; the fsGroup mount root is owned
+# by uid 0, so chmod there is EPERM. Control-plane db/ is left untouched.
+#
+# Preconditions:
+#   1. debug.enabled=true (gateway parked, SQLite quiescent).
+#   2. persistence.state size is 10Gi and the filesystem has been resized
+#      (`df -h /home/node/.openclaw-state` shows ~10G).
+#   3. nodeName matches the node holding the attached RWO volumes:
+#        kubectl -n openclaw get pod -o wide
+#   4. Existing volume locality (StorageClass edits do not propagate):
+#        VOL=$(kubectl get pv pvc-$(kubectl -n openclaw get pvc openclaw-state -o jsonpath='{.metadata.uid}') -o jsonpath='{.spec.csi.volumeHandle}')
+#        kubectl -n longhorn-system patch volume.longhorn.io "$VOL" \
+#          --type merge -p '{"spec":{"dataLocality":"best-effort"}}'
+#      Wait for a replica on the gateway node before applying this Job.
+#
+# After it completes, set debug.enabled=false.
+# Leave agents.nfs-migrated-2026-09-21 on the share until a clean unpark.
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: openclaw-seed-agents
+  namespace: openclaw
+spec:
+  backoffLimit: 0 # A partial copy needs inspection, not a blind retry.
+  template:
+    metadata:
+      name: openclaw-seed-agents
+    spec:
+      restartPolicy: Never
+      # RWO volumes admit multiple pods only on the node they are attached to.
+      # Replace with the parked gateway node before apply.
+      nodeName: pi-homelab-master-1.local
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+      containers:
+        - name: seed
+          # renovate datasource=docker depName=busybox
+          image: busybox:1.38
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          command:
+            - sh
+            - -ec
+            - |
+              want=/home/node/.openclaw-state/agents
+              if [ -L /nfs/agents ] && [ "$(readlink /nfs/agents)" = "$want" ]; then
+                echo "Already migrated: /nfs/agents -> $want"
+                exit 0
+              fi
+
+              if [ -e /nfs/agents ] && [ ! -d /nfs/agents ]; then
+                echo "REFUSING: /nfs/agents exists and is not a directory"
+                ls -lan /nfs/agents
+                exit 1
+              fi
+
+              if [ -d /new/agents ]; then
+                if find /new/agents -name 'openclaw-agent.sqlite' -type f | grep -q .; then
+                  echo "REFUSING: agent sqlite already exists on the Longhorn volume."
+                  echo "The volume has already been seeded, or a previous copy is partial."
+                  find /new/agents -name 'openclaw-agent.sqlite' -type f -exec ls -ln {} \;
+                  exit 1
+                fi
+              fi
+
+              echo "--- source (NFS) ---"
+              du -sh /nfs/agents
+              find /nfs/agents -name 'openclaw-agent.sqlite' -type f -exec ls -ln {} \;
+
+              mkdir -m 0700 /new/agents
+
+              # Parked gateway: quiescent SQLite, plain copy cannot tear WAL.
+              # Synology @eaDir streams cannot chown onto ext4; busybox still
+              # copies the files and exits 0. Those dirs are NAS metadata only.
+              cp -a /nfs/agents/. /new/agents/
+
+              echo "--- checksums ---"
+              failed=0
+              for src in $(find /nfs/agents -name 'openclaw-agent.sqlite' -type f); do
+                rel=${src#/nfs/agents/}
+                dst=/new/agents/$rel
+                srcsum=$(md5sum "$src" | awk '{print $1}')
+                dstsum=$(md5sum "$dst" | awk '{print $1}')
+                echo "$rel src=$srcsum dst=$dstsum"
+                if [ "$srcsum" != "$dstsum" ]; then
+                  echo "FAILED: md5 mismatch $rel"
+                  failed=1
+                fi
+              done
+              if [ "$failed" -ne 0 ]; then
+                exit 1
+              fi
+
+              chmod 0700 /new/agents
+
+              echo "--- destination (Longhorn) ---"
+              du -sh /new/agents
+              ls -lan /new/db/
+              find /new/agents -name 'openclaw-agent.sqlite' -type f -exec ls -ln {} \;
+
+              echo "--- swapping NFS agents/ for a symlink ---"
+              mv /nfs/agents /nfs/agents.nfs-migrated-2026-09-21
+              ln -s "$want" /nfs/agents
+              echo "link: $(ls -ln /nfs/agents)"
+
+              echo "OK"
+          volumeMounts:
+            - name: nfs
+              mountPath: /nfs
+              readOnly: false
+            - name: state
+              mountPath: /new
+      volumes:
+        - name: nfs
+          persistentVolumeClaim:
+            claimName: openclaw-home-nfs
+        - name: state
+          persistentVolumeClaim:
+            claimName: openclaw-state

@@ -50,16 +50,19 @@ openclaw:
       accessMode: ReadWriteOnce
       size: 1Gi
       retain: true
-    # Shared control-plane SQLite. Must not live on the NFS home volume:
+    # Longhorn sibling volume for SQLite. Must not live on the NFS home volume:
     # WAL needs a -shm file NFS cannot provide, and nocto + actimeo=600 hide
     # the attribute changes SQLite relies on.
     #
+    # Holds both control-plane db/ and the per-agent agents/ tree. NFS
+    # `.openclaw/state` and `.openclaw/agents` are symlinks into uid-1000
+    # child dirs on this volume — not the mount root. OpenClaw chmod(0700)
+    # follows those links; the fsGroup mount root is owned by uid 0, so
+    # chmod there is EPERM (migrations/2026-09-09-seed-state-pvc.yaml,
+    # migrations/2026-09-21-seed-agents-pvc.yaml).
+    #
     # Sibling mount, not nested under `home`. kubelet would resolve a nested
-    # mount target as uid 0, and the Synology export squashes root. After the
-    # parked seed Job copies the database into a uid-1000 directory on this
-    # volume, NFS `state/` is a symlink to that directory — not the mount root.
-    # OpenClaw chmod(state, 0700) follows the symlink and EPERMs on an
-    # fsGroup-owned volume root (migrations/2026-09-09-seed-state-pvc.yaml).
+    # mount target as uid 0, and the Synology export squashes root.
     state:
       enabled: true
       type: pvc
@@ -67,8 +70,12 @@ openclaw:
       readOnly: false
       storageClass: longhorn
       accessMode: ReadWriteOnce
-      size: 2Gi
+      size: 10Gi
       retain: true
+  # Integrity-check / compile scratch. 1Gi evicted the gateway (emptyDir cap).
+  tmpDir:
+    enabled: true
+    sizeLimit: 2Gi
   ingress:
     enabled: true
     className: nginx

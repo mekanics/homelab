@@ -188,6 +188,9 @@ longhorn:
   persistence:
     # If you have three or more nodes for storage, use 3; otherwise use 2
     defaultClassReplicaCount: 2
+    # Keep a replica on the same node as the pod when the disk allows it.
+    # Existing volumes do not pick this up — patch Volume.spec.dataLocality.
+    defaultDataLocality: best-effort
 
   ingress:
     enabled: true
