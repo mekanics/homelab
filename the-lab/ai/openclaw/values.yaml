@@ -9,7 +9,7 @@ openclaw:
   # ReadWriteOnce — this replaces the gateway, it is not a second pod.
   # Chart 0.4.0+ honours this.
   debug:
-    enabled: true
+    enabled: false
 
   env:
     - name: TZ
