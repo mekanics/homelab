@@ -72,10 +72,10 @@ openclaw:
       accessMode: ReadWriteOnce
       size: 10Gi
       retain: true
-  # Integrity-check / compile scratch. 1Gi evicted the gateway (emptyDir cap).
+  # Integrity-check / compile scratch. 1Gi and 2Gi both evicted the gateway.
   tmpDir:
     enabled: true
-    sizeLimit: 2Gi
+    sizeLimit: 4Gi
   ingress:
     enabled: true
     className: nginx
