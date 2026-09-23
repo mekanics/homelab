@@ -11,6 +11,20 @@ openclaw:
   debug:
     enabled: false
 
+  # TEMPORARY — remove once the idle-CPU profile is captured (see resources).
+  # Loopback-only, so nothing outside the pod can reach it. Deliberately set
+  # here rather than in NODE_OPTIONS: the gateway spawns ~6 Codex children and
+  # the readiness probe shells out to node, and all of them would inherit the
+  # flag and fight over 9229. Worker threads still register as separate
+  # inspector targets, reachable over the NodeWorker CDP domain.
+  gateway:
+    command:
+      - node
+      - --inspect=127.0.0.1:9229
+      - /app/dist/index.js
+      - gateway
+      - run
+
   env:
     - name: TZ
       value: Europe/Zurich
