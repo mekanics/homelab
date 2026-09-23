@@ -168,8 +168,11 @@ openclaw:
     # while chasing it: heap exhaustion (heap 600-780MiB against a 3072MiB
     # ceiling), the daily 10:14 integrity verification, a looping memory
     # reindex (memory_index_state.revision static), and stuck-session
-    # recovery. So sessionCatalog can be turned back on whenever wanted; it
-    # is unrelated. Re-enable:
+    # recovery. Turning sessionCatalog back on should be safe, but note what
+    # was and was not measured: it stayed off for the whole investigation, so
+    # what is proven is that it is not required to cause the burn — not that
+    # it costs nothing. Re-enable as an isolated change and watch cpu.stat for
+    # a day before assuming it is free. Re-enable:
     #   kubectl -n openclaw exec deploy/openclaw -c gateway -- \
     #     openclaw config set plugins.entries.codex.config.sessionCatalog.enabled true \
     #     --strict-json
