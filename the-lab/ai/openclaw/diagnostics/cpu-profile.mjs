@@ -57,10 +57,23 @@ await new Promise((r) => setTimeout(r, 1500));
 const targets = [{ sessionId: undefined, label: 'MainThread' }];
 for (const [sessionId, title] of workers) targets.push({ sessionId, label: `Worker:${title}` });
 
+// Worker targets often already have a recording in flight, which makes
+// setSamplingInterval fail and leaves Profiler.start a no-op — so the later stop
+// reports "No recording profiles found". Discard any stale recording first, then
+// own the lifecycle ourselves. Failures here are informational, not fatal.
 for (const t of targets) {
-  await send('Profiler.enable', {}, t.sessionId);
-  await send('Profiler.setSamplingInterval', { interval: 1000 }, t.sessionId);
-  await send('Profiler.start', {}, t.sessionId);
+  for (const [method, params, quiet] of [
+    ['Profiler.enable', {}, false],
+    ['Profiler.stop', {}, true],
+    ['Profiler.setSamplingInterval', { interval: 1000 }, false],
+    ['Profiler.start', {}, false],
+  ]) {
+    try {
+      await send(method, params, t.sessionId);
+    } catch (err) {
+      if (!quiet) console.log(`note: ${t.label} ${method} -> ${err.message}`);
+    }
+  }
 }
 
 console.log(`profiling ${targets.length} target(s) for ${DURATION_MS}ms: ${targets.map((t) => t.label).join(', ')}`);

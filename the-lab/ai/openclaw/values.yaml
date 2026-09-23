@@ -11,20 +11,6 @@ openclaw:
   debug:
     enabled: false
 
-  # TEMPORARY — remove once the idle-CPU profile is captured (see resources).
-  # Loopback-only, so nothing outside the pod can reach it. Deliberately set
-  # here rather than in NODE_OPTIONS: the gateway spawns ~6 Codex children and
-  # the readiness probe shells out to node, and all of them would inherit the
-  # flag and fight over 9229. Worker threads still register as separate
-  # inspector targets, reachable over the NodeWorker CDP domain.
-  gateway:
-    command:
-      - node
-      - --inspect=127.0.0.1:9229
-      - /app/dist/index.js
-      - gateway
-      - run
-
   env:
     - name: TZ
       value: Europe/Zurich
@@ -114,11 +100,20 @@ openclaw:
         hosts:
           - *host
 
-  # The gateway idles at ~1.4 cores (main thread plus one Node worker thread), so
-  # a 1-core limit throttled it in 83% of all scheduling periods — 11.4h of stall
-  # in 29h. Requesting 1 also stops the scheduler bin-packing against a 250m
-  # request the pod exceeds 4x. Limit 2 leaves headroom on the 4-core Pi 5 while
-  # still capping the blast radius of the idle-spin bug below.
+  # Do not lower cpu back to 1. Cold start needs ~1.3-1.4 cores for a few
+  # minutes — plugin-registry resolution, provider catalog prep, and opening 19
+  # agent databases (user_version + integrity checks). Capped at 1 core it can
+  # never finish that warmup inside its quota, so it livelocks: the event loop
+  # stalls, the liveness/memory diagnostics fire continuously, and session
+  # bookkeeping queues behind work that never drains. Observed stuck that way
+  # for 29h straight — 83% of all scheduling periods throttled, 11.4h of stall,
+  # pinned at 100% of quota with active=0 waiting=0 queued=0 the whole time. A
+  # restart does not help; it is just another cold start into the same trap.
+  #
+  # At limit 2 the same build warms up in ~5min and then idles at 4% of one
+  # core with throttling essentially gone (2 of 535 periods). Request 1 matches
+  # real steady-state scheduling need and stops the scheduler bin-packing
+  # against a 250m request the pod exceeded 4x.
   resources:
     requests:
       cpu: '1'
@@ -168,26 +163,24 @@ openclaw:
     # harness stay on. Helm does not own this file — init-config only seeds
     # when openclaw.json is missing.
     #
-    # 2026-09-23: disabling it did NOT fix the CPU burn — do not treat this
-    # as the cause. With sessionCatalog off the gateway still idles at ~1.4
-    # cores: ~45% in one Node worker thread, ~43% on the main thread, while
-    # its own diagnostics report active=0 waiting=0 queued=0 and only ~171
-    # audit events per 24h. Ruled out alongside it: heap exhaustion (heap
-    # 600-780MiB against a 3072MiB ceiling), the daily 10:14 integrity
-    # verification, a looping memory reindex (memory_index_state.revision
-    # static), and stuck-session recovery. Root cause still open; needs a V8
-    # CPU profile via --inspect (SIGUSR1 restarts the gateway, see below).
-    # Re-enable:
+    # 2026-09-23: this was never the cause of the CPU burn — that was the
+    # 1-core limit starving cold start (see resources below). Also ruled out
+    # while chasing it: heap exhaustion (heap 600-780MiB against a 3072MiB
+    # ceiling), the daily 10:14 integrity verification, a looping memory
+    # reindex (memory_index_state.revision static), and stuck-session
+    # recovery. So sessionCatalog can be turned back on whenever wanted; it
+    # is unrelated. Re-enable:
     #   kubectl -n openclaw exec deploy/openclaw -c gateway -- \
     #     openclaw config set plugins.entries.codex.config.sessionCatalog.enabled true \
     #     --strict-json
     #   kubectl -n openclaw rollout restart deploy/openclaw
     #
-    # Do not `kill -USR1 1` to open the Node inspector: OpenClaw traps SIGUSR1
-    # as its own restart signal, so it restarts the gateway (~7s drain plus a
-    # cold start) and never binds 9229. To profile, add --inspect to
-    # NODE_OPTIONS above and roll the deploy; worker threads register as
-    # separate inspector targets reachable over the NodeWorker CDP domain.
+    # To CPU-profile the gateway, see diagnostics/cpu-profile.mjs. Do not
+    # `kill -USR1 1` to open the inspector: OpenClaw traps SIGUSR1 as its own
+    # restart signal, so it restarts the gateway (~7s drain plus a cold start)
+    # and never binds 9229. Set --inspect=127.0.0.1:9229 on `gateway.command`
+    # instead of NODE_OPTIONS — the ~6 Codex children and the node-based
+    # readiness probe inherit NODE_OPTIONS and would collide on 9229.
     #
     # Official plugins live on the home PVC (~/.openclaw/npm), not in the
     # image. After an image bump, update drifted ids then roll the deploy.
