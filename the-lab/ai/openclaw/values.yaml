@@ -100,13 +100,18 @@ openclaw:
         hosts:
           - *host
 
+  # The gateway idles at ~1.4 cores (main thread plus one Node worker thread), so
+  # a 1-core limit throttled it in 83% of all scheduling periods — 11.4h of stall
+  # in 29h. Requesting 1 also stops the scheduler bin-packing against a 250m
+  # request the pod exceeds 4x. Limit 2 leaves headroom on the 4-core Pi 5 while
+  # still capping the blast radius of the idle-spin bug below.
   resources:
     requests:
-      cpu: 250m
+      cpu: '1'
       memory: 2Gi
     limits:
       memory: 4Gi
-      cpu: '1'
+      cpu: '2'
 
   priorityClassName: high-priority-homelab
 
@@ -141,6 +146,48 @@ openclaw:
     #   NGINX_IP=$(kubectl -n ingress-nginx get pods -l app.kubernetes.io/component=controller -o jsonpath='{.items[0].status.podIP}')
     #   kubectl -n openclaw exec deploy/openclaw -c gateway -- \
     #     openclaw config set gateway.trustedProxies "[\"$NGINX_IP\"]" --strict-json --replace
+    #   kubectl -n openclaw rollout restart deploy/openclaw
+    #
+    # 2026-09-22: Codex session catalog is off on the live PVC config
+    # (`plugins.entries.codex.config.sessionCatalog.enabled=false`), on the
+    # theory that 2026.9.5 walks cold catalog pages while idle. Plugin and
+    # harness stay on. Helm does not own this file — init-config only seeds
+    # when openclaw.json is missing.
+    #
+    # 2026-09-23: disabling it did NOT fix the CPU burn — do not treat this
+    # as the cause. With sessionCatalog off the gateway still idles at ~1.4
+    # cores: ~45% in one Node worker thread, ~43% on the main thread, while
+    # its own diagnostics report active=0 waiting=0 queued=0 and only ~171
+    # audit events per 24h. Ruled out alongside it: heap exhaustion (heap
+    # 600-780MiB against a 3072MiB ceiling), the daily 10:14 integrity
+    # verification, a looping memory reindex (memory_index_state.revision
+    # static), and stuck-session recovery. Root cause still open; needs a V8
+    # CPU profile via --inspect (SIGUSR1 restarts the gateway, see below).
+    # Re-enable:
+    #   kubectl -n openclaw exec deploy/openclaw -c gateway -- \
+    #     openclaw config set plugins.entries.codex.config.sessionCatalog.enabled true \
+    #     --strict-json
+    #   kubectl -n openclaw rollout restart deploy/openclaw
+    #
+    # Do not `kill -USR1 1` to open the Node inspector: OpenClaw traps SIGUSR1
+    # as its own restart signal, so it restarts the gateway (~7s drain plus a
+    # cold start) and never binds 9229. To profile, add --inspect to
+    # NODE_OPTIONS above and roll the deploy; worker threads register as
+    # separate inspector targets reachable over the NodeWorker CDP domain.
+    #
+    # Official plugins live on the home PVC (~/.openclaw/npm), not in the
+    # image. After an image bump, update drifted ids then roll the deploy.
+    # npm stages under /tmp and will evict the 4Gi tmp EmptyDir unless
+    # cache and tmp both sit on the home volume:
+    #   kubectl -n openclaw exec deploy/openclaw -c gateway -- sh -c '
+    #     mkdir -p /home/node/.openclaw/.npm-cache /home/node/.openclaw/.npm-tmp
+    #     export NPM_CONFIG_CACHE=/home/node/.openclaw/.npm-cache
+    #     export NPM_CONFIG_TMP=/home/node/.openclaw/.npm-tmp
+    #     export TMPDIR=/home/node/.openclaw/.npm-tmp
+    #     openclaw plugins update acpx
+    #     openclaw plugins update perplexity
+    #     openclaw plugins update slack
+    #   '
     #   kubectl -n openclaw rollout restart deploy/openclaw
     # /startupz (not /readyz) comes from chart 0.5.0+ as a loopback exec.
     # Homelab only overrides timings so an event-loop stall still drops
