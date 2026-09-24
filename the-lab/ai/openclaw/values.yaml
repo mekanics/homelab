@@ -82,6 +82,17 @@ openclaw:
   # since a restart reuses the pod's emptyDir — a 6-restart crash loop reached
   # 5.2Gi on its own. 8Gi absorbs that. This is disk-backed, not tmpfs, so it
   # is not RAM; the node has ~330Gi free.
+  #
+  # They are only created during cold start, not during normal operation
+  # (13 dirs at start, still 13 after 23min of serving an agent run), so a
+  # long crash loop is the only thing that can still reach 8Gi. Dirs from
+  # earlier container lives are orphans and safe to reclaim — the running
+  # gateway holds no descriptors in any of them. Use the current pid 1 start
+  # time as the cutoff so nothing in the live cold start is touched:
+  #   kubectl -n openclaw exec deploy/openclaw -c gateway -- sh -c \
+  #     'find /tmp -maxdepth 1 \( -name "openclaw-plugin-build-*" \
+  #        -o -name "openclaw-model-catalog-*" \) \
+  #        ! -newermt "$(ps -o lstart= -p 1)" -exec rm -rf {} +'
   tmpDir:
     enabled: true
     sizeLimit: 8Gi
