@@ -72,10 +72,17 @@ openclaw:
       accessMode: ReadWriteOnce
       size: 10Gi
       retain: true
-  # Integrity-check / compile scratch. 1Gi and 2Gi both evicted the gateway.
+  # Integrity-check / compile scratch. 1Gi, 2Gi and 4Gi have each evicted the
+  # gateway. Cold start alone settles around 2.5Gi: the gateway stages every
+  # plugin build as its own /tmp/openclaw-plugin-build-* dir (~576Mi for the
+  # big ones) plus /tmp/openclaw-model-catalog-*, and does not clean them up
+  # while it runs. That left under 1.5Gi of headroom at 4Gi, so a single
+  # `openclaw plugins install` pushed it over and kubelet evicted the pod
+  # (2026-09-24). 8Gi keeps room for a plugin install on a warm gateway; the
+  # emptyDir is backed by node disk with ~330Gi free.
   tmpDir:
     enabled: true
-    sizeLimit: 4Gi
+    sizeLimit: 8Gi
   ingress:
     enabled: true
     className: nginx
@@ -185,20 +192,29 @@ openclaw:
     # instead of NODE_OPTIONS — the ~6 Codex children and the node-based
     # readiness probe inherit NODE_OPTIONS and would collide on 9229.
     #
-    # Official plugins live on the home PVC (~/.openclaw/npm), not in the
-    # image. After an image bump, update drifted ids then roll the deploy.
-    # npm stages under /tmp and will evict the 4Gi tmp EmptyDir unless
-    # cache and tmp both sit on the home volume:
-    #   kubectl -n openclaw exec deploy/openclaw -c gateway -- sh -c '
-    #     mkdir -p /home/node/.openclaw/.npm-cache /home/node/.openclaw/.npm-tmp
-    #     export NPM_CONFIG_CACHE=/home/node/.openclaw/.npm-cache
-    #     export NPM_CONFIG_TMP=/home/node/.openclaw/.npm-tmp
-    #     export TMPDIR=/home/node/.openclaw/.npm-tmp
-    #     openclaw plugins update acpx
-    #     openclaw plugins update perplexity
-    #     openclaw plugins update slack
-    #   '
-    #   kubectl -n openclaw rollout restart deploy/openclaw
+    # Official plugins live on the home PVC (~/.openclaw/npm), not in the image,
+    # so they drift from the gateway independently. `openclaw plugins list`
+    # shows installed versions; `gateway status --deep` names the drift.
+    #
+    # Two traps here, both learned the hard way on 2026-09-24:
+    #
+    # 1. Do NOT use `plugins update <id>`. It installs npm latest, which runs
+    #    ahead of this image — acpx was already 2026.9.7 on npm while the
+    #    gateway was 2026.9.5, so "update" widens the drift it is meant to
+    #    close. Pin to the gateway version instead:
+    #      openclaw plugins install @openclaw/acpx@<gateway version>
+    #
+    # 2. Exporting NPM_CONFIG_CACHE / NPM_CONFIG_TMP / TMPDIR in the exec shell
+    #    does NOT redirect the staging. The build runs inside the gateway
+    #    process, which has its own env, and it stages under /tmp regardless.
+    #    Doing this on a warm gateway evicted the pod on the tmp limit. Roll
+    #    first so /tmp is fresh, then install, then roll again to load it:
+    #      kubectl -n openclaw rollout restart deploy/openclaw
+    #      kubectl -n openclaw exec deploy/openclaw -c gateway -- \
+    #        openclaw plugins install @openclaw/acpx@2026.9.5
+    #      kubectl -n openclaw rollout restart deploy/openclaw
+    #    Watch headroom while it runs:
+    #      kubectl -n openclaw exec deploy/openclaw -c gateway -- du -sh /tmp
     # /startupz (not /readyz) comes from chart 0.5.0+ as a loopback exec.
     # Homelab only overrides timings so an event-loop stall still drops
     # the pod from Service endpoints quickly.
