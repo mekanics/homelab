@@ -63,6 +63,20 @@ openclaw:
     #
     # Sibling mount, not nested under `home`. kubelet would resolve a nested
     # mount target as uid 0, and the Synology export squashes root.
+    #
+    # The 2026-09-21 agents migration left every agent registered twice in
+    # agent_databases — once relative (written by the migration) and once
+    # absolute (rewritten on every startup) — because upstream derives the
+    # state dir as `db/` and so never relativises — resolveOpenClawState-
+    # DirForDatabasePath('<state>/db/openclaw.sqlite') returns '<state>/db',
+    # so path.relative to a sibling agents/ path starts with '..' and the
+    # relative branch is unreachable. Stale rows removed 2026-09-24 (19 -> 10,
+    # keeping `default`, which had no absolute counterpart); backup sits
+    # beside the db as openclaw.sqlite.bak-*. Expect duplicates back after
+    # any future migration that writes relative paths:
+    #   DELETE FROM agent_databases WHERE path NOT LIKE '/%' AND EXISTS (
+    #     SELECT 1 FROM agent_databases b
+    #     WHERE b.agent_id = agent_databases.agent_id AND b.path LIKE '/%');
     state:
       enabled: true
       type: pvc
