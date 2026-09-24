@@ -78,8 +78,10 @@ openclaw:
   # big ones) plus /tmp/openclaw-model-catalog-*, and does not clean them up
   # while it runs. That left under 1.5Gi of headroom at 4Gi, so a single
   # `openclaw plugins install` pushed it over and kubelet evicted the pod
-  # (2026-09-24). 8Gi keeps room for a plugin install on a warm gateway; the
-  # emptyDir is backed by node disk with ~330Gi free.
+  # (2026-09-24). The build dirs also accumulate across container restarts,
+  # since a restart reuses the pod's emptyDir — a 6-restart crash loop reached
+  # 5.2Gi on its own. 8Gi absorbs that. This is disk-backed, not tmpfs, so it
+  # is not RAM; the node has ~330Gi free.
   tmpDir:
     enabled: true
     sizeLimit: 8Gi
@@ -204,17 +206,23 @@ openclaw:
     #    close. Pin to the gateway version instead:
     #      openclaw plugins install @openclaw/acpx@<gateway version>
     #
-    # 2. Exporting NPM_CONFIG_CACHE / NPM_CONFIG_TMP / TMPDIR in the exec shell
-    #    does NOT redirect the staging. The build runs inside the gateway
-    #    process, which has its own env, and it stages under /tmp regardless.
-    #    Doing this on a warm gateway evicted the pod on the tmp limit. Roll
-    #    first so /tmp is fresh, then install, then roll again to load it:
-    #      kubectl -n openclaw rollout restart deploy/openclaw
+    # 2. Do NOT install against a running gateway. The build needs ~2Gi of its
+    #    own anonymous memory while the gateway already holds ~2.2Gi, which does
+    #    not fit the 4Gi limit — the kernel OOM-killed the gateway mid-install
+    #    (2026-09-24), and a prior attempt at 4Gi tmp was evicted on disk. Note
+    #    that exporting NPM_CONFIG_CACHE / NPM_CONFIG_TMP / TMPDIR in the exec
+    #    shell does not help: the build runs in the gateway process, not the
+    #    CLI, and stages under /tmp regardless.
+    #
+    #    Park the gateway first (debug.enabled=true → sleep infinity), which
+    #    frees both the memory and the state lock, then install and unpark:
+    #      # set debug.enabled: true above, commit, let ArgoCD sync
     #      kubectl -n openclaw exec deploy/openclaw -c gateway -- \
     #        openclaw plugins install @openclaw/acpx@2026.9.5
-    #      kubectl -n openclaw rollout restart deploy/openclaw
+    #      # set debug.enabled back to false, commit, let ArgoCD sync
     #    Watch headroom while it runs:
-    #      kubectl -n openclaw exec deploy/openclaw -c gateway -- du -sh /tmp
+    #      kubectl -n openclaw exec deploy/openclaw -c gateway -- sh -c \
+    #        'du -sh /tmp; cat /sys/fs/cgroup/memory.current'
     # /startupz (not /readyz) comes from chart 0.5.0+ as a loopback exec.
     # Homelab only overrides timings so an event-loop stall still drops
     # the pod from Service endpoints quickly.
