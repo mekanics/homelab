@@ -2,7 +2,7 @@ openclaw:
   image:
     repository: ghcr.io/mekanics/openclaw-image
     # renovate: datasource=docker depName=ghcr.io/mekanics/openclaw-image
-    tag: '2026.9.5-slim@sha256:2e297aaf99181b87204a238e6714cbedc89549e74dcb4a40a03a9373ee54291a'
+    tag: '2026.9.6-slim@sha256:cb8fbb9726bf24c2722b22a65eb62ebf4825632290dcc3fd3f09da35646c62d4'
 
   # Park the gateway (sleep infinity) so `openclaw doctor --fix` and
   # `openclaw backup create` can take the state ownership lock. Home PVC is
