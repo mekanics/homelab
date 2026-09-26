@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-"""Static checks for Waid Energy Flux queries.
+"""Contract for the Waid / Energy dashboard.
 
-These would have caught the 2026-09-09 No-data KPIs:
-- Flux rejects `x + if ...` without parentheses
-- integral() after bare group() drops _start/_stop from the group key
-- Grafana stat panels ignore integral rows that have no _time
+Today and History read energy_balance / energy_hourly. They do not
+integrate watts. Year comparison stays on the integral archive.
 """
 
 from __future__ import annotations
@@ -14,20 +12,51 @@ import re
 import unittest
 from pathlib import Path
 
-DASHBOARD = Path(__file__).with_name("energy.json")
+HERE = Path(__file__).resolve().parent
+DASHBOARD = HERE / "energy.json"
+YEAR = HERE / "year-comparison.json"
+LEGACY_TASK = HERE.parent / "tasks" / "downsample-energy-daily.flux"
 
-# Panels that integrate watts over "today" (must keep range bounds grouped).
-INTEGRAL_PANELS = {4, 5, 6, 21, 22, 23, 24}
+TODAY_TITLES = {
+    "Produced",
+    "Kept",
+    "Exported",
+    "From grid",
+    "Unaccounted",
+    "Autarky",
+    "Self-consumption",
+}
+
+REQUIRED_TITLES = TODAY_TITLES | {
+    "Right now",
+    "House",
+    "When the balcony exports",
+}
+
+RATE_VARS = {
+    "buy_ht": "0.2625",
+    "buy_nt": "0.1590",
+    "feed_ht": "0.1050",
+    "feed_nt": "0.0645",
+}
+
+
+def walk_panels(panels: list) -> list[dict]:
+    out: list[dict] = []
+    for panel in panels:
+        out.append(panel)
+        out.extend(walk_panels(panel.get("panels") or []))
+    return out
 
 
 def panel_queries(dashboard: dict) -> list[tuple[int, str, str]]:
     out = []
-    for panel in dashboard["panels"]:
+    for panel in walk_panels(dashboard.get("panels", [])):
         title = panel.get("title", "")
         for target in panel.get("targets", []):
             query = target.get("query")
             if query:
-                out.append((panel["id"], title, query))
+                out.append((panel.get("id", 0), title, query))
     return out
 
 
@@ -36,43 +65,138 @@ class EnergyQueryContract(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.dashboard = json.loads(DASHBOARD.read_text())
         cls.queries = panel_queries(cls.dashboard)
+        cls.titles = {title for _pid, title, _q in cls.queries}
+        cls.row_titles = {
+            p.get("title")
+            for p in walk_panels(cls.dashboard.get("panels", []))
+            if p.get("type") == "row"
+        }
+        cls.vars = {v["name"]: v for v in cls.dashboard.get("templating", {}).get("list", [])}
+
+    def test_required_panel_titles_exist(self) -> None:
+        missing = REQUIRED_TITLES - {
+            p.get("title") for p in walk_panels(self.dashboard.get("panels", []))
+        }
+        self.assertEqual(missing, set())
+
+    def test_today_stats_do_not_integrate_watts(self) -> None:
+        today = [
+            (pid, title, query)
+            for pid, title, query in self.queries
+            if title in TODAY_TITLES
+            or (title == "House" and "energy_balance" in query)
+        ]
+        self.assertTrue(today, "Today panels are missing")
+        bad = []
+        for pid, title, query in today:
+            if "integral(" in query:
+                bad.append(f"{pid} {title}: integral")
+            if "energy_balance" not in query:
+                bad.append(f"{pid} {title}: no energy_balance")
+        self.assertEqual(bad, [])
+
+    def test_money_is_the_only_rate_consumer(self) -> None:
+        rate_tokens = tuple(RATE_VARS)
+        money_hits = []
+        identity_hits = []
+        for pid, title, query in self.queries:
+            uses = [t for t in rate_tokens if f"${{{t}}}" in query or f"${t}" in query]
+            if not uses:
+                continue
+            if title in TODAY_TITLES or (
+                title == "House" and "energy_balance" in query
+            ):
+                identity_hits.append(f"{pid} {title}: {uses}")
+            else:
+                money_hits.append((pid, title, uses))
+        self.assertTrue(money_hits, "Paid / Credited / Kept worth must use the rate variables")
+        self.assertEqual(identity_hits, [])
+        used = {name for _pid, _title, names in money_hits for name in names}
+        self.assertEqual(used, set(RATE_VARS))
+
+    def test_rate_variables_hidden_with_defaults(self) -> None:
+        self.assertNotIn("tariff", self.vars)
+        for name, default in RATE_VARS.items():
+            var = self.vars.get(name)
+            self.assertIsNotNone(var, name)
+            self.assertEqual(var.get("hide"), 2, name)
+            self.assertEqual(var.get("type"), "textbox", name)
+            current = var.get("current") or {}
+            self.assertIn(default, (current.get("value"), var.get("query")), name)
+
+    def test_history_excludes_open_day_and_uses_day_start(self) -> None:
+        history = [
+            (pid, title, query)
+            for pid, title, query in self.queries
+            if title in {"When the balcony exports"}
+            or "energy_balance" in query
+            and title not in TODAY_TITLES
+            and "House" != title
+            or (title in {"Export", "From grid"} and "energy_hourly" not in query and "1d" in query)
+        ]
+        bar_queries = [
+            query
+            for _pid, title, query in self.queries
+            if "energy_balance" in query and title not in TODAY_TITLES | {"House", "Autarky", "Self-consumption"}
+        ]
+        # House composition and export history must stop at today's midnight.
+        closed = [
+            query
+            for _pid, title, query in self.queries
+            if "energy_balance" in query
+            and "date.truncate" in query
+            and title not in TODAY_TITLES
+            and not title.startswith("Autarky")
+            and title != "Self-consumption"
+            and title != "House"
+        ]
+        self.assertTrue(
+            any("energy_balance" in q and "date.truncate" in q for q in [q for _, _, q in self.queries]),
+            "history must filter energy_balance and truncate the open day",
+        )
+        for query in closed:
+            self.assertNotIn("timeShift", query)
+            self.assertIn("date.truncate", query)
+
+    def test_hour_of_day_is_mean_export(self) -> None:
+        hits = [
+            query
+            for _pid, title, query in self.queries
+            if title == "When the balcony exports"
+        ]
+        self.assertTrue(hits)
+        for query in hits:
+            self.assertIn("energy_hourly", query)
+            self.assertIn("export_kwh", query)
+
+    def test_legacy_yoy_untouched(self) -> None:
+        year = json.loads(YEAR.read_text())
+        text = json.dumps(year)
+        self.assertIn("grid_net_kwh", text)
+        self.assertNotIn("energy_balance", text)
+
+    def test_integral_archive_still_written(self) -> None:
+        flux = LEGACY_TASK.read_text()
+        self.assertIn("integral(unit: 1h)", flux)
+        self.assertIn("grid_import_kwh", flux)
 
     def test_flux_if_after_plus_is_parenthesized(self) -> None:
         bad = []
         for pid, title, query in self.queries:
             if re.search(r"\+ if ", query):
                 bad.append(f"{pid} {title}")
-        self.assertEqual(
-            bad,
-            [],
-            "Flux parses `+ if` as invalid; wrap: x + (if ... then ... else ...)",
-        )
+        self.assertEqual(bad, [])
 
-    def test_integral_keeps_start_stop_in_group_key(self) -> None:
-        missing = []
-        for pid, title, query in self.queries:
-            if pid not in INTEGRAL_PANELS:
-                continue
-            if "integral(unit: 1h)" not in query:
-                missing.append(f"{pid} {title}: no integral")
-                continue
-            if 'group(columns: ["_start", "_stop"])' not in query:
-                missing.append(f"{pid} {title}: integral without grouped _start/_stop")
-        self.assertEqual(missing, [])
-
-    def test_integral_results_set_time(self) -> None:
-        missing = []
-        for pid, title, query in self.queries:
-            if pid not in INTEGRAL_PANELS:
-                continue
-            if "_time: r._stop" not in query:
-                missing.append(f"{pid} {title}: integral map missing _time: r._stop")
-        self.assertEqual(missing, [])
-
-    def test_house_load_does_not_pivot_on_mismatched_last_timestamps(self) -> None:
-        house = next(q for pid, title, q in self.queries if pid == 1)
-        self.assertIn("|> sum()", house)
-        self.assertNotIn("pivot(rowKey: [\"_time\"]", house)
+    def test_now_house_watts_sums_without_pivot(self) -> None:
+        houses = [
+            (pid, title, query)
+            for pid, title, query in self.queries
+            if title == "House" and "total_act_power" in query
+        ]
+        self.assertTrue(houses)
+        for pid, title, query in houses:
+            self.assertIn("|> sum()", query)
+            self.assertNotIn('pivot(rowKey: ["_time"]', query)
 
 
 if __name__ == "__main__":

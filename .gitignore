@@ -31,6 +31,9 @@ charts/*/*.tgz
 .DS_Store
 Thumbs.db
 
+__pycache__/
+*.pyc
+
 # Secrets — never commit
 **/secret.yaml
 **/secrets.yaml

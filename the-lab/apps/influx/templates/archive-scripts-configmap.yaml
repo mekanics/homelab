@@ -7,5 +7,7 @@ data:
 {{ .Files.Get "tasks/downsample-yieldday.flux" | indent 4 }}
   downsample-energy-daily.flux: |
 {{ .Files.Get "tasks/downsample-energy-daily.flux" | indent 4 }}
+  energy-balance.flux: |
+{{ .Files.Get "tasks/energy-balance.flux" | indent 4 }}
   sync-archive.sh: |
 {{ .Files.Get "tasks/sync-archive.sh" | indent 4 }}
