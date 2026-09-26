@@ -211,6 +211,14 @@ class EnergyQueryContract(unittest.TestCase):
             self.assertNotIn('pivot(rowKey: ["_time"]', query)
             self.assertIn("toFloat()", query)
 
+    def test_ratio_panels_keep_today_and_median_names(self) -> None:
+        for title in ("Autarky", "Self-consumption"):
+            hits = [query for _pid, t, query in self.queries if t == title]
+            self.assertTrue(hits, title)
+            for query in hits:
+                self.assertIn("30d median", query)
+                self.assertIn('group(columns: ["_field"])', query)
+
     def test_inverter_status_casts_before_union(self) -> None:
         hits = [
             query
@@ -221,6 +229,7 @@ class EnergyQueryContract(unittest.TestCase):
         for query in hits:
             self.assertIn("toFloat()", query)
             self.assertIn("union(tables: [solar, reach])", query)
+            self.assertIn('group(columns: ["_field"])', query)
 
 
 if __name__ == "__main__":
