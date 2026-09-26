@@ -67,4 +67,13 @@ spec:
           jsonPointers:
             - /spec/replicas
 
+        # Argo SSA of Longhorn CRDs merges conversion into an invalid
+        # state (empty strategy + leftover webhookClientConfig) and
+        # then never updates spec.versions. That left 1.9.2 Volume
+        # schemas in place and crashed the 1.10.2 managers.
+        - group: apiextensions.k8s.io
+          kind: CustomResourceDefinition
+          jsonPointers:
+            - /spec/conversion
+
 {{- end }}
