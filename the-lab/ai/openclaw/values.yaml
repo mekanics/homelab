@@ -11,6 +11,15 @@ openclaw:
   debug:
     enabled: false
 
+  # Default policy is Always, which rewrites every file on each volume at
+  # every start. The state volume now holds the whole home, and that walk is
+  # slow enough for kubelet to warn. OnRootMismatch skips it when the root is
+  # already group-owned and at least 2770. Doctor may still chmod the root to
+  # 700; the following start walks once and restores 2770. That is safe
+  # because the mount is the volume itself, not an NFS subPath.
+  podSecurityContext:
+    fsGroupChangePolicy: OnRootMismatch
+
   env:
     - name: TZ
       value: Europe/Zurich
@@ -38,6 +47,14 @@ openclaw:
     # on ARM64 where JS compilation is CPU/memory intensive.
     - name: NODE_COMPILE_CACHE
       value: /home/node/.node-compile-cache
+    # State lives on the Longhorn volume, not the NFS home. Doctor chmods this
+    # directory to 700 whenever group/other bits are set, and a nested mount
+    # under the NFS home then fails: kubelet is root, the export squashes
+    # root, and mode 700 is not traversable. The volume mount itself is on
+    # the container rootfs, so 700 is fine. Agents are real directories here;
+    # do not put them back behind a symlink or an NFS subPath.
+    - name: OPENCLAW_STATE_DIR
+      value: /home/node/.openclaw-state
   persistence:
     home:
       existingClaim: openclaw-home-nfs
@@ -54,15 +71,17 @@ openclaw:
     # WAL needs a -shm file NFS cannot provide, and nocto + actimeo=600 hide
     # the attribute changes SQLite relies on.
     #
-    # Holds both control-plane db/ and the per-agent agents/ tree. NFS
-    # `.openclaw/state` and `.openclaw/agents` are symlinks into uid-1000
-    # child dirs on this volume — not the mount root. OpenClaw chmod(0700)
-    # follows those links; the fsGroup mount root is owned by uid 0, so
-    # chmod there is EPERM (migrations/2026-09-09-seed-state-pvc.yaml,
-    # migrations/2026-09-21-seed-agents-pvc.yaml).
+    # This directory is OPENCLAW_STATE_DIR. It holds control-plane state/
+    # (formerly db/) and the per-agent agents/ tree, plus the rest of the
+    # home copied off NFS on 2026-09-25. NFS stays mounted at ~/.openclaw for
+    # the previous tree and for init-config, which still writes there.
+    # migrations/2026-09-09-seed-state-pvc.yaml,
+    # migrations/2026-09-21-seed-agents-pvc.yaml.
     #
-    # Sibling mount, not nested under `home`. kubelet would resolve a nested
-    # mount target as uid 0, and the Synology export squashes root.
+    # One Volume for this claim. A second Volume entry leaves the pod Pending
+    # with no attach event. Do not subPath-mount agents or state under the
+    # NFS home: doctor will chmod the directory to 700 and the next start
+    # cannot lstat the mountpoint.
     #
     # The 2026-09-21 agents migration left every agent registered twice in
     # agent_databases — once relative (written by the migration) and once
