@@ -71,7 +71,9 @@ class EnergyQueryContract(unittest.TestCase):
             for p in walk_panels(cls.dashboard.get("panels", []))
             if p.get("type") == "row"
         }
-        cls.vars = {v["name"]: v for v in cls.dashboard.get("templating", {}).get("list", [])}
+        cls.vars = {
+            v["name"]: v for v in cls.dashboard.get("templating", {}).get("list", [])
+        }
 
     def test_required_panel_titles_exist(self) -> None:
         missing = REQUIRED_TITLES - {
@@ -83,8 +85,7 @@ class EnergyQueryContract(unittest.TestCase):
         today = [
             (pid, title, query)
             for pid, title, query in self.queries
-            if title in TODAY_TITLES
-            or (title == "House" and "energy_balance" in query)
+            if title in TODAY_TITLES or (title == "House" and "energy_balance" in query)
         ]
         self.assertTrue(today, "Today panels are missing")
         bad = []
@@ -109,7 +110,9 @@ class EnergyQueryContract(unittest.TestCase):
                 identity_hits.append(f"{pid} {title}: {uses}")
             else:
                 money_hits.append((pid, title, uses))
-        self.assertTrue(money_hits, "Paid / Credited / Kept worth must use the rate variables")
+        self.assertTrue(
+            money_hits, "Paid / Credited / Kept worth must use the rate variables"
+        )
         self.assertEqual(identity_hits, [])
         used = {name for _pid, _title, names in money_hits for name in names}
         self.assertEqual(used, set(RATE_VARS))
@@ -132,12 +135,17 @@ class EnergyQueryContract(unittest.TestCase):
             or "energy_balance" in query
             and title not in TODAY_TITLES
             and "House" != title
-            or (title in {"Export", "From grid"} and "energy_hourly" not in query and "1d" in query)
+            or (
+                title in {"Export", "From grid"}
+                and "energy_hourly" not in query
+                and "1d" in query
+            )
         ]
         bar_queries = [
             query
             for _pid, title, query in self.queries
-            if "energy_balance" in query and title not in TODAY_TITLES | {"House", "Autarky", "Self-consumption"}
+            if "energy_balance" in query
+            and title not in TODAY_TITLES | {"House", "Autarky", "Self-consumption"}
         ]
         # House composition and export history must stop at today's midnight.
         closed = [
@@ -151,7 +159,10 @@ class EnergyQueryContract(unittest.TestCase):
             and title != "House"
         ]
         self.assertTrue(
-            any("energy_balance" in q and "date.truncate" in q for q in [q for _, _, q in self.queries]),
+            any(
+                "energy_balance" in q and "date.truncate" in q
+                for q in [q for _, _, q in self.queries]
+            ),
             "history must filter energy_balance and truncate the open day",
         )
         for query in closed:
@@ -233,12 +244,25 @@ class EnergyQueryContract(unittest.TestCase):
             self.assertIn("exists r.grid", after)
             self.assertLess(after.index("|> group()"), after.index("pivot("))
 
-    def test_inverter_status_casts_before_union(self) -> None:
+    def test_power_chart_hides_idle_solar(self) -> None:
         hits = [
             query
             for _pid, title, query in self.queries
-            if title == "Inverter"
+            if title == "Load / Solar / Grid"
         ]
+        self.assertTrue(hits)
+        for query in hits:
+            solar = query.split("solar = ", 1)[1].split("union(", 1)[0]
+            self.assertIn("filter(fn: (r) => r._value > 0.0)", solar)
+            self.assertIn('import "math"', query)
+            self.assertIn("math.NaN()", query)
+            self.assertRegex(
+                query,
+                r"Solar: if .+ then .+ else math\.NaN\(\)",
+            )
+
+    def test_inverter_status_casts_before_union(self) -> None:
+        hits = [query for _pid, title, query in self.queries if title == "Inverter"]
         self.assertTrue(hits)
         for query in hits:
             self.assertIn("toFloat()", query)
