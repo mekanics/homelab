@@ -3,6 +3,9 @@
 argo-cd:
   global:
     domain: argocd.mekanics.ch
+    # Chart 10 default; explicit so CVE-2026-62185 stays closed.
+    networkPolicy:
+      create: true
 
   # Performance tuning and timeout configuration for Raspberry Pi cluster
   configs:
@@ -15,11 +18,6 @@ argo-cd:
     cm:
       # Use annotation-based resource tracking (more reliable)
       application.resourceTrackingMethod: annotation
-
-  server:
-    extraArgs:
-      - --insecure
-    config:
       statusbadge.enabled: 'true'
       resource.customizations: |
         networking.k8s.io/Ingress:
@@ -27,6 +25,10 @@ argo-cd:
             hs = {}
             hs.status = "Healthy"
             return hs
+
+  server:
+    extraArgs:
+      - --insecure
     ingress:
       enabled: true
       ingressClassName: nginx
@@ -55,3 +57,5 @@ argo-cd:
     metrics: *metrics
   redis:
     metrics: *metrics
+    exporter:
+      enabled: true
