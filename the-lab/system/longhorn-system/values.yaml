@@ -69,7 +69,11 @@ longhorn:
     # -- priorityClass for Longhorn system-managed components
     # This setting can help prevent Longhorn components from being evicted under Node Pressure.
     # Notice that this will be applied to Longhorn user-deployed components by default if there are no priority class values set yet, such as `longhornManager.priorityClass`.
-    priorityClass: &defaultPriorityClassNameRef 'longhorn-critical'
+    # longhorn-critical is 1e9 and is not IsCriticalPod. Kubelet DiskPressure
+    # rejects and evicts those pods, which is how a full node trapped the
+    # snapshot purge that would have freed it. system-cluster-critical (2e9)
+    # is admitted and not evicted; stay below system-node-critical.
+    priorityClass: &defaultPriorityClassNameRef 'system-cluster-critical'
     # -- If enabled, volumes will be automatically salvaged when all the replicas become faulty, e.g., due to network disconnection.
     # Longhorn will try to figure out which replica(s) are usable, then use them for the volume. By default, true.
     autoSalvage: ~
@@ -206,6 +210,12 @@ longhorn:
   preUpgradeChecker:
     jobEnabled: false
     upgradeVersionCheck: false
+
+  # Chart default is the string longhorn-critical, so the DaemonSet ignores
+  # defaultSettings.priorityClass unless this is set. Driver and UI stay on
+  # the chart default; they are not on the snapshot-purge path.
+  longhornManager:
+    priorityClass: system-cluster-critical
 
   longhornUI:
     replicas: 1

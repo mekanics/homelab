@@ -1,0 +1,62 @@
+# Metric names and values confirmed against Prometheus on 2026-09-26:
+# longhorn_volume_robustness == 3 is faulted (openclaw-state while detaching).
+# longhorn_volume_actual_size_bytes / longhorn_volume_capacity_bytes is the
+# snapshot-chain signature (media-srv-downloads was ~1.86x its 200Gi spec).
+# node_filesystem_* on mountpoint=/ is the kubelet nodefs signal. When that
+# node-exporter is itself evicted, kube_node_status_condition DiskPressure
+# is the remaining scrape.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ .Release.Name }}-alerts
+  namespace: {{ .Release.Namespace }}
+  labels:
+    release: kube-prometheus-stack
+    app: kube-prometheus-stack
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  groups:
+    - name: longhorn
+      rules:
+        - alert: NodeRootFilesystemLow
+          expr: |
+            node_filesystem_avail_bytes{fstype="ext4",mountpoint="/"}
+              / node_filesystem_size_bytes{fstype="ext4",mountpoint="/"}
+              < 0.15
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: 'Node {{ $labels.instance }} root filesystem below 15% free'
+            description: 'Matches Longhorn storage-minimal-available-percentage. Snapshot COW on /var/lib/longhorn fills nodefs, not the PVC.'
+
+        - alert: KubernetesNodeDiskPressure
+          expr: kube_node_status_condition{condition="DiskPressure",status="true"} == 1
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: 'Node {{ $labels.node }} has DiskPressure'
+            description: 'Kubelet will reject and evict non-critical pods, including Longhorn at priority longhorn-critical.'
+
+        - alert: LonghornVolumeFaulted
+          expr: longhorn_volume_robustness == 3
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: 'Longhorn volume {{ $labels.pvc }} is faulted'
+            description: 'Volume {{ $labels.volume }} in {{ $labels.pvc_namespace }} is robustness=faulted and cannot attach.'
+
+        - alert: LonghornVolumeActualSizeHigh
+          expr: |
+            longhorn_volume_actual_size_bytes
+              / longhorn_volume_capacity_bytes
+              > 1.5
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: 'Longhorn volume {{ $labels.pvc }} actual size is {{ $value | humanizePercentage }} of spec'
+            description: 'Snapshot chain growth on {{ $labels.volume }}. The PVC filesystem stays small; the node disk does not.'
