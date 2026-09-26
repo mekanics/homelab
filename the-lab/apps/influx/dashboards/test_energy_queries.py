@@ -169,6 +169,18 @@ class EnergyQueryContract(unittest.TestCase):
             self.assertIn("energy_hourly", query)
             self.assertIn("export_kwh", query)
 
+    def test_hour_of_day_keeps_time_after_mean(self) -> None:
+        hits = [
+            query
+            for _pid, title, query in self.queries
+            if title == "When the balcony exports"
+        ]
+        self.assertTrue(hits)
+        for query in hits:
+            after = query.split("mean()", 1)[1]
+            self.assertIn("_time", after)
+            self.assertRegex(after, r"group\(\s*\)")
+
     def test_legacy_yoy_untouched(self) -> None:
         year = json.loads(YEAR.read_text())
         text = json.dumps(year)
@@ -197,6 +209,18 @@ class EnergyQueryContract(unittest.TestCase):
         for pid, title, query in houses:
             self.assertIn("|> sum()", query)
             self.assertNotIn('pivot(rowKey: ["_time"]', query)
+            self.assertIn("toFloat()", query)
+
+    def test_inverter_status_casts_before_union(self) -> None:
+        hits = [
+            query
+            for _pid, title, query in self.queries
+            if title == "Inverter"
+        ]
+        self.assertTrue(hits)
+        for query in hits:
+            self.assertIn("toFloat()", query)
+            self.assertIn("union(tables: [solar, reach])", query)
 
 
 if __name__ == "__main__":
