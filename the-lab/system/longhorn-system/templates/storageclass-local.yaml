@@ -1,0 +1,22 @@
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: longhorn-local
+  annotations:
+    storageclass.kubernetes.io/is-default-class: 'false'
+provisioner: driver.longhorn.io
+allowVolumeExpansion: true
+# WaitForFirstConsumer is a StorageClass field. The scheduler delays binding
+# until the first pod is placed so the single replica is created on that node.
+# A PVC annotation cannot change this; the default `longhorn` class is Immediate.
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Delete
+parameters:
+  # CSI CreateVolume is the only path Longhorn reads. PVC annotations such as
+  # longhorn.io/replica-count stay on the claim (longhorn/longhorn#9906).
+  numberOfReplicas: '1'
+  staleReplicaTimeout: '2880'
+  fsType: ext4
+  # RWO only. Longhorn 1.9.2 rejects strict-local on RWX
+  # (access mode rwx is incompatible with data locality strict-local).
+  dataLocality: strict-local
