@@ -107,10 +107,12 @@ victoria-metrics-k8s-stack:
     spec:
       retentionPeriod: 30d
       resources:
+        # 512Mi OOMs under ~330k series plus vmalert query fan-out;
+        # old Prometheus sat at ~880Mi RSS for the same scrape set.
         requests:
-          memory: 256Mi
-        limits:
           memory: 512Mi
+        limits:
+          memory: 1Gi
       storage:
         accessModes:
           - ReadWriteOnce
