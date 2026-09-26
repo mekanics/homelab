@@ -19,7 +19,7 @@
 			"separateMultipleMinor": true
 		},
 		{
-			"matchPackageNames": ["kube-prometheus-stack"],
+			"matchPackageNames": ["victoria-metrics-k8s-stack", "prometheus-operator-crds"],
 			"extends": ["schedule:monthly"],
 			"groupName": "prometheus-stack"
 		},

@@ -1,8 +1,12 @@
 apiVersion: v2
-name: kube-prometheus-stack
+name: monitoring-system
 version: 0.0.0
 dependencies:
-  - name: kube-prometheus-stack
-    # renovate datasource=helm depName=kube-prometheus-stack registryUrl=https://prometheus-community.github.io/helm-charts
-    version: 91.6.0
+  - name: victoria-metrics-k8s-stack
+    # renovate datasource=helm depName=victoria-metrics-k8s-stack registryUrl=https://victoriametrics.github.io/helm-charts
+    version: 0.93.0
+    repository: https://victoriametrics.github.io/helm-charts
+  - name: prometheus-operator-crds
+    # renovate datasource=helm depName=prometheus-operator-crds registryUrl=https://prometheus-community.github.io/helm-charts
+    version: 32.0.1
     repository: https://prometheus-community.github.io/helm-charts
