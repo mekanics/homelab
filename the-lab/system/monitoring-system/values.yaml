@@ -1,31 +1,23 @@
-# https://github.com/prometheus-community/helm-charts/blob/kube-prometheus-stack-91.6.0/charts/kube-prometheus-stack/values.yaml
-kube-prometheus-stack:
-  crds:
-    upgradeJob:
-      enabled: true
+# https://github.com/VictoriaMetrics/helm-charts/blob/victoria-metrics-k8s-stack-0.93.0/charts/victoria-metrics-k8s-stack/values.yaml
+#
+# Optimisation baseline 2026-09-26 (prometheus container, kubectl top):
+#   memory 884Mi working set, request 1024Mi, limit 2048Mi
+#   cpu 49m, request 100m, limit 500m
+#   retention 3d or 1500MB, scrape/eval 60s, no Prometheus PVC
+# Target after this chart: VMSingle request 256Mi / limit 512Mi, 30d,
+#   10Gi longhorn-local, scrape/eval 30s. Fill measured After after merge.
+victoria-metrics-k8s-stack:
+  argocdReleaseOverride: monitoring-system
 
-  # https://github.com/grafana/helm-charts/blob/main/charts/grafana/values.yaml
+  # https://github.com/grafana-community/helm-charts/blob/main/charts/grafana/values.yaml
   grafana:
     enabled: true
+    # Argo templates this chart off-cluster, so Helm lookup() cannot keep the
+    # existing admin secret. Pin the password Grafana's sqlite already has
+    # (the 58.x chart default) or the sidecar 401s and login drifts.
+    adminPassword: prom-operator
     defaultDashboardsTimezone: Europe/Zurich
     forceDeployDatasources: true
-    forceDeployDashboards: true
-    # http://docs.grafana.org/administration/provisioning/#datasources
-
-    additionalDataSources:
-      - name: Loki
-        type: loki
-        url: http://loki.loki:3100
-
-      - name: Sun and Moon
-        type: fetzerch-sunandmoon-datasource
-        access: proxy
-        basicAuth: false
-        editable: true
-        jsonData:
-          # Waid, Zürich — lat/lon required for correct sun altitude
-          latitude: 47.39
-          longitude: 8.52
 
     plugins:
       - grafana-clock-panel
@@ -38,6 +30,8 @@ kube-prometheus-stack:
     grafana.ini:
       server:
         root_url: https://grafana.mekanics.ch
+      date_formats:
+        default_timezone: Europe/Zurich
 
     ingress:
       enabled: true
@@ -48,16 +42,11 @@ kube-prometheus-stack:
         hajimari.io/appName: Grafana
         hajimari.io/icon: chart-bar
       hosts:
-        - &host grafana.mekanics.ch
+        - &grafanaHost grafana.mekanics.ch
       tls:
         - secretName: grafana-general-tls
           hosts:
-            - *host
-
-    # Argo templates this chart off-cluster, so Helm lookup() cannot keep the
-    # existing admin secret. Pin the password Grafana's sqlite already has
-    # (the 58.x chart default) or the sidecar 401s and login drifts.
-    adminPassword: prom-operator
+            - *grafanaHost
 
     initChownData:
       enabled: false
@@ -90,28 +79,44 @@ kube-prometheus-stack:
                   operator: In
                   values: ['ssd']
 
-  prometheus:
-    prometheusSpec:
-      # Memory optimization for Raspberry Pi cluster
-      retention: 3d
-      retentionSize: 1500MB
-      scrapeInterval: 60s
-      evaluationInterval: 60s
+  defaultDatasources:
+    victoriametrics:
+      datasources:
+        - name: Prometheus
+          type: prometheus
+          access: proxy
+          uid: prometheus
+          isDefault: true
+    extra:
+      - name: Loki
+        type: loki
+        access: proxy
+        url: http://loki.loki:3100
+      - name: Sun and Moon
+        type: fetzerch-sunandmoon-datasource
+        access: proxy
+        basicAuth: false
+        editable: true
+        jsonData:
+          latitude: 47.39
+          longitude: 8.52
+
+  vmsingle:
+    enabled: true
+    spec:
+      retentionPeriod: 30d
       resources:
-        limits:
-          cpu: 500m
-          memory: 2048Mi
         requests:
-          cpu: 100m
-          memory: 1024Mi
-      # Reduce memory pressure on Pi: compress WAL, limit in-memory chunks
-      walCompression: true
-      ruleSelectorNilUsesHelmValues: false
-      serviceMonitorSelectorNilUsesHelmValues: false
-      podMonitorSelectorNilUsesHelmValues: false
-      probeSelectorNilUsesHelmValues: false
-      # Removed performance affinity to allow better load distribution
-      # Both nodes have SSDs, so storage-type preference is kept
+          memory: 256Mi
+        limits:
+          memory: 512Mi
+      storage:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: longhorn-local
+        resources:
+          requests:
+            storage: 10Gi
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -122,15 +127,32 @@ kube-prometheus-stack:
                     operator: In
                     values: ['ssd']
 
-  # Additional exporters
-  prometheus-node-exporter:
+  vmagent:
     enabled: true
+    spec:
+      selectAllByDefault: true
+      scrapeInterval: 30s
 
-  kube-state-metrics:
+  vmalert:
     enabled: true
+    spec:
+      selectAllByDefault: true
+      evaluationInterval: 30s
 
   alertmanager:
     enabled: true
+    useManagedConfig: false
+    spec:
+      replicaCount: 1
+      selectAllByDefault: true
+      externalURL: https://alertmanager.mekanics.ch
+      secrets:
+        - alertmanager-slack-secret
+      resources:
+        limits:
+          memory: 64Mi
+        requests:
+          memory: 32Mi
     ingress:
       enabled: true
       ingressClassName: nginx
@@ -141,24 +163,10 @@ kube-prometheus-stack:
         hajimari.io/icon: bell-alert
       hosts:
         - &amHost alertmanager.mekanics.ch
-      paths:
-        - /
       tls:
         - secretName: alertmanager-general-tls
           hosts:
             - *amHost
-    alertmanagerSpec:
-      # Ingress fallback is http://; Slack "View" uses this value as ExternalURL.
-      externalUrl: https://alertmanager.mekanics.ch
-      resources:
-        limits:
-          memory: 64Mi
-        requests:
-          memory: 32Mi
-      alertmanagerConfigMatcherStrategy:
-        type: None
-      secrets:
-        - alertmanager-slack-secret
     config:
       global:
         resolve_timeout: 5m
@@ -169,7 +177,6 @@ kube-prometheus-stack:
         repeat_interval: 4h
         receiver: slack-default
         routes:
-          # Mute synthetic / k3s-incompatible alerts (no Slack notification)
           - matchers:
               - alertname =~ "Watchdog|InfoInhibitor|KubeControllerManagerDown|KubeSchedulerDown|KubeProxyDown"
             receiver: 'null'
@@ -183,21 +190,21 @@ kube-prometheus-stack:
         - name: 'null'
         - name: slack-default
           slack_configs:
-            - api_url_file: /etc/alertmanager/secrets/alertmanager-slack-secret/webhookUrl
+            - api_url_file: /etc/vm/secrets/alertmanager-slack-secret/webhookUrl
               channel: '#the-dark-side'
               title: '{{ template "slack.default.title" . }}'
               text: '{{ range .Alerts }}{{ .Annotations.summary }}\n{{ end }}'
               send_resolved: true
         - name: slack-critical
           slack_configs:
-            - api_url_file: /etc/alertmanager/secrets/alertmanager-slack-secret/webhookUrl
+            - api_url_file: /etc/vm/secrets/alertmanager-slack-secret/webhookUrl
               channel: '#the-dark-side'
               title: '🚨 [CRITICAL] {{ .GroupLabels.alertname }}'
               text: '{{ range .Alerts }}*Summary:* {{ .Annotations.summary }}\n*Description:* {{ .Annotations.description }}\n{{ end }}'
               send_resolved: true
         - name: slack-warning
           slack_configs:
-            - api_url_file: /etc/alertmanager/secrets/alertmanager-slack-secret/webhookUrl
+            - api_url_file: /etc/vm/secrets/alertmanager-slack-secret/webhookUrl
               channel: '#the-dark-side'
               title: '⚠️ [WARNING] {{ .GroupLabels.alertname }}'
               text: '{{ range .Alerts }}*Summary:* {{ .Annotations.summary }}\n{{ end }}'
@@ -208,3 +215,18 @@ kube-prometheus-stack:
           target_matchers:
             - severity = warning
           equal: ['alertname', 'namespace']
+
+  kubeControllerManager:
+    enabled: false
+  kubeScheduler:
+    enabled: false
+  kubeEtcd:
+    enabled: false
+  kubeProxy:
+    enabled: false
+  kubeApiServer:
+    enabled: true
+  coreDns:
+    enabled: true
+
+prometheus-operator-crds: {}
