@@ -54,6 +54,11 @@ kube-prometheus-stack:
           hosts:
             - *host
 
+    # Argo templates this chart off-cluster, so Helm lookup() cannot keep the
+    # existing admin secret. Pin the password Grafana's sqlite already has
+    # (the 58.x chart default) or the sidecar 401s and login drifts.
+    adminPassword: prom-operator
+
     initChownData:
       enabled: false
 
