@@ -126,8 +126,7 @@ longhorn:
     # -- This setting controls how Longhorn automatically upgrades volumes' engines to the new default engine image after upgrading Longhorn manager.
     # The value of this setting specifies the maximum number of engines per node that are allowed to upgrade to the default engine image at the same time.
     # If the value is 0, Longhorn will not automatically upgrade volumes' engines to the default version of engine image.
-    # 1 during the 1.9.2 -> 1.12.1 hops so engines follow the manager one volume at a time.
-    concurrentAutomaticEngineUpgradePerNodeLimit: 1
+    concurrentAutomaticEngineUpgradePerNodeLimit: 0
     # -- This interval in minutes determines how long Longhorn will wait before cleaning up the backing image file when there is no replica in the disk using it.
     backingImageCleanupWaitInterval: ~
     # -- This interval in seconds determines how long Longhorn will wait before re-downloading the backing image file
