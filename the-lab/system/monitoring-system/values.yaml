@@ -8,6 +8,10 @@
 #   10Gi longhorn-local, scrape/eval 30s. Fill measured After after merge.
 victoria-metrics-k8s-stack:
   argocdReleaseOverride: monitoring-system
+  # Default fullname is monitoring-system-victoria-metrics-k8s-stack. That
+  # makes the Alertmanager controller-revision-hash 70 chars; Kubernetes
+  # rejects the pod at 63.
+  nameOverride: vm
 
   # https://github.com/grafana-community/helm-charts/blob/main/charts/grafana/values.yaml
   grafana:
