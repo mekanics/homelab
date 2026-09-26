@@ -118,7 +118,25 @@ kube-prometheus-stack:
 
   alertmanager:
     enabled: true
+    ingress:
+      enabled: true
+      ingressClassName: nginx
+      annotations:
+        cert-manager.io/cluster-issuer: mekanics-ca-issuer
+        hajimari.io/group: Monitoring
+        hajimari.io/appName: Alertmanager
+        hajimari.io/icon: bell-alert
+      hosts:
+        - &amHost alertmanager.mekanics.ch
+      paths:
+        - /
+      tls:
+        - secretName: alertmanager-general-tls
+          hosts:
+            - *amHost
     alertmanagerSpec:
+      # Ingress fallback is http://; Slack "View" uses this value as ExternalURL.
+      externalUrl: https://alertmanager.mekanics.ch
       resources:
         limits:
           memory: 64Mi
