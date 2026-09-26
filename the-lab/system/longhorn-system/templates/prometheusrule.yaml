@@ -28,7 +28,7 @@ spec:
           labels:
             severity: warning
           annotations:
-            summary: 'Node {{ $labels.instance }} root filesystem below 15% free'
+            summary: 'Node {{`{{ $labels.instance }}`}} root filesystem below 15% free'
             description: 'Matches Longhorn storage-minimal-available-percentage. Snapshot COW on /var/lib/longhorn fills nodefs, not the PVC.'
 
         - alert: KubernetesNodeDiskPressure
@@ -37,7 +37,7 @@ spec:
           labels:
             severity: critical
           annotations:
-            summary: 'Node {{ $labels.node }} has DiskPressure'
+            summary: 'Node {{`{{ $labels.node }}`}} has DiskPressure'
             description: 'Kubelet will reject and evict non-critical pods, including Longhorn at priority longhorn-critical.'
 
         - alert: LonghornVolumeFaulted
@@ -46,8 +46,8 @@ spec:
           labels:
             severity: critical
           annotations:
-            summary: 'Longhorn volume {{ $labels.pvc }} is faulted'
-            description: 'Volume {{ $labels.volume }} in {{ $labels.pvc_namespace }} is robustness=faulted and cannot attach.'
+            summary: 'Longhorn volume {{`{{ $labels.pvc }}`}} is faulted'
+            description: 'Volume {{`{{ $labels.volume }}`}} in {{`{{ $labels.pvc_namespace }}`}} is robustness=faulted and cannot attach.'
 
         - alert: LonghornVolumeActualSizeHigh
           expr: |
@@ -58,5 +58,5 @@ spec:
           labels:
             severity: warning
           annotations:
-            summary: 'Longhorn volume {{ $labels.pvc }} actual size is {{ $value | humanizePercentage }} of spec'
-            description: 'Snapshot chain growth on {{ $labels.volume }}. The PVC filesystem stays small; the node disk does not.'
+            summary: 'Longhorn volume {{`{{ $labels.pvc }}`}} actual size is {{`{{ $value | humanizePercentage }}`}} of spec'
+            description: 'Snapshot chain growth on {{`{{ $labels.volume }}`}}. The PVC filesystem stays small; the node disk does not.'
