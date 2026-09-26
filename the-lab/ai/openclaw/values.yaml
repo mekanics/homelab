@@ -178,6 +178,8 @@ openclaw:
   priorityClassName: high-priority-homelab
 
   probes:
+    # Chart 0.5.2 drops exec when httpGet is set. `exec: null` alone does not:
+    # Argo CD strips the null before Helm merges the chart default back in.
     startup:
       spec:
         exec: null
