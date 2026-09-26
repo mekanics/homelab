@@ -23,6 +23,10 @@ victoria-metrics-k8s-stack:
     sidecar:
       dashboards:
         folderAnnotation: grafana_folder
+        # kube-prometheus-stack defaulted this to ALL. The Grafana chart
+        # otherwise watches only monitoring-system, so the Waid (influx)
+        # and CNPG dashboard ConfigMaps never reach Grafana.
+        searchNamespace: ALL
 
     grafana.ini:
       server:
