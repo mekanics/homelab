@@ -1369,6 +1369,7 @@
 					"mode": "single",
 					"sort": "none"
 				},
+				"xField": "Hour",
 				"xTickLabelRotation": 0
 			},
 			"targets": [
@@ -1378,7 +1379,7 @@
 						"type": "influxdb",
 						"uid": "${datasource}"
 					},
-					"query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name: \"Europe/Zurich\")\nstart = date.truncate(t: date.add(d: -30d, to: v.timeRangeStop), unit: 1d)\nstop = date.truncate(t: v.timeRangeStop, unit: 1d)\n\nfrom(bucket: \"waid-bucket-downsampled\")\n  |> range(start: start, stop: stop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"energy_hourly\" and r[\"_field\"] == \"export_kwh\")\n  |> map(fn: (r) => ({\n      _time: date.add(d: duration(v: string(v: date.hour(t: r._time)) + \"h\"), to: 1970-01-01T00:00:00Z),\n      _value: r._value,\n      _field: \"Export\"\n    }))\n  |> group(columns: [\"_time\", \"_field\"])\n  |> mean()\n  |> map(fn: (r) => ({_time: r._time, _value: r._value, _field: r._field}))\n  |> group()\n"
+					"query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name: \"Europe/Zurich\")\nstart = date.truncate(t: date.add(d: -30d, to: v.timeRangeStop), unit: 1d)\nstop = date.truncate(t: v.timeRangeStop, unit: 1d)\n\nfrom(bucket: \"waid-bucket-downsampled\")\n  |> range(start: start, stop: stop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"energy_hourly\" and r[\"_field\"] == \"export_kwh\")\n  |> map(fn: (r) => ({hour: date.hour(t: r._time), _value: r._value}))\n  |> group(columns: [\"hour\"])\n  |> mean()\n  |> map(fn: (r) => {\n      h = r.hour\n      pad = if h < 10 then \"0\" else \"\"\n      return {Hour: pad + string(v: h) + \":00\", \"Mean export\": r._value}\n    })\n  |> group()\n  |> sort(columns: [\"Hour\"])\n"
 				}
 			]
 		}

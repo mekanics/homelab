@@ -180,17 +180,22 @@ class EnergyQueryContract(unittest.TestCase):
             self.assertIn("energy_hourly", query)
             self.assertIn("export_kwh", query)
 
-    def test_hour_of_day_keeps_time_after_mean(self) -> None:
-        hits = [
-            query
-            for _pid, title, query in self.queries
-            if title == "When the balcony exports"
+    def test_hour_of_day_uses_clock_hour_labels(self) -> None:
+        panels = [
+            p
+            for p in walk_panels(self.dashboard.get("panels", []))
+            if p.get("title") == "When the balcony exports"
         ]
-        self.assertTrue(hits)
-        for query in hits:
+        self.assertTrue(panels)
+        for panel in panels:
+            query = "".join(t.get("query") or "" for t in panel.get("targets", []))
+            self.assertNotIn("1970-01-01", query)
+            self.assertNotIn('_field: "Export"', query)
             after = query.split("mean()", 1)[1]
-            self.assertIn("_time", after)
+            self.assertIn("Hour:", after)
+            self.assertIn('":00"', after)
             self.assertRegex(after, r"group\(\s*\)")
+            self.assertEqual(panel.get("options", {}).get("xField"), "Hour")
 
     def test_legacy_yoy_untouched(self) -> None:
         year = json.loads(YEAR.read_text())
