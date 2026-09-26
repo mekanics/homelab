@@ -212,6 +212,12 @@ longhorn:
     jobEnabled: false
     upgradeVersionCheck: true
 
+  # 1.12.1 defaults this to true even when networkPolicies.enabled is false.
+  # Cilium enforces NetworkPolicy and is not on Longhorn's validated matrix;
+  # the default policies drop host iSCSI (TCP 3260) to instance-manager.
+  networkPolicies:
+    restrictInternalTraffic: false
+
   # Chart default is the string longhorn-critical, so the DaemonSet ignores
   # defaultSettings.priorityClass unless this is set. Driver and UI stay on
   # the chart default; they are not on the snapshot-purge path.
