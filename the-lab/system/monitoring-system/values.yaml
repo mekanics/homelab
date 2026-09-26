@@ -64,9 +64,13 @@ kube-prometheus-stack:
 
     resources:
       requests:
-        memory: 256Mi
-      limits:
         memory: 384Mi
+      limits:
+        memory: 768Mi
+
+    # RWO NFS claim cannot attach to two pods, so RollingUpdate wedges.
+    deploymentStrategy:
+      type: Recreate
 
     persistence:
       enabled: true
