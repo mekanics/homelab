@@ -202,15 +202,18 @@ openclaw:
         periodSeconds: 30
         timeoutSeconds: 10
         failureThreshold: 10
-    # Loopback exec, not kubelet httpGet. Live openclaw.json (PVC) must list
-    # only the ingress-nginx controller pod IP in gateway.trustedProxies — not
-    # 10.0.0.0/8. That supernet also covers kubelet/Cilium host IPs and
-    # SNATed clients, which OpenClaw then cannot attribute (403).
-    # After an ingress-nginx reschedule, replace the /32 and restart:
-    #   NGINX_IP=$(kubectl -n ingress-nginx get pods -l app.kubernetes.io/component=controller -o jsonpath='{.items[0].status.podIP}')
+    # Loopback exec, not kubelet httpGet. Live openclaw.json (PVC) trusts
+    # the Cilium pod CIDR of the node that currently runs ingress-nginx
+    # (pi-homelab = 10.0.0.0/24). The browser is SNATed to another
+    # node's Cilium IP (10.0.3.36), so that client hop stays
+    # attributable. Do not list every node CIDR and do not use
+    # 10.0.0.0/8 — those swallow the SNATed client and 403. Do not
+    # change ingress-nginx traffic policy for this. Helm does not own
+    # this file. After the controller moves to another node:
     #   kubectl -n openclaw exec deploy/openclaw -c gateway -- \
-    #     openclaw config set gateway.trustedProxies "[\"$NGINX_IP\"]" --strict-json --replace
-    #   kubectl -n openclaw rollout restart deploy/openclaw
+    #     openclaw config set gateway.trustedProxies \
+    #     '["10.0.0.0/24"]' \
+    #     --strict-json --replace
     #
     # 2026-09-22: Codex session catalog is off on the live PVC config
     # (`plugins.entries.codex.config.sessionCatalog.enabled=false`), on the
