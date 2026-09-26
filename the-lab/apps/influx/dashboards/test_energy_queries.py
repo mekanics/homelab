@@ -219,6 +219,20 @@ class EnergyQueryContract(unittest.TestCase):
                 self.assertIn("30d median", query)
                 self.assertIn('group(columns: ["_field"])', query)
 
+    def test_power_chart_joins_grid_and_solar(self) -> None:
+        hits = [
+            query
+            for _pid, title, query in self.queries
+            if title == "Load / Solar / Grid"
+        ]
+        self.assertTrue(hits)
+        for query in hits:
+            union_at = query.index("union(tables: [grid, solar])")
+            after = query[union_at:]
+            self.assertIn("|> group()", after)
+            self.assertIn("exists r.grid", after)
+            self.assertLess(after.index("|> group()"), after.index("pivot("))
+
     def test_inverter_status_casts_before_union(self) -> None:
         hits = [
             query
