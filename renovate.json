@@ -14,6 +14,11 @@
 	"schedule": ["before 4pm every weekday"],
 	"packageRules": [
 		{
+			"description": "Longhorn forbids skipping a minor; one PR per minor stream",
+			"matchPackageNames": ["longhorn"],
+			"separateMultipleMinor": true
+		},
+		{
 			"matchPackageNames": ["kube-prometheus-stack"],
 			"extends": ["schedule:monthly"],
 			"groupName": "prometheus-stack"
