@@ -69,8 +69,11 @@ kube-prometheus-stack:
         memory: 768Mi
 
     # RWO NFS claim cannot attach to two pods, so RollingUpdate wedges.
+    # rollingUpdate: null is required so Argo SSA drops the live field;
+    # Kubernetes rejects Recreate when rollingUpdate is still set.
     deploymentStrategy:
       type: Recreate
+      rollingUpdate: null
 
     persistence:
       enabled: true
