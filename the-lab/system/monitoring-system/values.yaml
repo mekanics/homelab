@@ -1,11 +1,4 @@
 # https://github.com/VictoriaMetrics/helm-charts/blob/victoria-metrics-k8s-stack-0.93.0/charts/victoria-metrics-k8s-stack/values.yaml
-#
-# Optimisation baseline 2026-09-26 (prometheus container, kubectl top):
-#   memory 884Mi working set, request 1024Mi, limit 2048Mi
-#   cpu 49m, request 100m, limit 500m
-#   retention 3d or 1500MB, scrape/eval 60s, no Prometheus PVC
-# Target after this chart: VMSingle request 256Mi / limit 512Mi, 30d,
-#   10Gi longhorn-local, scrape/eval 30s. Fill measured After after merge.
 victoria-metrics-k8s-stack:
   argocdReleaseOverride: monitoring-system
   # Default fullname is monitoring-system-victoria-metrics-k8s-stack. That
