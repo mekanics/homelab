@@ -6,6 +6,15 @@ victoria-metrics-k8s-stack:
   # rejects the pod at 63.
   nameOverride: vm
 
+  defaultRules:
+    groups:
+      kube-prometheus-general.rules:
+        rules:
+          # count(up == 0) emits nothing while every target is up, and
+          # RecordingRulesNoData treats that silence as a broken rule.
+          'count:up0':
+            enabled: false
+
   # https://github.com/grafana-community/helm-charts/blob/main/charts/grafana/values.yaml
   grafana:
     enabled: true
