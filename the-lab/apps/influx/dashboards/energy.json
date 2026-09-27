@@ -63,7 +63,7 @@
 			"id": 1,
 			"type": "stat",
 			"title": "Right now",
-			"description": "Absolute watts. Exporting is green, importing is orange. Idle is \u00b130 W.",
+			"description": "Absolute watts. Exporting is green, importing is orange. Idle is ±30 W.",
 			"gridPos": {
 				"h": 4,
 				"w": 12,
@@ -78,7 +78,7 @@
 				"defaults": {
 					"unit": "watt",
 					"decimals": 0,
-					"noValue": "\u2014",
+					"noValue": "—",
 					"color": {
 						"mode": "fixed",
 						"fixedColor": "text"
@@ -143,7 +143,9 @@
 			},
 			"options": {
 				"reduceOptions": {
-					"calcs": ["lastNotNull"]
+					"calcs": [
+						"lastNotNull"
+					]
 				},
 				"colorMode": "value",
 				"graphMode": "none",
@@ -200,7 +202,9 @@
 			},
 			"options": {
 				"reduceOptions": {
-					"calcs": ["lastNotNull"]
+					"calcs": [
+						"lastNotNull"
+					]
 				},
 				"colorMode": "value",
 				"graphMode": "none",
@@ -238,7 +242,7 @@
 				"defaults": {
 					"unit": "watt",
 					"decimals": 0,
-					"noValue": "\u2014",
+					"noValue": "—",
 					"color": {
 						"mode": "fixed",
 						"fixedColor": "text"
@@ -257,7 +261,9 @@
 			},
 			"options": {
 				"reduceOptions": {
-					"calcs": ["lastNotNull"]
+					"calcs": [
+						"lastNotNull"
+					]
 				},
 				"colorMode": "value",
 				"graphMode": "none",
@@ -295,7 +301,7 @@
 				"defaults": {
 					"unit": "none",
 					"decimals": 0,
-					"noValue": "\u2014",
+					"noValue": "—",
 					"color": {
 						"mode": "fixed",
 						"fixedColor": "text"
@@ -360,7 +366,9 @@
 			},
 			"options": {
 				"reduceOptions": {
-					"calcs": ["lastNotNull"]
+					"calcs": [
+						"lastNotNull"
+					]
 				},
 				"colorMode": "background",
 				"graphMode": "none",
@@ -528,7 +536,10 @@
 							{
 								"id": "custom.lineStyle",
 								"value": {
-									"dash": [4, 4],
+									"dash": [
+										4,
+										4
+									],
 									"fill": "dash"
 								}
 							},
@@ -584,7 +595,10 @@
 							{
 								"id": "custom.lineStyle",
 								"value": {
-									"dash": [4, 4],
+									"dash": [
+										4,
+										4
+									],
 									"fill": "dash"
 								}
 							},
@@ -608,7 +622,10 @@
 			},
 			"options": {
 				"legend": {
-					"calcs": ["lastNotNull", "mean"],
+					"calcs": [
+						"lastNotNull",
+						"mean"
+					],
 					"displayMode": "table",
 					"placement": "bottom",
 					"showLegend": true
@@ -634,14 +651,16 @@
 						"uid": "P64382691D9610877"
 					},
 					"hide": false,
-					"target": ["sun_altitude"]
+					"target": [
+						"sun_altitude"
+					]
 				}
 			]
 		},
 		{
 			"id": 101,
 			"type": "row",
-			"title": "Today \u2014 Zurich day. A dash means the balance task has not written this day yet.",
+			"title": "Today — Zurich day. A dash means the balance task has not written this day yet.",
 			"collapsed": false,
 			"gridPos": {
 				"h": 1,
@@ -670,7 +689,7 @@
 				"defaults": {
 					"unit": "kwatth",
 					"decimals": 1,
-					"noValue": "\u2014",
+					"noValue": "—",
 					"color": {
 						"mode": "fixed",
 						"fixedColor": "yellow"
@@ -689,7 +708,9 @@
 			},
 			"options": {
 				"reduceOptions": {
-					"calcs": ["lastNotNull"]
+					"calcs": [
+						"lastNotNull"
+					]
 				},
 				"colorMode": "value",
 				"graphMode": "none",
@@ -727,7 +748,7 @@
 				"defaults": {
 					"unit": "kwatth",
 					"decimals": 1,
-					"noValue": "\u2014",
+					"noValue": "—",
 					"color": {
 						"mode": "fixed",
 						"fixedColor": "green"
@@ -746,7 +767,9 @@
 			},
 			"options": {
 				"reduceOptions": {
-					"calcs": ["lastNotNull"]
+					"calcs": [
+						"lastNotNull"
+					]
 				},
 				"colorMode": "value",
 				"graphMode": "none",
@@ -784,7 +807,7 @@
 				"defaults": {
 					"unit": "kwatth",
 					"decimals": 1,
-					"noValue": "\u2014",
+					"noValue": "—",
 					"color": {
 						"mode": "fixed",
 						"fixedColor": "blue"
@@ -803,7 +826,9 @@
 			},
 			"options": {
 				"reduceOptions": {
-					"calcs": ["lastNotNull"]
+					"calcs": [
+						"lastNotNull"
+					]
 				},
 				"colorMode": "value",
 				"graphMode": "none",
@@ -841,7 +866,7 @@
 				"defaults": {
 					"unit": "kwatth",
 					"decimals": 1,
-					"noValue": "\u2014",
+					"noValue": "—",
 					"color": {
 						"mode": "fixed",
 						"fixedColor": "text"
@@ -860,7 +885,9 @@
 			},
 			"options": {
 				"reduceOptions": {
-					"calcs": ["lastNotNull"]
+					"calcs": [
+						"lastNotNull"
+					]
 				},
 				"colorMode": "value",
 				"graphMode": "none",
@@ -898,7 +925,7 @@
 				"defaults": {
 					"unit": "kwatth",
 					"decimals": 1,
-					"noValue": "\u2014",
+					"noValue": "—",
 					"color": {
 						"mode": "fixed",
 						"fixedColor": "orange"
@@ -917,7 +944,9 @@
 			},
 			"options": {
 				"reduceOptions": {
-					"calcs": ["lastNotNull"]
+					"calcs": [
+						"lastNotNull"
+					]
 				},
 				"colorMode": "value",
 				"graphMode": "none",
@@ -955,7 +984,7 @@
 				"defaults": {
 					"unit": "kwatth",
 					"decimals": 2,
-					"noValue": "\u2014",
+					"noValue": "—",
 					"color": {
 						"mode": "thresholds"
 					},
@@ -977,7 +1006,9 @@
 			},
 			"options": {
 				"reduceOptions": {
-					"calcs": ["lastNotNull"]
+					"calcs": [
+						"lastNotNull"
+					]
 				},
 				"colorMode": "value",
 				"graphMode": "none",
@@ -1015,7 +1046,7 @@
 				"defaults": {
 					"unit": "percentunit",
 					"decimals": 0,
-					"noValue": "\u2014",
+					"noValue": "—",
 					"color": {
 						"mode": "fixed",
 						"fixedColor": "text"
@@ -1034,7 +1065,9 @@
 			},
 			"options": {
 				"reduceOptions": {
-					"calcs": ["lastNotNull"]
+					"calcs": [
+						"lastNotNull"
+					]
 				},
 				"colorMode": "value",
 				"graphMode": "none",
@@ -1072,7 +1105,7 @@
 				"defaults": {
 					"unit": "percentunit",
 					"decimals": 0,
-					"noValue": "\u2014",
+					"noValue": "—",
 					"color": {
 						"mode": "fixed",
 						"fixedColor": "text"
@@ -1091,7 +1124,9 @@
 			},
 			"options": {
 				"reduceOptions": {
-					"calcs": ["lastNotNull"]
+					"calcs": [
+						"lastNotNull"
+					]
 				},
 				"colorMode": "value",
 				"graphMode": "none",
@@ -1129,7 +1164,7 @@
 				"defaults": {
 					"unit": "currencyCHF",
 					"decimals": 2,
-					"noValue": "\u2014",
+					"noValue": "—",
 					"color": {
 						"mode": "fixed",
 						"fixedColor": "text"
@@ -1148,7 +1183,9 @@
 			},
 			"options": {
 				"reduceOptions": {
-					"calcs": ["lastNotNull"]
+					"calcs": [
+						"lastNotNull"
+					]
 				},
 				"colorMode": "value",
 				"graphMode": "none",
@@ -1252,7 +1289,10 @@
 				"orientation": "auto",
 				"showValue": "never",
 				"legend": {
-					"calcs": ["sum", "mean"],
+					"calcs": [
+						"sum",
+						"mean"
+					],
 					"displayMode": "table",
 					"placement": "bottom",
 					"showLegend": true
@@ -1314,7 +1354,10 @@
 				"orientation": "auto",
 				"showValue": "never",
 				"legend": {
-					"calcs": ["sum", "mean"],
+					"calcs": [
+						"sum",
+						"mean"
+					],
 					"displayMode": "table",
 					"placement": "bottom",
 					"showLegend": true
@@ -1398,11 +1441,322 @@
 					"query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name: \"Europe/Zurich\")\nstart = date.truncate(t: date.add(d: -30d, to: v.timeRangeStop), unit: 1d)\nstop = date.truncate(t: v.timeRangeStop, unit: 1d)\n\nfrom(bucket: \"waid-bucket-downsampled\")\n  |> range(start: start, stop: stop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"energy_hourly\" and r[\"_field\"] == \"export_kwh\")\n  |> map(fn: (r) => ({hour: date.hour(t: r._time), _value: r._value}))\n  |> group(columns: [\"hour\"])\n  |> mean()\n  |> map(fn: (r) => {\n      h = r.hour\n      pad = if h < 10 then \"0\" else \"\"\n      return {Hour: pad + string(v: h) + \":00\", \"Mean export\": r._value}\n    })\n  |> group()\n  |> sort(columns: [\"Hour\"])\n"
 				}
 			]
+		},
+		{
+			"id": 103,
+			"type": "row",
+			"title": "Battery — last 365 closed Zurich days. AC-coupled, same Shelly. No degradation. Does not change Today / History.",
+			"collapsed": false,
+			"gridPos": {
+				"h": 1,
+				"w": 24,
+				"x": 0,
+				"y": 51
+			},
+			"panels": []
+		},
+		{
+			"id": 40,
+			"type": "stat",
+			"title": "Shifted",
+			"description": "Kilowatt-hours the pack would have delivered to the apartment instead of the grid.",
+			"gridPos": {
+				"h": 4,
+				"w": 5,
+				"x": 0,
+				"y": 52
+			},
+			"datasource": {
+				"type": "influxdb",
+				"uid": "${datasource}"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "kwatth",
+					"decimals": 1,
+					"noValue": "—",
+					"color": {
+						"mode": "fixed",
+						"fixedColor": "green"
+					},
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"reduceOptions": {
+					"calcs": [
+						"lastNotNull"
+					]
+				},
+				"colorMode": "value",
+				"graphMode": "none",
+				"textMode": "value",
+				"justifyMode": "auto",
+				"orientation": "auto"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "influxdb",
+						"uid": "${datasource}"
+					},
+					"query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name: \"Europe/Zurich\")\nusable = float(v: ${battery_kwh})\neta = float(v: ${battery_eta})\nstart = date.truncate(t: date.add(d: -365d, to: v.timeRangeStop), unit: 1d)\nstop = date.truncate(t: v.timeRangeStop, unit: 1d)\nhours = from(bucket: \"waid-bucket-downsampled\")\n  |> range(start: start, stop: stop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"energy_hourly\" and (r[\"_field\"] == \"import_kwh\" or r[\"_field\"] == \"export_kwh\"))\n  |> group()\n  |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({\n      _time: r._time,\n      import_kwh: if exists r.import_kwh then r.import_kwh else 0.0,\n      export_kwh: if exists r.export_kwh then r.export_kwh else 0.0\n    }))\n  |> sort(columns: [\"_time\"])\nwalked = hours\n  |> reduce(\n      fn: (r, accumulator) => {\n        dead = usable <= 0.0 or eta <= 0.0\n        export = if r.export_kwh > 0.0 then r.export_kwh else 0.0\n        imported = if r.import_kwh > 0.0 then r.import_kwh else 0.0\n        hoch = date.weekDay(t: r._time) != 0 and date.hour(t: r._time) >= 6 and date.hour(t: r._time) < 22\n        room = usable - accumulator.soc\n        take = if dead then 0.0 else if export < room / eta then export else room / eta\n        soc1 = if dead then accumulator.soc else accumulator.soc + take * eta\n        give = if dead then 0.0 else if imported < soc1 then imported else soc1\n        soc2 = if dead then accumulator.soc else soc1 - give\n        return {\n          soc: soc2,\n          charged_ht: accumulator.charged_ht + (if hoch then take else 0.0),\n          charged_nt: accumulator.charged_nt + (if hoch then 0.0 else take),\n          shifted_ht: accumulator.shifted_ht + (if hoch then give else 0.0),\n          shifted_nt: accumulator.shifted_nt + (if hoch then 0.0 else give),\n          leftover_export: accumulator.leftover_export + export - take,\n          leftover_import: accumulator.leftover_import + imported - give\n        }\n      },\n      identity: {soc: 0.0, charged_ht: 0.0, charged_nt: 0.0, shifted_ht: 0.0, shifted_nt: 0.0, leftover_export: 0.0, leftover_import: 0.0}\n    )\n  |> map(fn: (r) => ({_time: stop, _value: r.shifted_ht + r.shifted_nt, _field: \"Shifted\"}))\n"
+				}
+			]
+		},
+		{
+			"id": 41,
+			"type": "stat",
+			"title": "Saved",
+			"description": "Buy avoided minus feed-in forgone, the year we lived. ewz.natur 2026 exkl. MWST.",
+			"gridPos": {
+				"h": 4,
+				"w": 5,
+				"x": 5,
+				"y": 52
+			},
+			"datasource": {
+				"type": "influxdb",
+				"uid": "${datasource}"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "currencyCHF",
+					"decimals": 0,
+					"noValue": "—",
+					"color": {
+						"mode": "fixed",
+						"fixedColor": "text"
+					},
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "text",
+								"value": null
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"reduceOptions": {
+					"calcs": [
+						"lastNotNull"
+					]
+				},
+				"colorMode": "value",
+				"graphMode": "none",
+				"textMode": "value",
+				"justifyMode": "auto",
+				"orientation": "auto"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "influxdb",
+						"uid": "${datasource}"
+					},
+					"query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name: \"Europe/Zurich\")\nusable = float(v: ${battery_kwh})\neta = float(v: ${battery_eta})\nstart = date.truncate(t: date.add(d: -365d, to: v.timeRangeStop), unit: 1d)\nstop = date.truncate(t: v.timeRangeStop, unit: 1d)\nhours = from(bucket: \"waid-bucket-downsampled\")\n  |> range(start: start, stop: stop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"energy_hourly\" and (r[\"_field\"] == \"import_kwh\" or r[\"_field\"] == \"export_kwh\"))\n  |> group()\n  |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({\n      _time: r._time,\n      import_kwh: if exists r.import_kwh then r.import_kwh else 0.0,\n      export_kwh: if exists r.export_kwh then r.export_kwh else 0.0\n    }))\n  |> sort(columns: [\"_time\"])\nwalked = hours\n  |> reduce(\n      fn: (r, accumulator) => {\n        dead = usable <= 0.0 or eta <= 0.0\n        export = if r.export_kwh > 0.0 then r.export_kwh else 0.0\n        imported = if r.import_kwh > 0.0 then r.import_kwh else 0.0\n        hoch = date.weekDay(t: r._time) != 0 and date.hour(t: r._time) >= 6 and date.hour(t: r._time) < 22\n        room = usable - accumulator.soc\n        take = if dead then 0.0 else if export < room / eta then export else room / eta\n        soc1 = if dead then accumulator.soc else accumulator.soc + take * eta\n        give = if dead then 0.0 else if imported < soc1 then imported else soc1\n        soc2 = if dead then accumulator.soc else soc1 - give\n        return {\n          soc: soc2,\n          charged_ht: accumulator.charged_ht + (if hoch then take else 0.0),\n          charged_nt: accumulator.charged_nt + (if hoch then 0.0 else take),\n          shifted_ht: accumulator.shifted_ht + (if hoch then give else 0.0),\n          shifted_nt: accumulator.shifted_nt + (if hoch then 0.0 else give),\n          leftover_export: accumulator.leftover_export + export - take,\n          leftover_import: accumulator.leftover_import + imported - give\n        }\n      },\n      identity: {soc: 0.0, charged_ht: 0.0, charged_nt: 0.0, shifted_ht: 0.0, shifted_nt: 0.0, leftover_export: 0.0, leftover_import: 0.0}\n    )\nbuyHT = float(v: ${buy_ht})\nbuyNT = float(v: ${buy_nt})\nfeedHT = float(v: ${feed_ht})\nfeedNT = float(v: ${feed_nt})\nsaved = walked\n  |> map(fn: (r) => ({\n      _time: stop,\n      _value: r.shifted_ht * buyHT + r.shifted_nt * buyNT - r.charged_ht * feedHT - r.charged_nt * feedNT,\n      _field: \"Saved\"\n    }))\nsaved\n"
+				}
+			]
+		},
+		{
+			"id": 42,
+			"type": "stat",
+			"title": "Payback",
+			"description": "All-in price divided by Saved. A dash when Saved is zero or below.",
+			"gridPos": {
+				"h": 4,
+				"w": 4,
+				"x": 10,
+				"y": 52
+			},
+			"datasource": {
+				"type": "influxdb",
+				"uid": "${datasource}"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "none",
+					"decimals": 1,
+					"noValue": "—",
+					"color": {
+						"mode": "fixed",
+						"fixedColor": "text"
+					},
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "text",
+								"value": null
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"reduceOptions": {
+					"calcs": [
+						"lastNotNull"
+					]
+				},
+				"colorMode": "value",
+				"graphMode": "none",
+				"textMode": "value",
+				"justifyMode": "auto",
+				"orientation": "auto"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "influxdb",
+						"uid": "${datasource}"
+					},
+					"query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name: \"Europe/Zurich\")\nusable = float(v: ${battery_kwh})\neta = float(v: ${battery_eta})\nstart = date.truncate(t: date.add(d: -365d, to: v.timeRangeStop), unit: 1d)\nstop = date.truncate(t: v.timeRangeStop, unit: 1d)\nhours = from(bucket: \"waid-bucket-downsampled\")\n  |> range(start: start, stop: stop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"energy_hourly\" and (r[\"_field\"] == \"import_kwh\" or r[\"_field\"] == \"export_kwh\"))\n  |> group()\n  |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({\n      _time: r._time,\n      import_kwh: if exists r.import_kwh then r.import_kwh else 0.0,\n      export_kwh: if exists r.export_kwh then r.export_kwh else 0.0\n    }))\n  |> sort(columns: [\"_time\"])\nwalked = hours\n  |> reduce(\n      fn: (r, accumulator) => {\n        dead = usable <= 0.0 or eta <= 0.0\n        export = if r.export_kwh > 0.0 then r.export_kwh else 0.0\n        imported = if r.import_kwh > 0.0 then r.import_kwh else 0.0\n        hoch = date.weekDay(t: r._time) != 0 and date.hour(t: r._time) >= 6 and date.hour(t: r._time) < 22\n        room = usable - accumulator.soc\n        take = if dead then 0.0 else if export < room / eta then export else room / eta\n        soc1 = if dead then accumulator.soc else accumulator.soc + take * eta\n        give = if dead then 0.0 else if imported < soc1 then imported else soc1\n        soc2 = if dead then accumulator.soc else soc1 - give\n        return {\n          soc: soc2,\n          charged_ht: accumulator.charged_ht + (if hoch then take else 0.0),\n          charged_nt: accumulator.charged_nt + (if hoch then 0.0 else take),\n          shifted_ht: accumulator.shifted_ht + (if hoch then give else 0.0),\n          shifted_nt: accumulator.shifted_nt + (if hoch then 0.0 else give),\n          leftover_export: accumulator.leftover_export + export - take,\n          leftover_import: accumulator.leftover_import + imported - give\n        }\n      },\n      identity: {soc: 0.0, charged_ht: 0.0, charged_nt: 0.0, shifted_ht: 0.0, shifted_nt: 0.0, leftover_export: 0.0, leftover_import: 0.0}\n    )\nbuyHT = float(v: ${buy_ht})\nbuyNT = float(v: ${buy_nt})\nfeedHT = float(v: ${feed_ht})\nfeedNT = float(v: ${feed_nt})\npack = float(v: ${battery_chf})\nsaved = walked\n  |> map(fn: (r) => ({\n      _time: stop,\n      _value: r.shifted_ht * buyHT + r.shifted_nt * buyNT - r.charged_ht * feedHT - r.charged_nt * feedNT,\n      _field: \"Payback\"\n    }))\n  |> map(fn: (r) => ({r with _value: if r._value > 0.0 then pack / r._value else 0.0}))\n  |> filter(fn: (r) => r._value > 0.0)\nsaved\n"
+				}
+			]
+		},
+		{
+			"id": 43,
+			"type": "stat",
+			"title": "Max price",
+			"description": "Saved times the payback horizon. The most the pack may cost to hit that year count.",
+			"gridPos": {
+				"h": 4,
+				"w": 5,
+				"x": 14,
+				"y": 52
+			},
+			"datasource": {
+				"type": "influxdb",
+				"uid": "${datasource}"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "currencyCHF",
+					"decimals": 0,
+					"noValue": "—",
+					"color": {
+						"mode": "fixed",
+						"fixedColor": "text"
+					},
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "text",
+								"value": null
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"reduceOptions": {
+					"calcs": [
+						"lastNotNull"
+					]
+				},
+				"colorMode": "value",
+				"graphMode": "none",
+				"textMode": "value",
+				"justifyMode": "auto",
+				"orientation": "auto"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "influxdb",
+						"uid": "${datasource}"
+					},
+					"query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name: \"Europe/Zurich\")\nusable = float(v: ${battery_kwh})\neta = float(v: ${battery_eta})\nstart = date.truncate(t: date.add(d: -365d, to: v.timeRangeStop), unit: 1d)\nstop = date.truncate(t: v.timeRangeStop, unit: 1d)\nhours = from(bucket: \"waid-bucket-downsampled\")\n  |> range(start: start, stop: stop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"energy_hourly\" and (r[\"_field\"] == \"import_kwh\" or r[\"_field\"] == \"export_kwh\"))\n  |> group()\n  |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({\n      _time: r._time,\n      import_kwh: if exists r.import_kwh then r.import_kwh else 0.0,\n      export_kwh: if exists r.export_kwh then r.export_kwh else 0.0\n    }))\n  |> sort(columns: [\"_time\"])\nwalked = hours\n  |> reduce(\n      fn: (r, accumulator) => {\n        dead = usable <= 0.0 or eta <= 0.0\n        export = if r.export_kwh > 0.0 then r.export_kwh else 0.0\n        imported = if r.import_kwh > 0.0 then r.import_kwh else 0.0\n        hoch = date.weekDay(t: r._time) != 0 and date.hour(t: r._time) >= 6 and date.hour(t: r._time) < 22\n        room = usable - accumulator.soc\n        take = if dead then 0.0 else if export < room / eta then export else room / eta\n        soc1 = if dead then accumulator.soc else accumulator.soc + take * eta\n        give = if dead then 0.0 else if imported < soc1 then imported else soc1\n        soc2 = if dead then accumulator.soc else soc1 - give\n        return {\n          soc: soc2,\n          charged_ht: accumulator.charged_ht + (if hoch then take else 0.0),\n          charged_nt: accumulator.charged_nt + (if hoch then 0.0 else take),\n          shifted_ht: accumulator.shifted_ht + (if hoch then give else 0.0),\n          shifted_nt: accumulator.shifted_nt + (if hoch then 0.0 else give),\n          leftover_export: accumulator.leftover_export + export - take,\n          leftover_import: accumulator.leftover_import + imported - give\n        }\n      },\n      identity: {soc: 0.0, charged_ht: 0.0, charged_nt: 0.0, shifted_ht: 0.0, shifted_nt: 0.0, leftover_export: 0.0, leftover_import: 0.0}\n    )\nbuyHT = float(v: ${buy_ht})\nbuyNT = float(v: ${buy_nt})\nfeedHT = float(v: ${feed_ht})\nfeedNT = float(v: ${feed_nt})\nyears = float(v: ${payback_years})\nsaved = walked\n  |> map(fn: (r) => ({\n      _time: stop,\n      _value: r.shifted_ht * buyHT + r.shifted_nt * buyNT - r.charged_ht * feedHT - r.charged_nt * feedNT,\n      _field: \"Max price\"\n    }))\n  |> map(fn: (r) => ({r with _value: if r._value > 0.0 then r._value * years else 0.0}))\n  |> filter(fn: (r) => r._value > 0.0)\nsaved\n"
+				}
+			]
+		},
+		{
+			"id": 44,
+			"type": "stat",
+			"title": "Left on the grid",
+			"description": "Exported kilowatt-hours the pack did not take.",
+			"gridPos": {
+				"h": 4,
+				"w": 5,
+				"x": 19,
+				"y": 52
+			},
+			"datasource": {
+				"type": "influxdb",
+				"uid": "${datasource}"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "kwatth",
+					"decimals": 1,
+					"noValue": "—",
+					"color": {
+						"mode": "fixed",
+						"fixedColor": "blue"
+					},
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "blue",
+								"value": null
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"reduceOptions": {
+					"calcs": [
+						"lastNotNull"
+					]
+				},
+				"colorMode": "value",
+				"graphMode": "none",
+				"textMode": "value",
+				"justifyMode": "auto",
+				"orientation": "auto"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "influxdb",
+						"uid": "${datasource}"
+					},
+					"query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name: \"Europe/Zurich\")\nusable = float(v: ${battery_kwh})\neta = float(v: ${battery_eta})\nstart = date.truncate(t: date.add(d: -365d, to: v.timeRangeStop), unit: 1d)\nstop = date.truncate(t: v.timeRangeStop, unit: 1d)\nhours = from(bucket: \"waid-bucket-downsampled\")\n  |> range(start: start, stop: stop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"energy_hourly\" and (r[\"_field\"] == \"import_kwh\" or r[\"_field\"] == \"export_kwh\"))\n  |> group()\n  |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({\n      _time: r._time,\n      import_kwh: if exists r.import_kwh then r.import_kwh else 0.0,\n      export_kwh: if exists r.export_kwh then r.export_kwh else 0.0\n    }))\n  |> sort(columns: [\"_time\"])\nwalked = hours\n  |> reduce(\n      fn: (r, accumulator) => {\n        dead = usable <= 0.0 or eta <= 0.0\n        export = if r.export_kwh > 0.0 then r.export_kwh else 0.0\n        imported = if r.import_kwh > 0.0 then r.import_kwh else 0.0\n        hoch = date.weekDay(t: r._time) != 0 and date.hour(t: r._time) >= 6 and date.hour(t: r._time) < 22\n        room = usable - accumulator.soc\n        take = if dead then 0.0 else if export < room / eta then export else room / eta\n        soc1 = if dead then accumulator.soc else accumulator.soc + take * eta\n        give = if dead then 0.0 else if imported < soc1 then imported else soc1\n        soc2 = if dead then accumulator.soc else soc1 - give\n        return {\n          soc: soc2,\n          charged_ht: accumulator.charged_ht + (if hoch then take else 0.0),\n          charged_nt: accumulator.charged_nt + (if hoch then 0.0 else take),\n          shifted_ht: accumulator.shifted_ht + (if hoch then give else 0.0),\n          shifted_nt: accumulator.shifted_nt + (if hoch then 0.0 else give),\n          leftover_export: accumulator.leftover_export + export - take,\n          leftover_import: accumulator.leftover_import + imported - give\n        }\n      },\n      identity: {soc: 0.0, charged_ht: 0.0, charged_nt: 0.0, shifted_ht: 0.0, shifted_nt: 0.0, leftover_export: 0.0, leftover_import: 0.0}\n    )\n  |> map(fn: (r) => ({_time: stop, _value: r.leftover_export, _field: \"Left on the grid\"}))\n"
+				}
+			]
 		}
 	],
 	"refresh": "1m",
 	"schemaVersion": 39,
-	"tags": ["waid", "energy"],
+	"tags": [
+		"waid",
+		"energy"
+	],
 	"templating": {
 		"list": [
 			{
@@ -1494,6 +1848,86 @@
 						"selected": true,
 						"text": "0.0645",
 						"value": "0.0645"
+					}
+				],
+				"skipUrlSync": false
+			},
+			{
+				"name": "battery_kwh",
+				"label": "Usable kWh",
+				"type": "textbox",
+				"hide": 0,
+				"query": "2",
+				"current": {
+					"selected": false,
+					"text": "2",
+					"value": "2"
+				},
+				"options": [
+					{
+						"selected": true,
+						"text": "2",
+						"value": "2"
+					}
+				],
+				"skipUrlSync": false
+			},
+			{
+				"name": "battery_chf",
+				"label": "Pack CHF",
+				"type": "textbox",
+				"hide": 0,
+				"query": "2000",
+				"current": {
+					"selected": false,
+					"text": "2000",
+					"value": "2000"
+				},
+				"options": [
+					{
+						"selected": true,
+						"text": "2000",
+						"value": "2000"
+					}
+				],
+				"skipUrlSync": false
+			},
+			{
+				"name": "battery_eta",
+				"label": "Round-trip",
+				"type": "textbox",
+				"hide": 0,
+				"query": "0.90",
+				"current": {
+					"selected": false,
+					"text": "0.90",
+					"value": "0.90"
+				},
+				"options": [
+					{
+						"selected": true,
+						"text": "0.90",
+						"value": "0.90"
+					}
+				],
+				"skipUrlSync": false
+			},
+			{
+				"name": "payback_years",
+				"label": "Payback years",
+				"type": "textbox",
+				"hide": 0,
+				"query": "10",
+				"current": {
+					"selected": false,
+					"text": "10",
+					"value": "10"
+				},
+				"options": [
+					{
+						"selected": true,
+						"text": "10",
+						"value": "10"
 					}
 				],
 				"skipUrlSync": false
