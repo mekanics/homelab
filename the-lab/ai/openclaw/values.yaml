@@ -9,7 +9,7 @@ openclaw:
   # ReadWriteOnce — this replaces the gateway, it is not a second pod.
   # Chart 0.4.0+ honours this.
   debug:
-    enabled: true
+    enabled: false
 
   # Default policy is Always, which rewrites every file on each volume at
   # every start. The state volume now holds the whole home, and that walk is
@@ -115,27 +115,17 @@ openclaw:
         recurring-job.longhorn.io/backup-every-8h: enabled
         recurring-job.longhorn.io/backup-weekly: enabled
         recurring-job.longhorn.io/backup-monthly: enabled
-  # Integrity-check / compile scratch. 1Gi, 2Gi and 4Gi have each evicted the
-  # gateway. Cold start alone settles around 2.5Gi: the gateway stages every
-  # plugin build as its own /tmp/openclaw-plugin-build-* dir (~576Mi for the
-  # big ones) plus /tmp/openclaw-model-catalog-*, and does not clean them up
-  # while it runs. That left under 1.5Gi of headroom at 4Gi, so a single
-  # `openclaw plugins install` pushed it over and kubelet evicted the pod
-  # (2026-09-24). The build dirs also accumulate across container restarts,
-  # since a restart reuses the pod's emptyDir — a 6-restart crash loop reached
-  # 5.2Gi on its own. 8Gi absorbs that. This is disk-backed, not tmpfs, so it
-  # is not RAM; the node has ~330Gi free.
-  #
-  # They are only created during cold start, not during normal operation
-  # (13 dirs at start, still 13 after 23min of serving an agent run), so a
-  # long crash loop is the only thing that can still reach 8Gi. Dirs from
-  # earlier container lives are orphans and safe to reclaim — the running
-  # gateway holds no descriptors in any of them. Use the current pid 1 start
-  # time as the cutoff so nothing in the live cold start is touched:
-  #   kubectl -n openclaw exec deploy/openclaw -c gateway -- sh -c \
-  #     'find /tmp -maxdepth 1 \( -name "openclaw-plugin-build-*" \
-  #        -o -name "openclaw-model-catalog-*" \) \
-  #        ! -newermt "$(ps -o lstart= -p 1)" -exec rm -rf {} +'
+    # 2026.9.6 stages plugin builds under OPENCLAW_STATE_DIR/tmp/plugin-captures,
+    # not /tmp. An emptyDir here keeps those trees off the snapshotted PVC.
+    # Mount last: overlaying tmp/ hides leftover captures on the volume.
+    state-tmp:
+      enabled: true
+      type: emptyDir
+      mountPath: /home/node/.openclaw-state/tmp
+      sizeLimit: 8Gi
+  # Container /tmp for npm/uv caches and anything that still honours TMPDIR.
+  # Plugin captures for 2026.9.6 live on persistence.state-tmp instead.
+  # 8Gi is disk-backed emptyDir, not RAM; a crash loop evicts the pod.
   tmpDir:
     enabled: true
     sizeLimit: 8Gi
@@ -271,7 +261,7 @@ openclaw:
     #    (2026-09-24), and a prior attempt at 4Gi tmp was evicted on disk. Note
     #    that exporting NPM_CONFIG_CACHE / NPM_CONFIG_TMP / TMPDIR in the exec
     #    shell does not help: the build runs in the gateway process, not the
-    #    CLI, and stages under /tmp regardless.
+    #    CLI, and stages under OPENCLAW_STATE_DIR/tmp (state-tmp emptyDir).
     #
     #    Park the gateway first (debug.enabled=true → sleep infinity), which
     #    frees both the memory and the state lock, then install and unpark:
