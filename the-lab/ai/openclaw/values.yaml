@@ -105,6 +105,16 @@ openclaw:
       accessMode: ReadWriteOnce
       size: 10Gi
       retain: true
+      # PVC is the recurring-job source (Longhorn 1.12). Restate group
+      # default so snapshot-cleanup-daily and filesystem-trim stay. Do not
+      # join default-backup: that group also runs snapshot-12h, and a
+      # stuck full-size snapshot is what aborted this volume's journal.
+      extraLabels:
+        recurring-job.longhorn.io/source: enabled
+        recurring-job-group.longhorn.io/default: enabled
+        recurring-job.longhorn.io/backup-every-8h: enabled
+        recurring-job.longhorn.io/backup-weekly: enabled
+        recurring-job.longhorn.io/backup-monthly: enabled
   # Integrity-check / compile scratch. 1Gi, 2Gi and 4Gi have each evicted the
   # gateway. Cold start alone settles around 2.5Gi: the gateway stages every
   # plugin build as its own /tmp/openclaw-plugin-build-* dir (~576Mi for the
