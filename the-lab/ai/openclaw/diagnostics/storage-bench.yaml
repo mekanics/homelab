@@ -1,0 +1,274 @@
+# One-shot storage benchmark. Not rendered by Helm or ArgoCD.
+# Apply, read Job logs, then delete the namespace:
+#   kubectl apply -f the-lab/ai/openclaw/diagnostics/storage-bench.yaml
+#   kubectl -n storage-bench logs job/bench-longhorn
+#   kubectl -n storage-bench logs job/bench-local
+#   kubectl -n storage-bench logs job/bench-nfs
+#   kubectl delete ns storage-bench
+#
+# Pins to pi-homelab-master-2 with a hostname nodeSelector, never nodeName:
+# longhorn-local is WaitForFirstConsumer and a nodeName pod skips the scheduler.
+#
+# NFS writes only under .storage-bench/ on the production export and removes
+# that directory when the Job exits.
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: storage-bench
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bench-script
+  namespace: storage-bench
+data:
+  run.sh: |
+    #!/bin/sh
+    set -eu
+    TARGET="${BENCH_TARGET:?}"
+    ROOT="${BENCH_ROOT:?}"
+    WORK="$ROOT/.storage-bench"
+    mkdir -p "$WORK"
+    cleanup() { rm -rf "$WORK"; }
+    trap cleanup EXIT
+
+    apt-get update -qq
+    DEBIAN_FRONTEND=noninteractive apt-get install -y -qq fio sqlite3 python3 >/dev/null
+
+    fio_one() {
+      local out="$WORK/fio.json"
+      fio --name=randwrite --filename="$WORK/fio.bin" --size=256M \
+        --bs=4k --iodepth=1 --rw=randwrite --fsync=1 \
+        --runtime=60 --time_based --group_reporting \
+        --output-format=json --output="$out" >/dev/null
+      python3 - "$out" <<'PY'
+    import json,sys
+    j=json.load(open(sys.argv[1]))
+    w=j["jobs"][0]["write"]
+    clat=w["clat_ns"]["percentile"]
+    print("fio iops={:.1f} p50_ms={:.3f} p99_ms={:.3f}".format(
+        w["iops"],
+        clat["50.000000"]/1e6,
+        clat["99.000000"]/1e6,
+    ))
+    PY
+    }
+
+    sqlite_one() {
+      rm -f "$WORK/bench.db" "$WORK/bench.db-wal" "$WORK/bench.db-shm"
+      local sql="$WORK/sqlite.sql"
+      {
+        echo 'PRAGMA journal_mode=WAL;'
+        echo 'PRAGMA synchronous=FULL;'
+        echo 'CREATE TABLE t(id INTEGER PRIMARY KEY, v TEXT);'
+        i=1
+        while [ "$i" -le 2000 ]; do
+          printf "INSERT INTO t(v) VALUES('row-%s');\n" "$i"
+          i=$((i + 1))
+        done
+      } >"$sql"
+      local start end
+      start=$(date +%s.%N)
+      sqlite3 "$WORK/bench.db" <"$sql"
+      end=$(date +%s.%N)
+      python3 -c "print('sqlite_s={:.3f}'.format(float('$end')-float('$start')))"
+    }
+
+    files_one() {
+      rm -rf "$WORK/files"
+      mkdir "$WORK/files"
+      local start end
+      start=$(date +%s.%N)
+      i=1
+      while [ "$i" -le 10000 ]; do
+        printf '%s\n' "$i" > "$WORK/files/$i"
+        i=$((i + 1))
+      done
+      sync
+      end=$(date +%s.%N)
+      python3 -c "print('files_s={:.3f}'.format(float('$end')-float('$start')))"
+    }
+
+    echo "TARGET=$TARGET node=$(cat /etc/hostname) $(date -Is)"
+    echo "--- replicas (if Longhorn) ---"
+    # Filled by the operator from outside the Job.
+
+    n=1
+    while [ "$n" -le 3 ]; do
+      echo "===== run $n ====="
+      fio_one
+      sqlite_one
+      files_one
+      n=$((n + 1))
+    done
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bench-longhorn
+  namespace: storage-bench
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bench-local
+  namespace: storage-bench
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn-local
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: storage-bench-nfs
+  labels:
+    app.kubernetes.io/name: storage-bench
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ''
+  nfs:
+    server: 192.168.10.12
+    path: /volume1/openclaw
+  mountOptions:
+    - nfsvers=4
+    - noatime
+    - nocto
+    - actimeo=600
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bench-nfs
+  namespace: storage-bench
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ''
+  volumeName: storage-bench-nfs
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: bench-longhorn
+  namespace: storage-bench
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/hostname: pi-homelab-master-2.local
+      containers:
+        - name: bench
+          image: debian:bookworm-slim
+          command: ['bash', '/scripts/run.sh']
+          env:
+            - name: BENCH_TARGET
+              value: longhorn
+            - name: BENCH_ROOT
+              value: /mnt
+          volumeMounts:
+            - name: data
+              mountPath: /mnt
+            - name: script
+              mountPath: /scripts
+              readOnly: true
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: bench-longhorn
+        - name: script
+          configMap:
+            name: bench-script
+            defaultMode: 0555
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: bench-local
+  namespace: storage-bench
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/hostname: pi-homelab-master-2.local
+      containers:
+        - name: bench
+          image: debian:bookworm-slim
+          command: ['bash', '/scripts/run.sh']
+          env:
+            - name: BENCH_TARGET
+              value: longhorn-local
+            - name: BENCH_ROOT
+              value: /mnt
+          volumeMounts:
+            - name: data
+              mountPath: /mnt
+            - name: script
+              mountPath: /scripts
+              readOnly: true
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: bench-local
+        - name: script
+          configMap:
+            name: bench-script
+            defaultMode: 0555
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: bench-nfs
+  namespace: storage-bench
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/hostname: pi-homelab-master-2.local
+      containers:
+        - name: bench
+          image: debian:bookworm-slim
+          command: ['bash', '/scripts/run.sh']
+          env:
+            - name: BENCH_TARGET
+              value: nfs
+            - name: BENCH_ROOT
+              value: /mnt
+          volumeMounts:
+            - name: data
+              mountPath: /mnt
+            - name: script
+              mountPath: /scripts
+              readOnly: true
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: bench-nfs
+        - name: script
+          configMap:
+            name: bench-script
+            defaultMode: 0555
