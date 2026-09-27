@@ -1,0 +1,28 @@
+# Held for 7 days after the 2026-09-27 longhorn-local copy.
+# Not mounted. Delete this file together with the claim and its
+# Longhorn volume after 2026-10-04 and a Completed backup of
+# openclaw-data. Rollback remounts via persistence.state.enabled.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: openclaw-state
+  namespace: openclaw
+  annotations:
+    helm.sh/resource-policy: keep
+    argocd.argoproj.io/sync-options: Prune=false
+    homelab.mekanics.ch/retire-after: '2026-10-04'
+  labels:
+    app.kubernetes.io/name: openclaw
+    recurring-job.longhorn.io/source: enabled
+    recurring-job-group.longhorn.io/default: enabled
+    recurring-job.longhorn.io/backup-every-8h: enabled
+    recurring-job.longhorn.io/backup-weekly: enabled
+    recurring-job.longhorn.io/backup-monthly: enabled
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 10Gi
+  volumeName: pvc-6e868d67-de5a-4673-a512-e346e1580d34

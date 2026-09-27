@@ -14,6 +14,7 @@ one volumeMount uses the state directory.
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -61,6 +62,9 @@ def render() -> str:
             + "\n"
         )
         (work / "values.yaml").write_bytes((CHART_DIR / "values.yaml").read_bytes())
+        templates = CHART_DIR / "templates"
+        if templates.is_dir():
+            shutil.copytree(templates, work / "templates")
         subprocess.run(
             ["helm", "dependency", "build", str(work)],
             check=True,
@@ -224,8 +228,8 @@ def main() -> int:
     if extra:
         print("unexpected PVC for scratch:", extra, file=sys.stderr)
         return 1
-    if "openclaw-state" in names:
-        print("openclaw-state must stay disabled so Argo does not remount it", file=sys.stderr)
+    if "openclaw-state" not in names:
+        print("keep-PVC openclaw-state missing from render", file=sys.stderr)
         return 1
 
     mounts = volume_mounts(manifest)
@@ -239,6 +243,9 @@ def main() -> int:
     if data_mount is None or data_mount.get("mountPath") != STATE_MOUNT:
         print("volumeMounts:", mounts, file=sys.stderr)
         print(f"missing volumeMount data at {STATE_MOUNT}", file=sys.stderr)
+        return 1
+    if "state" in mounts_by_name:
+        print("openclaw-state must not be mounted after the local copy", file=sys.stderr)
         return 1
     scratch_mount = mounts_by_name.get("state-tmp")
     if scratch_mount is None or scratch_mount.get("mountPath") != STATE_TMP_MOUNT:
