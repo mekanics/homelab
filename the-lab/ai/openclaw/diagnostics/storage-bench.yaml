@@ -1,10 +1,16 @@
 # One-shot storage benchmark. Not rendered by Helm or ArgoCD.
-# Apply, read Job logs, then delete the namespace:
+# Apply the namespace, ConfigMap, PVs and PVCs first. Then apply ONE Job
+# at a time — the three Jobs in this file will otherwise run in parallel
+# on the same node and contaminate the numbers.
 #   kubectl apply -f the-lab/ai/openclaw/diagnostics/storage-bench.yaml
+#   kubectl -n storage-bench delete job bench-local bench-nfs
 #   kubectl -n storage-bench logs job/bench-longhorn
-#   kubectl -n storage-bench logs job/bench-local
-#   kubectl -n storage-bench logs job/bench-nfs
+#   # then apply only the next Job document, repeat
 #   kubectl delete ns storage-bench
+#   kubectl delete pv storage-bench-nfs
+#
+# NFS is root-squashed. The script installs packages as root, then drops
+# to uid 1000 so it can write `.storage-bench/` on the production export.
 #
 # Pins to pi-homelab-master-2 with a hostname nodeSelector, never nodeName:
 # longhorn-local is WaitForFirstConsumer and a nodeName pod skips the scheduler.
@@ -29,12 +35,21 @@ data:
     TARGET="${BENCH_TARGET:?}"
     ROOT="${BENCH_ROOT:?}"
     WORK="$ROOT/.storage-bench"
+
+    if ! command -v fio >/dev/null 2>&1; then
+      apt-get update -qq
+      DEBIAN_FRONTEND=noninteractive apt-get install -y -qq fio sqlite3 python3 >/dev/null
+    fi
+
+    # Production NFS is root-squashed. Install as root, then drop to the
+    # export owner (uid 1000) so mkdir/write/rm under .storage-bench work.
+    if [ "$(id -u)" = 0 ] && [ ! -w "$ROOT" ]; then
+      exec setpriv --reuid=1000 --regid=1000 --clear-groups /scripts/run.sh
+    fi
+
     mkdir -p "$WORK"
     cleanup() { rm -rf "$WORK"; }
     trap cleanup EXIT
-
-    apt-get update -qq
-    DEBIAN_FRONTEND=noninteractive apt-get install -y -qq fio sqlite3 python3 >/dev/null
 
     fio_one() {
       local out="$WORK/fio.json"
@@ -45,12 +60,18 @@ data:
       python3 - "$out" <<'PY'
     import json,sys
     j=json.load(open(sys.argv[1]))
-    w=j["jobs"][0]["write"]
+    job=j["jobs"][0]
+    w=job["write"]
     clat=w["clat_ns"]["percentile"]
-    print("fio iops={:.1f} p50_ms={:.3f} p99_ms={:.3f}".format(
+    sync=job.get("sync", {}).get("lat_ns", {}).get("percentile")
+    if not sync:
+        raise SystemExit("fio json has no job.sync.lat_ns.percentile; keys=%s" % sorted(job.keys()))
+    print("fio iops={:.1f} write_p50_ms={:.3f} write_p99_ms={:.3f} fsync_p50_ms={:.3f} fsync_p99_ms={:.3f}".format(
         w["iops"],
         clat["50.000000"]/1e6,
         clat["99.000000"]/1e6,
+        sync["50.000000"]/1e6,
+        sync["99.000000"]/1e6,
     ))
     PY
     }

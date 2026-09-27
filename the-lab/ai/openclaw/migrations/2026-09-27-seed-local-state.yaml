@@ -1,0 +1,126 @@
+# One-shot migration: copy durable OpenClaw state from the 2-replica
+# `openclaw-state` volume onto a new `longhorn-local` claim.
+#
+# Not rendered by Helm or ArgoCD — only `templates/` is. Apply by hand
+# after the gateway is parked on pi-homelab-master-2.
+#
+# Preconditions:
+#   1. debug.enabled=true (gateway parked, SQLite quiescent).
+#   2. The parked pod is on pi-homelab-master-2.local so the RWO source
+#      volume is attached there. A hostname nodeSelector on the Deployment
+#      is what moves it; do not start this Job while the gateway is still
+#      on master-1.
+#   3. openclaw-data does not exist yet, or exists and is still Pending.
+#      This Job is the first consumer. longhorn-local is
+#      WaitForFirstConsumer — use nodeSelector, never nodeName.
+#
+# After it completes: mount `data` at OPENCLAW_STATE_DIR, set
+# state.enabled=false, unpark. Annotate openclaw-state with
+# argocd.argoproj.io/sync-options: Prune=false before that sync — Argo
+# prune:true does not honour helm.sh/resource-policy: keep.
+# Keep openclaw-state for 7 clean days after a Completed backup of the
+# new volume, then delete the claim and its Longhorn volume.
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: openclaw-data
+  namespace: openclaw
+  annotations:
+    helm.sh/resource-policy: keep
+  labels:
+    app.kubernetes.io/name: openclaw
+    recurring-job.longhorn.io/source: enabled
+    recurring-job-group.longhorn.io/default: enabled
+    recurring-job.longhorn.io/backup-every-8h: enabled
+    recurring-job.longhorn.io/backup-weekly: enabled
+    recurring-job.longhorn.io/backup-monthly: enabled
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn-local
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: openclaw-seed-local-state
+  namespace: openclaw
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      name: openclaw-seed-local-state
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/hostname: pi-homelab-master-2.local
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+      containers:
+        - name: seed
+          # renovate datasource=docker depName=busybox
+          image: busybox:1.38
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          command:
+            - sh
+            - -ec
+            - |
+              if find /new -name '*.sqlite' -type f | grep -q .; then
+                echo "REFUSING: sqlite already exists on openclaw-data."
+                find /new -name '*.sqlite' -type f -exec ls -ln {} \;
+                exit 1
+              fi
+
+              echo "--- source (openclaw-state) ---"
+              du -sh /old
+              find /old -name '*.sqlite' -type f ! -path '/old/tmp/*' -exec ls -ln {} \;
+
+              echo "--- copy (exclude tmp/ and lost+found) ---"
+              find /old -mindepth 1 -maxdepth 1 ! -name tmp ! -name lost+found -exec cp -a {} /new/ \;
+              sync
+
+              echo "--- checksums ---"
+              failed=0
+              for src in $(find /old -name '*.sqlite' -type f ! -path '/old/tmp/*'); do
+                rel=${src#/old/}
+                dst=/new/$rel
+                srcsum=$(md5sum "$src" | awk '{print $1}')
+                dstsum=$(md5sum "$dst" | awk '{print $1}')
+                echo "$rel src=$srcsum dst=$dstsum"
+                if [ "$srcsum" != "$dstsum" ]; then
+                  echo "FAILED: md5 mismatch $rel"
+                  failed=1
+                fi
+              done
+              if [ "$failed" -ne 0 ]; then
+                exit 1
+              fi
+
+              echo "--- destination (openclaw-data) ---"
+              du -sh /new
+              find /new -name '*.sqlite' -type f -exec ls -ln {} \;
+              echo "OK"
+          volumeMounts:
+            - name: state
+              mountPath: /old
+              readOnly: true
+            - name: data
+              mountPath: /new
+      volumes:
+        - name: state
+          persistentVolumeClaim:
+            claimName: openclaw-state
+        - name: data
+          persistentVolumeClaim:
+            claimName: openclaw-data
