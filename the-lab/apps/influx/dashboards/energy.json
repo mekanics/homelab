@@ -383,7 +383,7 @@
 			"id": 10,
 			"type": "timeseries",
 			"title": "Load / Solar / Grid",
-			"description": "House load = grid + solar. Grid negative when exporting. Solar hidden at 0 W. Sun altitude on the right axis.",
+			"description": "House load = grid + solar. Shared bucket is at least 30 seconds. A missing meter sample is a gap. Grid negative when exporting. Solar hidden at 0 W. Sun altitude on the right axis.",
 			"gridPos": {
 				"h": 10,
 				"w": 24,
@@ -625,7 +625,7 @@
 						"type": "influxdb",
 						"uid": "${datasource}"
 					},
-					"query": "import \"math\"\ngrid = from(bucket: \"waid-bucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"mqtt_consumer\" and r[\"_field\"] == \"total_act_power\")\n  |> drop(columns: [\"host\", \"topic\"])\n  |> group()\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> map(fn: (r) => ({_time: r._time, _value: r._value, _field: \"grid\"}))\nsolar = from(bucket: \"waid-bucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"solar\" and r[\"_field\"] == \"power\" and r.channel == \"0\")\n  |> drop(columns: [\"host\", \"channel\", \"serial\", \"topic\"])\n  |> group()\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> filter(fn: (r) => r._value > 0.0)\n  |> map(fn: (r) => ({_time: r._time, _value: r._value, _field: \"solar\"}))\nunion(tables: [grid, solar])\n  |> group()\n  |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => {\n      g = if exists r.grid then r.grid else 0.0\n      s = if exists r.solar then r.solar else 0.0\n      return {_time: r._time, Grid: g, Solar: if s > 0.0 then s else math.NaN(), \"House load\": g + s}\n    })\n"
+					"query": "import \"math\"\nevery = if uint(v: v.windowPeriod) < uint(v: 30s) then 30s else v.windowPeriod\ngrid = from(bucket: \"waid-bucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"mqtt_consumer\" and r[\"_field\"] == \"total_act_power\")\n  |> drop(columns: [\"host\", \"topic\"])\n  |> group()\n  |> aggregateWindow(every: every, fn: mean, createEmpty: false)\n  |> map(fn: (r) => ({_time: r._time, _value: r._value, _field: \"grid\"}))\nsolar = from(bucket: \"waid-bucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"solar\" and r[\"_field\"] == \"power\" and r.channel == \"0\")\n  |> drop(columns: [\"host\", \"channel\", \"serial\", \"topic\"])\n  |> group()\n  |> aggregateWindow(every: every, fn: mean, createEmpty: false)\n  |> filter(fn: (r) => r._value > 0.0)\n  |> map(fn: (r) => ({_time: r._time, _value: r._value, _field: \"solar\"}))\nunion(tables: [grid, solar])\n  |> group()\n  |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => {\n      g = if exists r.grid then r.grid else math.NaN()\n      s = if exists r.solar then r.solar else 0.0\n      return {_time: r._time, Grid: g, Solar: if s > 0.0 then s else math.NaN(), \"House load\": if exists r.grid then r.grid + s else math.NaN()}\n    })\n"
 				},
 				{
 					"refId": "B",

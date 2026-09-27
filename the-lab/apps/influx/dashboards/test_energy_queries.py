@@ -249,6 +249,29 @@ class EnergyQueryContract(unittest.TestCase):
             self.assertIn("exists r.grid", after)
             self.assertLess(after.index("|> group()"), after.index("pivot("))
 
+    def test_power_chart_floors_window_and_leaves_missing_grid(self) -> None:
+        hits = [
+            query
+            for _pid, title, query in self.queries
+            if title == "Load / Solar / Grid"
+        ]
+        self.assertTrue(hits)
+        for query in hits:
+            self.assertIn("30s", query)
+            self.assertIn("v.windowPeriod", query)
+            self.assertRegex(
+                query,
+                r"every\s*=\s*if\s+uint\(v:\s*v\.windowPeriod\)\s*<\s*uint\(v:\s*30s\)\s+then\s+30s\s+else\s+v\.windowPeriod",
+            )
+            self.assertIn("aggregateWindow(every: every,", query)
+            self.assertNotIn("else 0.0", query.split("g = ", 1)[1].split("s = ", 1)[0])
+            self.assertIn(
+                "else math.NaN()", query.split("g = ", 1)[1].split("s = ", 1)[0]
+            )
+            house = query.split('"House load":', 1)[1]
+            self.assertIn("exists r.grid", house)
+            self.assertNotRegex(house, r"g \+ s\s*}")
+
     def test_power_chart_paints_import_export_area(self) -> None:
         panels = [
             p
