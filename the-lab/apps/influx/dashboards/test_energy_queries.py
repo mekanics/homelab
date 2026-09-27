@@ -27,7 +27,13 @@ TODAY_TITLES = {
     "Self-consumption",
 }
 
-BATTERY_TITLES = {
+REQUIRED_TITLES = TODAY_TITLES | {
+    "Right now",
+    "House",
+    "When the balcony exports",
+}
+
+GONE_BATTERY_TITLES = {
     "Shifted",
     "Saved",
     "Payback",
@@ -35,20 +41,11 @@ BATTERY_TITLES = {
     "Left on the grid",
 }
 
-BATTERY_MONEY_TITLES = {"Saved", "Payback", "Max price"}
-BATTERY_KWH_TITLES = {"Shifted", "Left on the grid"}
-
-REQUIRED_TITLES = TODAY_TITLES | BATTERY_TITLES | {
-    "Right now",
-    "House",
-    "When the balcony exports",
-}
-
-BATTERY_VARS = {
-    "battery_kwh": "2",
-    "battery_chf": "2000",
-    "battery_eta": "0.90",
-    "payback_years": "10",
+GONE_BATTERY_VARS = {
+    "battery_kwh",
+    "battery_chf",
+    "battery_eta",
+    "payback_years",
 }
 
 RATE_VARS = {
@@ -343,60 +340,19 @@ class EnergyQueryContract(unittest.TestCase):
             self.assertIn("union(tables: [solar, reach])", query)
             self.assertIn('group(columns: ["_field"])', query)
 
-    def test_battery_row_reads_hourly_closed_year(self) -> None:
-        hits = [
-            (title, query)
-            for _pid, title, query in self.queries
-            if title in BATTERY_TITLES
-        ]
-        self.assertEqual({title for title, _q in hits}, BATTERY_TITLES)
-        for title, query in hits:
-            self.assertIn("energy_hourly", query, title)
-            self.assertIn("date.truncate", query, title)
-            self.assertIn("-365d", query, title)
-            self.assertNotIn("integral(", query, title)
-            self.assertNotIn("energy_balance", query, title)
-            self.assertIn("reduce(", query, title)
-            self.assertIn("accumulator", query, title)
-
-    def test_battery_inputs_visible_with_defaults(self) -> None:
-        for name, default in BATTERY_VARS.items():
-            var = self.vars.get(name)
-            self.assertIsNotNone(var, name)
-            self.assertNotEqual(var.get("hide"), 2, name)
-            self.assertEqual(var.get("type"), "textbox", name)
-            current = var.get("current") or {}
-            self.assertIn(default, (current.get("value"), var.get("query")), name)
-
-    def test_identity_panels_ignore_battery_vars(self) -> None:
-        identity = {"Produced", "Kept", "House", "Autarky", "Self-consumption"}
-        bad = []
+    def test_dashboard_has_no_battery_counterfactual(self) -> None:
+        titles = {p.get("title") for p in walk_panels(self.dashboard.get("panels", []))}
+        leftover = (GONE_BATTERY_TITLES | {"Battery"}) & titles
+        leftover |= {
+            title
+            for title in titles
+            if isinstance(title, str) and title.startswith("Battery")
+        }
+        self.assertEqual(leftover, set())
+        self.assertEqual(GONE_BATTERY_VARS & set(self.vars), set())
         for _pid, title, query in self.queries:
-            if title not in identity:
-                continue
-            if "battery_" in query or "payback_years" in query:
-                bad.append(title)
-        self.assertEqual(bad, [])
-
-    def test_battery_money_uses_rates_kwh_does_not(self) -> None:
-        rate_tokens = tuple(RATE_VARS)
-        for _pid, title, query in self.queries:
-            if title not in BATTERY_TITLES:
-                continue
-            uses_rates = [t for t in rate_tokens if f"${{{t}}}" in query]
-            if title in BATTERY_MONEY_TITLES:
-                self.assertEqual(set(uses_rates), set(RATE_VARS), title)
-                if title == "Saved":
-                    self.assertNotIn("${battery_chf}", query)
-                    self.assertNotIn("${payback_years}", query)
-                if title == "Payback":
-                    self.assertIn("${battery_chf}", query)
-                if title == "Max price":
-                    self.assertIn("${payback_years}", query)
-            else:
-                self.assertEqual(uses_rates, [], title)
-                self.assertNotIn("${battery_chf}", query)
-                self.assertNotIn("${payback_years}", query)
+            self.assertNotIn("battery_", query, title)
+            self.assertNotIn("payback_years", query, title)
 
 
 if __name__ == "__main__":
