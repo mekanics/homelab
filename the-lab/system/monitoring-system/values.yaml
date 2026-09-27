@@ -135,6 +135,17 @@ victoria-metrics-k8s-stack:
     spec:
       selectAllByDefault: true
       scrapeInterval: 30s
+      resources:
+        # Operator default is a 200m quota. vmagent sizes itself from that
+        # (process_cpu_cores_available=0.2) and CFS stalls every scrape.
+        # One whole core is the smallest limit that does not fractional-throttle,
+        # and it still caps a scrape storm on the 4-core control-plane node.
+        requests:
+          cpu: 100m
+          memory: 200Mi
+        limits:
+          cpu: '1'
+          memory: 500Mi
 
   vmalert:
     enabled: true
