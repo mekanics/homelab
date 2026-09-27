@@ -249,6 +249,30 @@ class EnergyQueryContract(unittest.TestCase):
             self.assertIn("exists r.grid", after)
             self.assertLess(after.index("|> group()"), after.index("pivot("))
 
+    def test_power_chart_paints_import_export_area(self) -> None:
+        panels = [
+            p
+            for p in walk_panels(self.dashboard.get("panels", []))
+            if p.get("title") == "Load / Solar / Grid"
+        ]
+        self.assertTrue(panels)
+        for panel in panels:
+            defaults = panel["fieldConfig"]["defaults"]
+            self.assertEqual(defaults["custom"]["thresholdsStyle"]["mode"], "area")
+            steps = defaults["thresholds"]["steps"]
+            self.assertEqual(steps[0]["color"], "green")
+            self.assertEqual(steps[1]["value"], 0)
+            self.assertEqual(steps[1]["color"], "red")
+            sun_off = False
+            for override in panel["fieldConfig"]["overrides"]:
+                name = override.get("matcher", {}).get("options")
+                if name not in {"Sun altitude", "B"}:
+                    continue
+                for prop in override.get("properties", []):
+                    if prop.get("id") == "custom.thresholdsStyle":
+                        sun_off = prop.get("value", {}).get("mode") == "off"
+            self.assertTrue(sun_off, "Sun altitude must not paint the watt bands")
+
     def test_power_chart_hides_idle_solar(self) -> None:
         hits = [
             query

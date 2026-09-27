@@ -424,7 +424,7 @@
 							"mode": "none"
 						},
 						"thresholdsStyle": {
-							"mode": "off"
+							"mode": "area"
 						}
 					},
 					"mappings": [],
@@ -432,8 +432,12 @@
 						"mode": "absolute",
 						"steps": [
 							{
-								"color": "text",
+								"color": "green",
 								"value": null
+							},
+							{
+								"color": "red",
+								"value": 0
 							}
 						]
 					}
@@ -535,6 +539,12 @@
 									"tooltip": false,
 									"viz": false
 								}
+							},
+							{
+								"id": "custom.thresholdsStyle",
+								"value": {
+									"mode": "off"
+								}
 							}
 						]
 					},
@@ -584,6 +594,12 @@
 									"legend": true,
 									"tooltip": false,
 									"viz": false
+								}
+							},
+							{
+								"id": "custom.thresholdsStyle",
+								"value": {
+									"mode": "off"
 								}
 							}
 						]
