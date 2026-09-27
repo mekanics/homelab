@@ -60,6 +60,8 @@ spec:
       securityContext:
         runAsUser: 1000
         runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
       containers:
         - name: seed
           # renovate datasource=docker depName=busybox
@@ -76,23 +78,34 @@ spec:
             - sh
             - -ec
             - |
-              if find /new -name '*.sqlite' -type f | grep -q .; then
+              if find /new -name lost+found -prune -o -name '*.sqlite' -type f -print | grep -q .; then
                 echo "REFUSING: sqlite already exists on openclaw-data."
-                find /new -name '*.sqlite' -type f -exec ls -ln {} \;
+                find /new -name lost+found -prune -o -name '*.sqlite' -type f -print -exec ls -ln {} \;
                 exit 1
               fi
 
               echo "--- source (openclaw-state) ---"
               du -sh /old
-              find /old -name '*.sqlite' -type f ! -path '/old/tmp/*' -exec ls -ln {} \;
+              find /old -name tmp -prune -o -name lost+found -prune -o -name '*.sqlite' -type f -print -exec ls -ln {} \;
 
               echo "--- copy (exclude tmp/ and lost+found) ---"
-              find /old -mindepth 1 -maxdepth 1 ! -name tmp ! -name lost+found -exec cp -a {} /new/ \;
+              copied=0
+              for name in /old/* /old/.[!.]*; do
+                [ -e "$name" ] || continue
+                base=${name##*/}
+                case "$base" in tmp|lost+found) continue ;; esac
+                echo "copy $base"
+                cp -a "$name" /new/
+                copied=$((copied + 1))
+              done
+              echo "copied $copied top-level entries"
+              [ "$copied" -gt 0 ] || exit 1
               sync
 
               echo "--- checksums ---"
               failed=0
-              for src in $(find /old -name '*.sqlite' -type f ! -path '/old/tmp/*'); do
+              find /old -name tmp -prune -o -name lost+found -prune -o -name '*.sqlite' -type f -print > /new/.migration-sqlite-list
+              while read -r src; do
                 rel=${src#/old/}
                 dst=/new/$rel
                 srcsum=$(md5sum "$src" | awk '{print $1}')
@@ -102,7 +115,8 @@ spec:
                   echo "FAILED: md5 mismatch $rel"
                   failed=1
                 fi
-              done
+              done < /new/.migration-sqlite-list
+              rm -f /new/.migration-sqlite-list
               if [ "$failed" -ne 0 ]; then
                 exit 1
               fi

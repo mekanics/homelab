@@ -9,7 +9,7 @@ openclaw:
   # ReadWriteOnce — this replaces the gateway, it is not a second pod.
   # Chart 0.4.0+ honours this.
   debug:
-    enabled: true
+    enabled: false
 
   # Default policy is Always, which rewrites every file on each volume at
   # every start. The state volume now holds the whole home, and that walk is
@@ -47,12 +47,13 @@ openclaw:
     # on ARM64 where JS compilation is CPU/memory intensive.
     - name: NODE_COMPILE_CACHE
       value: /home/node/.node-compile-cache
-    # State lives on the Longhorn volume, not the NFS home. Doctor chmods this
-    # directory to 700 whenever group/other bits are set, and a nested mount
-    # under the NFS home then fails: kubelet is root, the export squashes
-    # root, and mode 700 is not traversable. The volume mount itself is on
-    # the container rootfs, so 700 is fine. Agents are real directories here;
-    # do not put them back behind a symlink or an NFS subPath.
+    # State lives on longhorn-local (openclaw-data), not the NFS home.
+    # Doctor chmods this directory to 700 whenever group/other bits are
+    # set, and a nested mount under the NFS home then fails: kubelet is
+    # root, the export squashes root, and mode 700 is not traversable.
+    # The volume mount itself is on the container rootfs, so 700 is fine.
+    # Agents are real directories here; do not put them back behind a
+    # symlink or an NFS subPath.
     - name: OPENCLAW_STATE_DIR
       value: /home/node/.openclaw-state
   persistence:
@@ -67,37 +68,56 @@ openclaw:
       accessMode: ReadWriteOnce
       size: 1Gi
       retain: true
-    # Longhorn sibling volume for SQLite. Must not live on the NFS home volume:
-    # WAL needs a -shm file NFS cannot provide, and nocto + actimeo=600 hide
+    # OPENCLAW_STATE_DIR. Control-plane state/ (formerly db/), the
+    # per-agent agents/ tree, and the rest of the home copied off NFS
+    # on 2026-09-25, then off 2-replica longhorn on 2026-09-27.
+    # migrations/2026-09-09-seed-state-pvc.yaml,
+    # migrations/2026-09-21-seed-agents-pvc.yaml,
+    # migrations/2026-09-27-seed-local-state.yaml.
+    #
+    # longhorn-local, one replica on pi-homelab-master-2. A second
+    # replica on the Pi 4 made every fsync wait on it (median p99
+    # 12.6ms vs 5.7ms local; sqlite 7.8s vs 2.4s). Must not go back
+    # onto NFS: WAL needs a -shm file, and nocto + actimeo=600 hide
     # the attribute changes SQLite relies on.
     #
-    # This directory is OPENCLAW_STATE_DIR. It holds control-plane state/
-    # (formerly db/) and the per-agent agents/ tree, plus the rest of the
-    # home copied off NFS on 2026-09-25. NFS stays mounted at ~/.openclaw for
-    # the previous tree and for init-config, which still writes there.
-    # migrations/2026-09-09-seed-state-pvc.yaml,
-    # migrations/2026-09-21-seed-agents-pvc.yaml.
+    # One Volume for this claim. A second Volume entry leaves the pod
+    # Pending with no attach event. Do not subPath-mount agents or
+    # state under the NFS home: doctor will chmod the directory to 700
+    # and the next start cannot lstat the mountpoint.
     #
-    # One Volume for this claim. A second Volume entry leaves the pod Pending
-    # with no attach event. Do not subPath-mount agents or state under the
-    # NFS home: doctor will chmod the directory to 700 and the next start
-    # cannot lstat the mountpoint.
-    #
-    # The 2026-09-21 agents migration left every agent registered twice in
-    # agent_databases — once relative (written by the migration) and once
-    # absolute (rewritten on every startup) — because upstream derives the
-    # state dir as `db/` and so never relativises — resolveOpenClawState-
-    # DirForDatabasePath('<state>/db/openclaw.sqlite') returns '<state>/db',
-    # so path.relative to a sibling agents/ path starts with '..' and the
-    # relative branch is unreachable. Stale rows removed 2026-09-24 (19 -> 10,
-    # keeping `default`, which had no absolute counterpart); backup sits
-    # beside the db as openclaw.sqlite.bak-*. Expect duplicates back after
+    # The 2026-09-21 agents migration left every agent registered twice
+    # in agent_databases — once relative (written by the migration) and
+    # once absolute (rewritten on every startup) — because upstream
+    # derives the state dir as `db/` and so never relativises. Stale
+    # rows removed 2026-09-24 (19 -> 10). Expect duplicates back after
     # any future migration that writes relative paths:
     #   DELETE FROM agent_databases WHERE path NOT LIKE '/%' AND EXISTS (
     #     SELECT 1 FROM agent_databases b
     #     WHERE b.agent_id = agent_databases.agent_id AND b.path LIKE '/%');
-    state:
+    data:
       enabled: true
+      type: pvc
+      mountPath: /home/node/.openclaw-state
+      readOnly: false
+      storageClass: longhorn-local
+      accessMode: ReadWriteOnce
+      size: 10Gi
+      retain: true
+      extraLabels:
+        recurring-job.longhorn.io/source: enabled
+        recurring-job-group.longhorn.io/default: enabled
+        recurring-job.longhorn.io/backup-every-8h: enabled
+        recurring-job.longhorn.io/backup-weekly: enabled
+        recurring-job.longhorn.io/backup-monthly: enabled
+    # Pre-migration 2-replica claim. Kept for 7 days after a Completed
+    # backup of openclaw-data, then delete the PVC and its Longhorn
+    # volume. Rollback: enabled true, data.enabled false. Argo prune
+    # would drop this the moment it leaves the manifest — the live
+    # object has argocd.argoproj.io/sync-options: Prune=false.
+    # helm.sh/resource-policy: keep is not enough.
+    state:
+      enabled: false
       type: pvc
       mountPath: /home/node/.openclaw-state
       readOnly: false
@@ -105,10 +125,6 @@ openclaw:
       accessMode: ReadWriteOnce
       size: 10Gi
       retain: true
-      # PVC is the recurring-job source (Longhorn 1.12). Restate group
-      # default so snapshot-cleanup-daily and filesystem-trim stay. Do not
-      # join default-backup: that group also runs snapshot-12h, and a
-      # stuck full-size snapshot is what aborted this volume's journal.
       extraLabels:
         recurring-job.longhorn.io/source: enabled
         recurring-job-group.longhorn.io/default: enabled

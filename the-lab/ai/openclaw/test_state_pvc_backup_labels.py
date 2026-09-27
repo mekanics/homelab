@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-"""Assert openclaw-state PVC labels enroll backups without 12h snapshots.
+"""Assert openclaw-data PVC labels enroll backups without 12h snapshots.
 
-helm template of this chart must render PVC openclaw-state with Longhorn
-PVC-as-source labels for the existing backup jobs and group default.
-Joining group default-backup would also enable snapshot-12h; that is the
-failure that filled this volume last night.
+helm template of this chart must render PVC openclaw-data on
+longhorn-local with Longhorn PVC-as-source labels for the existing
+backup jobs and group default. Joining group default-backup would also
+enable snapshot-12h; that is the failure that filled the previous
+volume.
 
 Scratch for plugin-captures is an emptyDir at OPENCLAW_STATE_DIR/tmp so
-rebuildable build trees never land on the snapshotted volume.
+rebuildable build trees never land on the snapshotted volume. Exactly
+one volumeMount uses the state directory.
 """
 
 from __future__ import annotations
@@ -32,8 +34,11 @@ FORBIDDEN = (
     "recurring-job-group.longhorn.io/default-backup",
 )
 
+STATE_MOUNT = "/home/node/.openclaw-state"
 STATE_TMP_MOUNT = "/home/node/.openclaw-state/tmp"
 STATE_TMP_LIMIT = "8Gi"
+DATA_STORAGE_CLASS = "longhorn-local"
+DATA_SIZE = "10Gi"
 
 
 def render() -> str:
@@ -93,26 +98,45 @@ def metadata_name(doc: str) -> str | None:
     return None
 
 
-def pvc_openclaw_state_labels(manifest: str) -> dict[str, str]:
+def pvc_doc(manifest: str, name: str) -> str:
     for doc in documents(manifest):
         if "kind: PersistentVolumeClaim" not in doc:
             continue
-        if metadata_name(doc) != "openclaw-state":
+        if metadata_name(doc) == name:
+            return doc
+    raise SystemExit(f"rendered manifests have no PersistentVolumeClaim named {name}")
+
+
+def pvc_labels(doc: str) -> dict[str, str]:
+    labels: dict[str, str] = {}
+    in_labels = False
+    for line in doc.splitlines():
+        if line == "  labels:" or line == "    labels:":
+            in_labels = True
             continue
-        labels: dict[str, str] = {}
-        in_labels = False
-        for line in doc.splitlines():
-            if line == "  labels:" or line == "    labels:":
-                in_labels = True
+        if in_labels:
+            if line.startswith("    ") or line.startswith("      "):
+                key, _, value = line.strip().partition(":")
+                labels[key] = value.strip()
                 continue
-            if in_labels:
-                if line.startswith("    ") or line.startswith("      "):
-                    key, _, value = line.strip().partition(":")
-                    labels[key] = value.strip()
-                    continue
+            break
+    return labels
+
+
+def pvc_spec_field(doc: str, key: str) -> str | None:
+    in_spec = False
+    for line in doc.splitlines():
+        if line == "spec:":
+            in_spec = True
+            continue
+        if in_spec:
+            if line.startswith("  ") and not line.startswith("    "):
+                field, _, value = line.strip().partition(":")
+                if field == key:
+                    return value.strip().strip("'\"")
+            elif line and not line.startswith(" "):
                 break
-        return labels
-    raise SystemExit("rendered manifests have no PersistentVolumeClaim named openclaw-state")
+    return None
 
 
 def pvc_names(manifest: str) -> list[str]:
@@ -174,26 +198,48 @@ def volumes(manifest: str) -> list[dict[str, str]]:
 
 def main() -> int:
     manifest = render()
-    labels = pvc_openclaw_state_labels(manifest)
+    data = pvc_doc(manifest, "openclaw-data")
+    labels = pvc_labels(data)
     missing = [k for k, v in REQUIRED.items() if labels.get(k) != v]
     present = [k for k in FORBIDDEN if k in labels]
     if missing or present:
-        print("openclaw-state labels:", labels, file=sys.stderr)
+        print("openclaw-data labels:", labels, file=sys.stderr)
         if missing:
             print("missing or wrong:", missing, file=sys.stderr)
         if present:
             print("forbidden present:", present, file=sys.stderr)
         return 1
-    print("openclaw-state backup labels ok")
+    if pvc_spec_field(data, "storageClassName") != DATA_STORAGE_CLASS:
+        print("openclaw-data storageClassName:", pvc_spec_field(data, "storageClassName"), file=sys.stderr)
+        return 1
+    # size lives under spec.resources.requests.storage
+    if f"storage: {DATA_SIZE}" not in data and f'storage: "{DATA_SIZE}"' not in data:
+        print("openclaw-data missing size", DATA_SIZE, file=sys.stderr)
+        print(data, file=sys.stderr)
+        return 1
+    print("openclaw-data backup labels ok")
 
     names = pvc_names(manifest)
     extra = [n for n in names if "state-tmp" in n]
     if extra:
         print("unexpected PVC for scratch:", extra, file=sys.stderr)
         return 1
+    if "openclaw-state" in names:
+        print("openclaw-state must stay disabled so Argo does not remount it", file=sys.stderr)
+        return 1
 
     mounts = volume_mounts(manifest)
     mounts_by_name = {m.get("name"): m for m in mounts}
+    state_paths = [m.get("mountPath") for m in mounts if m.get("mountPath") == STATE_MOUNT]
+    if len(state_paths) != 1:
+        print("volumeMounts:", mounts, file=sys.stderr)
+        print(f"expected exactly one volumeMount at {STATE_MOUNT}", file=sys.stderr)
+        return 1
+    data_mount = mounts_by_name.get("data")
+    if data_mount is None or data_mount.get("mountPath") != STATE_MOUNT:
+        print("volumeMounts:", mounts, file=sys.stderr)
+        print(f"missing volumeMount data at {STATE_MOUNT}", file=sys.stderr)
+        return 1
     scratch_mount = mounts_by_name.get("state-tmp")
     if scratch_mount is None or scratch_mount.get("mountPath") != STATE_TMP_MOUNT:
         print("volumeMounts:", mounts, file=sys.stderr)
