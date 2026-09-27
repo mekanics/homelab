@@ -9,7 +9,7 @@ openclaw:
   # ReadWriteOnce — this replaces the gateway, it is not a second pod.
   # Chart 0.4.0+ honours this.
   debug:
-    enabled: false
+    enabled: true
 
   # Default policy is Always, which rewrites every file on each volume at
   # every start. The state volume now holds the whole home, and that walk is
@@ -285,3 +285,7 @@ openclaw:
   nodeSelector:
     node.homelab.io/performance: high
     node.homelab.io/generation: pi5
+    # Durable state is longhorn-local on this node's NVMe. A second replica
+    # on the Pi 4 is what made every fsync wait ~4ms. Node down means
+    # OpenClaw is down until it returns or a NAS backup is restored.
+    kubernetes.io/hostname: pi-homelab-master-2.local
