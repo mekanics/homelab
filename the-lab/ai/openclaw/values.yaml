@@ -9,7 +9,7 @@ openclaw:
   # ReadWriteOnce — this replaces the gateway, it is not a second pod.
   # Chart 0.4.0+ honours this.
   debug:
-    enabled: false
+    enabled: true
 
   # Default policy is Always, which rewrites every file on each volume at
   # every start. The state volume now holds the whole home, and that walk is
