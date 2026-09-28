@@ -69,7 +69,7 @@ n8n:
 
       n8n:
         editor_base_url: 'https://workflow.mekanics.ch'
-        runners_enabled: true
+        webhook_url: 'https://workflow.mekanics.ch'
         # Trust the nginx ingress proxy for X-Forwarded-For (fixes ERR_ERL_UNEXPECTED_X_FORWARDED_FOR
         # and the cascading browserId check failures introduced in n8n v1.x with express-rate-limit v7)
         proxy_hops: 1
@@ -80,7 +80,6 @@ n8n:
           enabled: true
           prune_time: 24
 
-      webhook_url: 'https://workflow.mekanics.ch'
       # queue: config removed — regular mode does not use Redis/Valkey
 
       # Execution pruning — keep DB size manageable on homelab Postgres
@@ -145,6 +144,15 @@ n8n:
       # Cap Node.js heap to 768MB — uses the 1Gi pod limit while leaving room for the JS task-runner
       NODE_OPTIONS:
         value: '--max-old-space-size=768'
+      # Community nodes (imap, eml, yalc harvest) need this after the default flips to false
+      N8N_UNVERIFIED_PACKAGES_ENABLED:
+        value: 'true'
+      # Keep today's 5-minute Code-node cap when the default becomes 60s
+      N8N_RUNNERS_TASK_TIMEOUT:
+        value: '300'
+      # Rename ~/.n8n/binaryData → storage (parent NFS mount, storage does not exist yet)
+      N8N_MIGRATE_FS_STORAGE_PATH:
+        value: 'true'
 
     #    N8N_DB_POSTGRESDB_NAME:
     #      valueFrom:
