@@ -142,9 +142,9 @@ n8n:
       # v2.0: env var access in Code nodes blocked by default — re-enable if workflows need it
       N8N_BLOCK_ENV_ACCESS_IN_NODE:
         value: 'false'
-      # Cap Node.js heap to 384MB — keeps main pod under 512Mi limit on Pi
+      # Cap Node.js heap to 768MB — uses the 1Gi pod limit while leaving room for the JS task-runner
       NODE_OPTIONS:
-        value: '--max-old-space-size=384'
+        value: '--max-old-space-size=768'
 
     #    N8N_DB_POSTGRESDB_NAME:
     #      valueFrom:
