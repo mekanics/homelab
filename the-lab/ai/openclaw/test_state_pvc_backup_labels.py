@@ -14,6 +14,7 @@ one volumeMount uses the state directory.
 
 from __future__ import annotations
 
+import json
 import shutil
 import subprocess
 import sys
@@ -42,6 +43,13 @@ DATA_STORAGE_CLASS = "longhorn-local"
 DATA_SIZE = "10Gi"
 
 
+def local_dep_version() -> str:
+    for line in (LOCAL_DEP / "Chart.yaml").read_text().splitlines():
+        if line.startswith("version:"):
+            return line.split(":", 1)[1].strip()
+    raise SystemExit(f"no version in {LOCAL_DEP}/Chart.yaml")
+
+
 def render() -> str:
     if not LOCAL_DEP.is_dir():
         raise SystemExit(f"openclaw chart not found at {LOCAL_DEP}")
@@ -55,7 +63,7 @@ def render() -> str:
                     "version: 0.0.0",
                     "dependencies:",
                     "  - name: openclaw",
-                    "    version: 0.5.2",
+                    f"    version: {local_dep_version()}",
                     f"    repository: file://{LOCAL_DEP}",
                 ]
             )
@@ -184,12 +192,21 @@ def deployment_doc(manifest: str) -> str:
 
 
 def volume_mounts(manifest: str) -> list[dict[str, str]]:
-    doc = deployment_doc(manifest)
-    start = doc.find("          volumeMounts:")
-    end = doc.find("      volumes:")
-    if start < 0 or end < 0:
-        raise SystemExit("deployment has no volumeMounts/volumes")
-    return _indented_maps(doc[start:end], "            ")
+    """Gateway mounts only; init-doctor mounts the same state volume."""
+    out = subprocess.run(
+        [
+            "yq",
+            "-o=json",
+            '.spec.template.spec.containers[] | select(.name == "gateway") | .volumeMounts',
+        ],
+        input=deployment_doc(manifest),
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    if not out.strip() or out.strip() == "null":
+        raise SystemExit("gateway container has no volumeMounts")
+    return json.loads(out)
 
 
 def volumes(manifest: str) -> list[dict[str, str]]:
