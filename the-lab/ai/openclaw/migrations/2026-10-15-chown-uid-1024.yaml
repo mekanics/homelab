@@ -1,0 +1,90 @@
+# One-shot migration: hand OpenClaw's volumes to uid 1024.
+#
+# Not rendered by Helm or ArgoCD — only `templates/` is. Apply by hand.
+#
+# The NFS export now maps every client uid to admin (1024:100), so the
+# home share reports 1024 as the owner of everything. OpenClaw blocks
+# npm-installed plugins whose files are owned by any uid other than its
+# own or root (src/plugins/discovery.ts, "suspicious ownership"), so the
+# gateway runs as 1024. The Longhorn volumes still hold uid-1000 files,
+# including 0700 state directories the new uid cannot enter.
+#
+# On the share, Synology ACL entries report mode 777, which discovery
+# also blocks ("world-writable path"). chmod drops the ACL and leaves a
+# POSIX mode; with all-squash the owner is every client, so 0700 is fine.
+#
+# Preconditions:
+#   1. Chart 0.6.0 with securityContext.runAsUser=1024 is synced. The new
+#      pod sits in Init (init-doctor cannot read the uid-1000 state), so
+#      nothing writes to the volumes while this runs.
+#   2. The pod is on pi-homelab-master-2.local, where openclaw-data
+#      (longhorn-local, RWO) is attached.
+#
+# After it completes, delete the stuck pod or wait for the init retry.
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: openclaw-chown-uid-1024
+  namespace: openclaw
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      name: openclaw-chown-uid-1024
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/hostname: pi-homelab-master-2.local
+      containers:
+        - name: chown
+          # renovate datasource=docker depName=busybox
+          image: busybox:1.38
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - CHOWN
+                - DAC_OVERRIDE
+                - DAC_READ_SEARCH
+                - FOWNER
+          command:
+            - sh
+            - -ec
+            - |
+              for dir in /data /cache; do
+                echo "$dir: entries not owned by 1024 before: $(find "$dir" -xdev ! -user 1024 | wc -l)"
+                chown -R 1024 "$dir"
+                left=$(find "$dir" -xdev ! -user 1024 | wc -l)
+                echo "$dir: entries not owned by 1024: $left"
+                [ "$left" -eq 0 ]
+              done
+
+              echo "--- /home npm tree ---"
+              chmod -R go-w /home/npm
+              left=$(find /home/npm ! -type l -perm -0002 | wc -l)
+              echo "/home/npm: world-writable entries: $left"
+              [ "$left" -eq 0 ]
+              echo "OK"
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: cache
+              mountPath: /cache
+            - name: home
+              mountPath: /home
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: openclaw-data
+        - name: cache
+          persistentVolumeClaim:
+            claimName: openclaw-compile-cache
+        - name: home
+          persistentVolumeClaim:
+            claimName: openclaw-home-nfs

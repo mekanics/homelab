@@ -20,6 +20,15 @@ openclaw:
   podSecurityContext:
     fsGroupChangePolicy: OnRootMismatch
 
+  # The NFS export maps every client uid to admin, so the home share
+  # reports 1024:100 as the owner of everything. OpenClaw blocks npm
+  # plugins owned by any uid other than its own or root ("suspicious
+  # ownership"), so the gateway and init containers run as 1024. Longhorn
+  # volumes were handed over in migrations/2026-10-15-chown-uid-1024.yaml.
+  # Chart 0.6.0+ applies this to init-config as well.
+  securityContext:
+    runAsUser: 1024
+
   env:
     - name: TZ
       value: Europe/Zurich

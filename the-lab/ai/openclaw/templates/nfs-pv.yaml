@@ -1,5 +1,6 @@
 # NFS PersistentVolume for Synology workspace
-# Synology NFS export must allow uid/gid 1000 (container runs as node:1000)
+# Export rule: "Map all users to admin". Every client uid reaches DSM as
+# admin (1024:100) and new files are owned by it, so OpenClaw runs as 1024.
 ---
 apiVersion: v1
 kind: PersistentVolume
