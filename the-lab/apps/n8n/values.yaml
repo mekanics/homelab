@@ -119,6 +119,13 @@ n8n:
           secretKeyRef:
             name: pg-n8n-credentials
             key: password
+      # Password for the n8n_vectors database. Credentials in n8n reference
+      # {{ $env.N8N_VECTORS_PG_PASSWORD }}; the secret is reflected from postgres.
+      N8N_VECTORS_PG_PASSWORD:
+        valueFrom:
+          secretKeyRef:
+            name: pg-n8n-vectors-credentials
+            key: password
       N8N_PORT:
         value: '5678'
       N8N_DIAGNOSTICS_ENABLED:

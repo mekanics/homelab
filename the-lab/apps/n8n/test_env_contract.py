@@ -21,6 +21,8 @@ PINNED_ENV = {
     "N8N_RUNNERS_TASK_TIMEOUT": "300",
     "N8N_MIGRATE_FS_STORAGE_PATH": "true",
 }
+# n8n's PGVector Store credential reads this; the secret is reflected into the n8n namespace.
+VECTOR_PASSWORD_SECRET = ("pg-n8n-vectors-credentials", "password")
 
 
 def render() -> str:
@@ -111,40 +113,65 @@ def configmap_data(manifest: str) -> dict[str, str]:
     raise SystemExit("rendered manifests have no n8n app ConfigMap")
 
 
-def main_container_env(manifest: str) -> dict[str, str]:
+def main_container_env(
+    manifest: str,
+) -> tuple[dict[str, str], dict[str, tuple[str, str]]]:
     for doc in documents(manifest):
         kind, name = kind_name(doc)
         if kind != "Deployment" or name != "n8n":
             continue
         env: dict[str, str] = {}
+        secrets: dict[str, tuple[str, str]] = {}
         current: str | None = None
         in_env = False
+        in_secret = False
+        secret_name: str | None = None
+        secret_key: str | None = None
         for line in doc.splitlines():
             stripped = line.rstrip()
             if stripped.endswith(" env:") or stripped == "env:":
                 in_env = True
                 current = None
+                in_secret = False
                 continue
             if not in_env:
                 continue
             item = stripped.strip()
             if item.startswith("- name:"):
                 current = unquote(item.split(":", 1)[1])
+                in_secret = False
+                secret_name = None
+                secret_key = None
                 continue
             if current and item.startswith("value:"):
                 env[current] = unquote(item.split(":", 1)[1])
                 current = None
+                in_secret = False
+                continue
+            if current and item == "secretKeyRef:":
+                in_secret = True
+                continue
+            if in_secret and current and item.startswith("name:"):
+                secret_name = unquote(item.split(":", 1)[1])
+            elif in_secret and current and item.startswith("key:"):
+                secret_key = unquote(item.split(":", 1)[1])
+            if in_secret and current and secret_name and secret_key:
+                secrets[current] = (secret_name, secret_key)
+                current = None
+                in_secret = False
+                secret_name = None
+                secret_key = None
                 continue
             if item in {"volumeMounts:", "resources:", "livenessProbe:", "readinessProbe:", "startupProbe:", "ports:"}:
                 break
-        return env
+        return env, secrets
     raise SystemExit("rendered manifests have no Deployment named n8n")
 
 
 def main() -> int:
     manifest = render()
     data = configmap_data(manifest)
-    env = main_container_env(manifest)
+    env, secrets = main_container_env(manifest)
     failed = False
 
     webhook = data.get("N8N_WEBHOOK_URL")
@@ -163,6 +190,14 @@ def main() -> int:
         if got != want:
             print(f"{key}: {got!r} (want {want!r})", file=sys.stderr)
             failed = True
+
+    vector_secret = secrets.get("N8N_VECTORS_PG_PASSWORD")
+    if vector_secret != VECTOR_PASSWORD_SECRET:
+        print(
+            f"N8N_VECTORS_PG_PASSWORD: {vector_secret!r} (want {VECTOR_PASSWORD_SECRET!r})",
+            file=sys.stderr,
+        )
+        failed = True
 
     if failed:
         return 1

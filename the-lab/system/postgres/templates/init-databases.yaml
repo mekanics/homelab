@@ -38,13 +38,17 @@ spec:
               }
 
               {{- range .Values.databases }}
-              echo "Ensuring database '{{ include "postgres.pgName" .name }}' with owner '{{ include "postgres.pgName" .owner }}' exists..."
+              {{- $db := include "postgres.pgName" .name }}
+              echo "Ensuring database '{{ $db }}' with owner '{{ include "postgres.pgName" .owner }}' exists..."
               wait_for_role '{{ include "postgres.pgName" .owner }}'
               psql -h postgres-cluster-rw -U postgres -tc \
-                "SELECT 1 FROM pg_database WHERE datname = '{{ include "postgres.pgName" .name }}'" \
+                "SELECT 1 FROM pg_database WHERE datname = '{{ $db }}'" \
                 | grep -q 1 \
                 || psql -h postgres-cluster-rw -U postgres -c \
-                   "CREATE DATABASE {{ include "postgres.pgName" .name }} OWNER {{ include "postgres.pgName" .owner }}"
+                   "CREATE DATABASE {{ $db }} OWNER {{ include "postgres.pgName" .owner }}"
+              {{- range .extensions }}
+              psql -h postgres-cluster-rw -U postgres -d {{ $db }} -c "CREATE EXTENSION IF NOT EXISTS {{ include "postgres.pgName" . }}"
+              {{- end }}
               {{- end }}
               echo "All databases initialised."
           env:

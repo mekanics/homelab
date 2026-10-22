@@ -141,6 +141,11 @@ echo ""
 
 # --- Seal new secrets and merge with existing file ---------------------------
 NEW_SEALED=$(kubeseal --format yaml --namespace "${NAMESPACE}" < "${TEMP_SECRET}")
+# kubeseal omits the leading document separator for a single secret. Without it
+# the appended secret is glued onto the previous one and kubectl rejects the file.
+if [[ "${NEW_SEALED}" != ---* ]]; then
+  NEW_SEALED="$(printf -- '---\n%s' "${NEW_SEALED}")"
+fi
 
 if [[ -f "${OUTPUT}" ]] && [[ ${#skipped[@]} -gt 0 ]]; then
   # Remove existing entries for the owners we are re-sealing, then append new ones.

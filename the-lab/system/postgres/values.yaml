@@ -10,14 +10,17 @@ databases:
     owner: paperless
     namespace: paperless
     connectionLimit: 50
-  - name: rag_obsidian
-    owner: rag_obsidian
-    namespace: ~
+  # pgvector store for n8n agents. vector is not a trusted extension, so the
+  # init Job installs it as superuser; n8n's role can then use it.
+  - name: n8n_vectors
+    owner: n8n_vectors
+    namespace: n8n
     connectionLimit: 10
+    extensions: [vector]
 
 cluster:
   storage:
-    size: 5Gi
+    size: 10Gi
   resources:
     requests:
       cpu: 100m
