@@ -128,7 +128,7 @@ victoria-metrics-k8s-stack:
         storageClassName: longhorn-local
         resources:
           requests:
-            storage: 10Gi
+            storage: 25Gi
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
