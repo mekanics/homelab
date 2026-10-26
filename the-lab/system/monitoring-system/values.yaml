@@ -239,6 +239,23 @@ victoria-metrics-k8s-stack:
             - severity = warning
           equal: ['alertname', 'namespace']
 
+  kubelet:
+    vmScrapes:
+      kubelet:
+        spec:
+          # k3s serves one shared registry on every component endpoint, so
+          # kubelet /metrics re-exports the apiserver and etcd series that
+          # the apiserver job already scrapes. Lists replace on merge, so the
+          # chart's default relabels are repeated here.
+          metricRelabelConfigs:
+            - action: labeldrop
+              regex: (uid)
+            - action: labeldrop
+              regex: (id|name)
+            - action: drop
+              source_labels: [__name__]
+              regex: (rest_client_request_duration_seconds_bucket|rest_client_request_duration_seconds_sum|rest_client_request_duration_seconds_count|apiserver_.+|etcd_.+)
+
   kubeControllerManager:
     enabled: false
   kubeScheduler:
