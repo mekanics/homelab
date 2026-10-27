@@ -1,0 +1,65 @@
+# OpenClaw gateway memory pressure alerts.
+#
+# Metric derivation:
+#   - container_memory_working_set_bytes comes from kubelet/cAdvisor, scraped
+#     by vmagent (monitoring-system/values.yaml kubelet vmScrape; relabels
+#     drop id|name|uid, so pod/namespace/container survive).
+#   - kube_pod_container_resource_limits comes from kube-state-metrics, which
+#     is bundled and enabled by default in victoria-metrics-k8s-stack 0.93.0.
+#     vmalert has selectAllByDefault: true, so this rule is picked up without
+#     extra wiring.
+#   - Division is on(namespace, pod, container) so only containers with a
+#     limit produce a ratio; no-limit sidecar noise is dropped. If
+#     kube-state-metrics ever goes away the expression yields no data and the
+#     alert silently stops firing — check for the metric post-merge.
+#
+# Thresholds (against the 5Gi limit Alex set 2026-10-27):
+#   warning  > 0.75 -> 3.75 GiB working set. The pod idles ~3.6 GiB with all
+#             plugin workers resident, so this fires only on real growth.
+#   critical > 0.90 -> 4.50 GiB. The 2026-10-27 restart storm was a cgroup
+#             OOM against the then-4Gi limit at ~100% working set; 2m at
+#             >90% gives a heads-up before the kernel picks the gateway.
+#
+# Delivery: alertmanager routes severity=warning -> slack-warning and
+# severity=critical -> slack-critical, both to #the-dark-side (existing
+# sealed webhook, alertmanager-slack-secret). Critical inhibits warning on
+# the same alertname+namespace via the cluster-wide inhibit rule.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ .Release.Name }}-openclaw-alerts
+  namespace: {{ .Release.Namespace }}
+  labels:
+    release: kube-prometheus-stack
+    app: kube-prometheus-stack
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  groups:
+    - name: openclaw
+      rules:
+        - alert: OpenClawGatewayMemoryPressure
+          expr: |
+            container_memory_working_set_bytes{namespace="openclaw", pod=~"openclaw.*", container!="", container!="POD"}
+              / on(namespace, pod, container)
+            kube_pod_container_resource_limits{namespace="openclaw", pod=~"openclaw.*", resource="memory"}
+              > 0.75
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: 'OpenClaw gateway {{`{{ $labels.pod }}`}} above 75% of its memory limit'
+            description: 'Working set is {{`{{ $value | humanizePercentage }}`}} of the 5Gi limit (>3.75GiB) for 2m. Idle baseline is ~3.6GiB (72%) with all plugin workers resident; sustained growth past this point historically precedes the cgroup OOM that caused the 2026-10-27 restart storm.'
+
+        - alert: OpenClawGatewayMemoryPressure
+          expr: |
+            container_memory_working_set_bytes{namespace="openclaw", pod=~"openclaw.*", container!="", container!="POD"}
+              / on(namespace, pod, container)
+            kube_pod_container_resource_limits{namespace="openclaw", pod=~"openclaw.*", resource="memory"}
+              > 0.90
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: 'OpenClaw gateway {{`{{ $labels.pod }}`}} above 90% of its memory limit — OOM imminent'
+            description: 'Working set is {{`{{ $value | humanizePercentage }}`}} of the 5Gi limit (>4.5GiB) for 2m. At ~100% the kernel cgroup-kills the gateway (instant restart, sqlite WAL interrupted, "database is locked" cron fallout). Reduce concurrent subagent/context load immediately.'
