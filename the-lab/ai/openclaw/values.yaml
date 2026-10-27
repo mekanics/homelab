@@ -41,7 +41,7 @@ openclaw:
     #   value: /home/node/.cache/ms-playwright
     # Tell V8 its heap ceiling so it doesn't OOM-panic on ARM64 during cold start.
     # Without this, V8 picks a conservative default and crashes when it can't grow.
-    # 3072 leaves ~1Gi headroom under the 4Gi limit for non-heap RSS (native
+    # 3072 leaves ~2Gi headroom under the 5Gi limit for non-heap RSS (native
     # modules, buffers) and for the node children the gateway spawns — they
     # inherit NODE_OPTIONS, so this is a per-process ceiling, not a total.
     - name: NODE_OPTIONS
@@ -197,7 +197,7 @@ openclaw:
       cpu: '1'
       memory: 2Gi
     limits:
-      memory: 4Gi
+      memory: 5Gi
       cpu: '2'
 
   priorityClassName: high-priority-homelab
@@ -281,9 +281,10 @@ openclaw:
     #      openclaw plugins install @openclaw/acpx@<gateway version>
     #
     # 2. Do NOT install against a running gateway. The build needs ~2Gi of its
-    #    own anonymous memory while the gateway already holds ~2.2Gi, which does
-    #    not fit the 4Gi limit — the kernel OOM-killed the gateway mid-install
-    #    (2026-09-24), and a prior attempt at 4Gi tmp was evicted on disk. Note
+    #    own anonymous memory while the gateway already holds ~2.2Gi, which did
+    #    not fit the then-4Gi limit — the kernel OOM-killed the gateway mid-install
+    #    (2026-09-24) — and leaves under 1Gi of slack even at 5Gi. A prior
+    #    attempt at 4Gi tmp was also evicted on disk. Note
     #    that exporting NPM_CONFIG_CACHE / NPM_CONFIG_TMP / TMPDIR in the exec
     #    shell does not help: the build runs in the gateway process, not the
     #    CLI, and stages under OPENCLAW_STATE_DIR/tmp (state-tmp emptyDir).
