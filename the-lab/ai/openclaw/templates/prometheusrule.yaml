@@ -1,0 +1,65 @@
+# Gateway memory alerts. test_memory_alerts.py runs them through
+# vmalert-tool against the series the cluster actually exports.
+#
+# container_memory_working_set_bytes comes from kubelet twice, on
+# /metrics/cadvisor and /metrics/resource, with the same namespace/pod/
+# container labels. Without the metrics_path pin the one-to-one join
+# errors with "duplicate time series" on every evaluation and never fires.
+#
+# Working set includes active page cache, so pressure alerts can sit high
+# without an OOM. OpenClawGatewayOOMKilled is the backstop for bursts that
+# kill the gateway inside the 2m `for`. It reads kube-state-metrics because
+# cAdvisor's container_oom_events_total stays 0 here across real OOM kills.
+#
+# Delivery: severity routes to slack-warning / slack-critical in
+# #the-dark-side; critical inhibits warning on alertname + namespace.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ .Release.Name }}-alerts
+  namespace: {{ .Release.Namespace }}
+  labels:
+    release: kube-prometheus-stack
+    app: kube-prometheus-stack
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  groups:
+    - name: openclaw
+      rules:
+        - alert: OpenClawGatewayMemoryPressure
+          expr: |
+            container_memory_working_set_bytes{job="kubelet", metrics_path="/metrics/cadvisor", namespace="openclaw", container="gateway"}
+              / on(namespace, pod, container)
+            kube_pod_container_resource_limits{namespace="openclaw", container="gateway", resource="memory"}
+              > 0.80
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: 'OpenClaw gateway {{`{{ $labels.pod }}`}} above 80% of its memory limit'
+            description: 'Working set is {{`{{ $value | humanizePercentage }}`}} of the {{ .Values.openclaw.resources.limits.memory }} limit for 2m.'
+
+        - alert: OpenClawGatewayMemoryPressure
+          expr: |
+            container_memory_working_set_bytes{job="kubelet", metrics_path="/metrics/cadvisor", namespace="openclaw", container="gateway"}
+              / on(namespace, pod, container)
+            kube_pod_container_resource_limits{namespace="openclaw", container="gateway", resource="memory"}
+              > 0.90
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: 'OpenClaw gateway {{`{{ $labels.pod }}`}} above 90% of its memory limit — OOM likely'
+            description: 'Working set is {{`{{ $value | humanizePercentage }}`}} of the {{ .Values.openclaw.resources.limits.memory }} limit for 2m. An OOM kill restarts the gateway mid-write and interrupts the sqlite WAL. Reduce concurrent subagent load.'
+
+        - alert: OpenClawGatewayOOMKilled
+          expr: |
+            increase(kube_pod_container_status_restarts_total{namespace="openclaw", container="gateway"}[10m]) > 0
+              and on(namespace, pod, container)
+            kube_pod_container_status_last_terminated_reason{namespace="openclaw", container="gateway", reason="OOMKilled"} == 1
+          labels:
+            severity: critical
+          annotations:
+            summary: 'OpenClaw gateway {{`{{ $labels.pod }}`}} was OOM-killed'
+            description: 'The gateway hit its {{ .Values.openclaw.resources.limits.memory }} memory limit and restarted within the last 10m.'
