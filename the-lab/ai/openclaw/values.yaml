@@ -41,7 +41,7 @@ openclaw:
     #   value: /home/node/.cache/ms-playwright
     # Tell V8 its heap ceiling so it doesn't OOM-panic on ARM64 during cold start.
     # Without this, V8 picks a conservative default and crashes when it can't grow.
-    # 3072 leaves ~2Gi headroom under the 5Gi limit for non-heap RSS (native
+    # 3072 leaves ~2Gi headroom under the 6Gi limit for non-heap RSS (native
     # modules, buffers) and for the node children the gateway spawns — they
     # inherit NODE_OPTIONS, so this is a per-process ceiling, not a total.
     - name: NODE_OPTIONS
@@ -197,7 +197,7 @@ openclaw:
       cpu: '1'
       memory: 2Gi
     limits:
-      memory: 5Gi
+      memory: 6Gi
       cpu: '2'
 
   priorityClassName: high-priority-homelab

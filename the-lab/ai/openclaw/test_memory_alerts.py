@@ -29,7 +29,7 @@ VMALERT_TOOL_IMAGE = "victoriametrics/vmalert-tool:v1.152.0"
 
 GIB = 2**30
 LIMIT = 5 * GIB
-LIMIT_TEXT = "5Gi"
+LIMIT_TEXT = "6Gi"
 POD = "openclaw-abc123-xyz"
 TARGET = {"namespace": "openclaw", "pod": POD, "container": "gateway"}
 
@@ -110,7 +110,9 @@ def pressure_case(gib: float, expected: list[str]) -> dict:
 
 
 def oom_case(reason: str, expected: bool) -> dict:
-    restart = labels("kube_pod_container_status_restarts_total", job="kube-state-metrics")
+    restart = labels(
+        "kube_pod_container_status_restarts_total", job="kube-state-metrics"
+    )
     terminated = labels(
         "kube_pod_container_status_last_terminated_reason",
         job="kube-state-metrics",
@@ -155,10 +157,14 @@ def oom_case(reason: str, expected: bool) -> dict:
 def render_rule_groups() -> str:
     with tempfile.TemporaryDirectory() as tmp:
         work = Path(tmp)
-        (work / "Chart.yaml").write_text("apiVersion: v2\nname: openclaw-alerts\nversion: 0.0.0\n")
+        (work / "Chart.yaml").write_text(
+            "apiVersion: v2\nname: openclaw-alerts\nversion: 0.0.0\n"
+        )
         (work / "values.yaml").write_bytes((CHART_DIR / "values.yaml").read_bytes())
         (work / "templates").mkdir()
-        shutil.copy(CHART_DIR / "templates" / RULE_TEMPLATE, work / "templates" / RULE_TEMPLATE)
+        shutil.copy(
+            CHART_DIR / "templates" / RULE_TEMPLATE, work / "templates" / RULE_TEMPLATE
+        )
         built = subprocess.run(
             ["helm", "template", "openclaw", str(work), "--namespace", "openclaw"],
             check=True,
@@ -174,10 +180,14 @@ def vmalert_tool(work: Path) -> list[str]:
     if shutil.which("vmalert-tool"):
         return ["vmalert-tool", "unittest", f"--files={work / 'tests.yaml'}"]
     return [
-        "docker", "run", "--rm",
-        "-v", f"{work}:/work",
+        "docker",
+        "run",
+        "--rm",
+        "-v",
+        f"{work}:/work",
         VMALERT_TOOL_IMAGE,
-        "unittest", "--files=/work/tests.yaml",
+        "unittest",
+        "--files=/work/tests.yaml",
     ]
 
 
