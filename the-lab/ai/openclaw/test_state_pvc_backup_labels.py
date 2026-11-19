@@ -41,6 +41,8 @@ STATE_TMP_MOUNT = "/home/node/.openclaw-state/tmp"
 STATE_TMP_LIMIT = "8Gi"
 DATA_STORAGE_CLASS = "longhorn-local"
 DATA_SIZE = "10Gi"
+CAPTURES_MOUNT = "/home/node/.openclaw-state.update-captures"
+CAPTURES_CLAIM = "openclaw-update-captures"
 
 
 def local_dep_version() -> str:
@@ -209,6 +211,24 @@ def volume_mounts(manifest: str) -> list[dict[str, str]]:
     return json.loads(out)
 
 
+def init_doctor_mount_paths(manifest: str) -> list[str]:
+    """init-doctor runs the migration and its pre-repair capture."""
+    out = subprocess.run(
+        [
+            "yq",
+            "-o=json",
+            '.spec.template.spec.initContainers[] | select(.name == "init-doctor") | .volumeMounts | map(.mountPath)',
+        ],
+        input=deployment_doc(manifest),
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    if not out.strip() or out.strip() == "null":
+        raise SystemExit("init-doctor has no volumeMounts")
+    return json.loads(out)
+
+
 def volumes(manifest: str) -> list[dict[str, str]]:
     doc = deployment_doc(manifest)
     start = doc.find("      volumes:")
@@ -289,6 +309,31 @@ def main() -> int:
         return 1
 
     print("openclaw-state scratch emptyDir ok")
+
+    # Doctor writes its pre-repair capture to <stateDir>.update-captures, a
+    # hard sibling of the state dir. Without its own mount that path is the
+    # read-only rootfs (EROFS) and the capture, and the private-mode restore
+    # tied to it, never run. It must not live on the state volume itself:
+    # a sibling path cannot be a subPath of the data claim.
+    captures_mount = mounts_by_name.get("update-captures")
+    if captures_mount is None or captures_mount.get("mountPath") != CAPTURES_MOUNT:
+        print("volumeMounts:", mounts, file=sys.stderr)
+        print(f"missing volumeMount update-captures at {CAPTURES_MOUNT}", file=sys.stderr)
+        return 1
+    captures_vol = vols_by_name.get("update-captures")
+    if captures_vol is None or captures_vol.get("claimName") != CAPTURES_CLAIM:
+        print("update-captures volume:", captures_vol, file=sys.stderr)
+        print(f"update-captures must be backed by its own claim {CAPTURES_CLAIM}", file=sys.stderr)
+        return 1
+    if pvc_spec_field(pvc_doc(manifest, CAPTURES_CLAIM), "storageClassName") != DATA_STORAGE_CLASS:
+        print(f"{CAPTURES_CLAIM} must be on {DATA_STORAGE_CLASS}", file=sys.stderr)
+        return 1
+    doctor_mounts = init_doctor_mount_paths(manifest)
+    if CAPTURES_MOUNT not in doctor_mounts:
+        print("init-doctor mounts:", doctor_mounts, file=sys.stderr)
+        print(f"init-doctor must mount {CAPTURES_MOUNT}", file=sys.stderr)
+        return 1
+    print("update-captures mount ok")
     return 0
 
 

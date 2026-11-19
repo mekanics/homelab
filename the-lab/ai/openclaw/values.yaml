@@ -148,6 +148,25 @@ openclaw:
       type: emptyDir
       mountPath: /home/node/.openclaw-state/tmp
       sizeLimit: 8Gi
+    # Doctor's pre-repair capture is written to <stateDir>.update-captures,
+    # a hard sibling of OPENCLAW_STATE_DIR (src/infra/update-capture-paths.ts).
+    # Unmounted, that path is the read-only rootfs: the capture fails with
+    # EROFS and the private-mode restore that runs with it never happens, so
+    # an fsGroup walk that widened client/ to 2770 leaves init-doctor stuck on
+    # "Client credential directory is unsafe". It cannot be a directory on
+    # the data volume (a sibling of the mount point is outside it) and a
+    # second Volume entry for the data claim leaves the pod Pending, so it
+    # gets its own claim. longhorn-local is WaitForFirstConsumer: the volume
+    # lands on the node where openclaw-data already pins the pod.
+    update-captures:
+      enabled: true
+      type: pvc
+      mountPath: /home/node/.openclaw-state.update-captures
+      readOnly: false
+      storageClass: longhorn-local
+      accessMode: ReadWriteOnce
+      size: 2Gi
+      retain: true
   # Container /tmp for npm/uv caches and anything that still honours TMPDIR.
   # Plugin captures for 2026.9.6 live on persistence.state-tmp instead.
   # 8Gi is disk-backed emptyDir, not RAM; a crash loop evicts the pod.
