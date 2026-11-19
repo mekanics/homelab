@@ -1,4 +1,5 @@
-# One-shot migration: hand the update-captures volume root to uid 1024.
+# One-shot migration: hand the update-captures volume root to uid 1024 and
+# make it private (0700).
 #
 # Not rendered by Helm or ArgoCD — only `templates/` is. Apply by hand.
 #
@@ -10,11 +11,11 @@
 #    must be owned by the current user and not writable by other users"
 # and the Gateway cannot chown a foreign-owned mount root.
 #
-# Only the owner changes. Doctor's own mode restore
-# (restorePrivateStateStoreModes) narrows an owned update-captures root to
-# 0700 before the capture, but refuses a root owned by someone else, so
-# ownership is the one thing it cannot supply. The mode is left alone here
-# so this Job does not fight kubelet's fsGroup handling.
+# The owner must change (doctor refuses a root owned by someone else and the
+# gateway cannot chown it). The mode must also be 0700: doctor takes its
+# pre-repair copy before its private-mode restore runs, and a group-writable
+# root (the 2775 an fsGroup walk leaves) is rejected as "writable by other
+# users". The pod no longer sets fsGroup, so nothing widens it again.
 #
 # The Job pod sets no fsGroup, so mounting the volume does not trigger a
 # kubelet permission walk.
@@ -23,6 +24,8 @@
 #   1. The openclaw-update-captures claim exists and is bound (values
 #      synced). It is on pi-homelab-master-2.local with openclaw-data.
 #   2. Restart the pod afterwards so init-doctor runs against the new owner.
+#   3. The pod's fsGroup is removed (values.yaml); with fsGroup still set,
+#      the next mount walks the volume and re-adds group write.
 ---
 apiVersion: batch/v1
 kind: Job
@@ -55,6 +58,7 @@ spec:
                 - ALL
               add:
                 - CHOWN
+                - FOWNER
           command:
             - sh
             - -ec
@@ -65,10 +69,12 @@ spec:
 
               # Root of the mount only; contents are doctor's to manage.
               chown 1024 /captures
+              chmod 0700 /captures
 
               echo "--- /captures after ---"
               stat -c '%a %u:%g %n' /captures
               [ "$(stat -c %u /captures)" = "1024" ]
+              [ "$(stat -c %a /captures)" = "700" ]
               echo OK
           volumeMounts:
             - name: captures
