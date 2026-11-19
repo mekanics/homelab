@@ -11,14 +11,19 @@ openclaw:
   debug:
     enabled: false
 
-  # Default policy is Always, which rewrites every file on each volume at
-  # every start. The state volume now holds the whole home, and that walk is
-  # slow enough for kubelet to warn. OnRootMismatch skips it when the root is
-  # already group-owned and at least 2770. Doctor may still chmod the root to
-  # 700; the following start walks once and restores 2770. That is safe
-  # because the mount is the volume itself, not an NFS subPath.
+  # No fsGroup (the chart default of 1000 is removed with null). Kubelet's
+  # fsGroup walk widens <stateDir>/client and control to 2770/660 and gives
+  # the update-captures root group-write. OpenClaw refuses both ("Client
+  # credential directory is unsafe", "staging root ... not writable by other
+  # users"), and doctor narrows the volume root to 700, which makes
+  # OnRootMismatch walk again on the next mount. So every restart broke
+  # init-doctor until the chmod migration was re-run by hand.
+  # Nothing needs the group: the data, compile-cache and update-captures
+  # volumes are owned by uid 1024 (migrations/2026-10-15-chown-uid-1024.yaml,
+  # 2026-11-19-chown-update-captures.yaml), the emptyDirs are 0777, and NFS
+  # ignores fsGroup. A new volume must be chowned to 1024 by a migration.
   podSecurityContext:
-    fsGroupChangePolicy: OnRootMismatch
+    fsGroup: null
 
   # The NFS export maps every client uid to admin, so the home share
   # reports 1024:100 as the owner of everything. OpenClaw blocks npm
