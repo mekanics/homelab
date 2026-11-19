@@ -1,0 +1,79 @@
+# One-shot migration: hand the update-captures volume root to uid 1024.
+#
+# Not rendered by Helm or ArgoCD — only `templates/` is. Apply by hand.
+#
+# Doctor writes its pre-repair recovery copy to <stateDir>.update-captures,
+# mounted from the openclaw-update-captures claim. A fresh volume's root is
+# owned by root; kubelet only adds group 1000 and rwx for fsGroup. Doctor
+# then reports
+#   "Pre-repair recovery copy was unavailable: Private SQLite staging root
+#    must be owned by the current user and not writable by other users"
+# and the Gateway cannot chown a foreign-owned mount root.
+#
+# Only the owner changes. Doctor's own mode restore
+# (restorePrivateStateStoreModes) narrows an owned update-captures root to
+# 0700 before the capture, but refuses a root owned by someone else, so
+# ownership is the one thing it cannot supply. The mode is left alone here
+# so this Job does not fight kubelet's fsGroup handling.
+#
+# The Job pod sets no fsGroup, so mounting the volume does not trigger a
+# kubelet permission walk.
+#
+# Preconditions:
+#   1. The openclaw-update-captures claim exists and is bound (values
+#      synced). It is on pi-homelab-master-2.local with openclaw-data.
+#   2. Restart the pod afterwards so init-doctor runs against the new owner.
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: openclaw-chown-update-captures
+  namespace: openclaw
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      name: openclaw-chown-update-captures
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/hostname: pi-homelab-master-2.local
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: chown
+          # renovate datasource=docker depName=busybox
+          image: busybox:1.38
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - CHOWN
+          command:
+            - sh
+            - -ec
+            - |
+              echo "--- /captures before ---"
+              stat -c '%a %u:%g %n' /captures
+              ls -lan /captures
+
+              # Root of the mount only; contents are doctor's to manage.
+              chown 1024 /captures
+
+              echo "--- /captures after ---"
+              stat -c '%a %u:%g %n' /captures
+              [ "$(stat -c %u /captures)" = "1024" ]
+              echo OK
+          volumeMounts:
+            - name: captures
+              mountPath: /captures
+      volumes:
+        - name: captures
+          persistentVolumeClaim:
+            claimName: openclaw-update-captures
